@@ -202,7 +202,7 @@ export default function PacoteForm() {
             <X className='h-4 w-4 mr-2' />
             Cancelar
           </Button>
-          <Button type='submit'>
+          <Button type='submit' variant='outline'>
             <Save className='h-4 w-4 mr-2' />
             {isEditing ? 'Atualizar' : 'Salvar'}
           </Button>

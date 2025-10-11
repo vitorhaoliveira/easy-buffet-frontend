@@ -65,7 +65,7 @@ export default function ClientesList() {
             Gerencie os dados dos seus clientes
           </p>
         </div>
-        <Button asChild>
+        <Button variant='outline' asChild>
           <Link to='/cadastros/clientes/novo'>
             <Plus className='mr-2 h-4 w-4' />
             Novo Cliente

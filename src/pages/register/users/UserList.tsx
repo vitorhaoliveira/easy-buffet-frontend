@@ -102,7 +102,7 @@ export default function UsuariosList() {
             Gerencie os usuários e perfis de acesso ao sistema
           </p>
         </div>
-        <Button asChild>
+        <Button variant='outline' asChild>
           <Link to='/cadastros/usuarios/novo'>
             <Plus className='mr-2 h-4 w-4' />
             Novo Usuário

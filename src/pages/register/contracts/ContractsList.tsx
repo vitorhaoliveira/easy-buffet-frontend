@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { Plus, Edit, Trash2, Eye, FileText, Calendar, DollarSign, User } from 'lucide-react'
 import { Button } from '@/components/ui/button/button'
 import SearchBar from '@/components/ui/search-bar/SearchBar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -217,46 +216,25 @@ export default function ContractsList() {
                 </TableCell>
                 <TableCell className='text-right'>
                   <div className='flex items-center justify-end space-x-2'>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant='ghost' size='sm' asChild>
-                          <Link to={`/cadastros/contratos/visualizar/${contrato.id}`}>
-                            <Eye className='h-4 w-4' />
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Visualizar detalhes do contrato</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <Button variant='ghost' size='sm' asChild>
+                      <Link to={`/cadastros/contratos/visualizar/${contrato.id}`}>
+                        <Eye className='h-4 w-4' />
+                      </Link>
+                    </Button>
                     
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant='ghost' size='sm' asChild>
-                          <Link to={`/cadastros/contratos/editar/${contrato.id}`}>
-                            <Edit className='h-4 w-4' />
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Editar contrato</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <Button variant='ghost' size='sm' asChild>
+                      <Link to={`/cadastros/contratos/editar/${contrato.id}`}>
+                        <Edit className='h-4 w-4' />
+                      </Link>
+                    </Button>
                     
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleDelete(contrato.id)}
-                        >
-                          <Trash2 className='h-4 w-4' />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Excluir contrato</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleDelete(contrato.id)}
+                    >
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

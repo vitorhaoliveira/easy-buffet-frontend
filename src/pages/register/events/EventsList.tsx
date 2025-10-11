@@ -104,7 +104,7 @@ export default function EventsList() {
             Gerencie os eventos e reservas dos clientes
           </p>
         </div>
-        <Button asChild>
+        <Button variant='outline' asChild>
           <Link to='/cadastros/eventos/novo'>
             <Plus className='mr-2 h-4 w-4' />
             Nova Reserva

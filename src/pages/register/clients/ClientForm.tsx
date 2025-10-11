@@ -178,7 +178,7 @@ export default function ClientForm() {
             <X className='h-4 w-4 mr-2' />
             Cancelar
           </Button>
-          <Button type='submit'>
+          <Button variant='outline' type='submit'>
             <Save className='h-4 w-4 mr-2' />
             {isEditing ? 'Atualizar' : 'Salvar'}
           </Button>

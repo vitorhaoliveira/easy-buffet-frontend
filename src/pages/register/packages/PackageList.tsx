@@ -80,7 +80,7 @@ export default function PackageList() {
             Gerencie os pacotes de buffet e serviços avulsos
           </p>
         </div>
-        <Button asChild>
+        <Button variant='outline' asChild>
           <Link to='/cadastros/pacotes/novo'>
             <Plus className='mr-2 h-4 w-4' />
             Novo Pacote/Serviço

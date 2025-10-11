@@ -196,7 +196,7 @@ export default function ContractForm() {
     <div className='space-y-6'>
       {/* Header */}
       <div className='flex items-center space-x-4'>
-        <Button variant='outline' size='sm' onClick={handleCancel}>
+        <Button variant='ghost' size='sm' onClick={handleCancel}>
           <ArrowLeft className='h-4 w-4 mr-2' />
           Voltar
         </Button>
