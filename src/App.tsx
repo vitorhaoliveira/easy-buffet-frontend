@@ -13,6 +13,9 @@ import EventosList from './pages/register/events/EventsList'
 import EventoForm from './pages/register/events/EventsForm'
 import UsuariosList from './pages/register/users/UserList'
 import UserForm from './pages/register/users/UserForm'
+import ContractsList from './pages/register/contracts/ContractsList'
+import ContractForm from './pages/register/contracts/ContractForm'
+import ContractDetail from './pages/register/contracts/ContractDetail'
 
 function App() {
   return (
@@ -44,6 +47,12 @@ function App() {
           <Route path='/cadastros/usuarios' element={<UsuariosList />} />
           <Route path='/cadastros/usuarios/novo' element={<UserForm />} />
           <Route path='/cadastros/usuarios/editar/:id' element={<UserForm />} />
+          
+          {/* Rotas de Contratos */}
+          <Route path='/cadastros/contratos' element={<ContractsList />} />
+          <Route path='/cadastros/contratos/novo' element={<ContractForm />} />
+          <Route path='/cadastros/contratos/editar/:id' element={<ContractForm />} />
+          <Route path='/cadastros/contratos/visualizar/:id' element={<ContractDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>

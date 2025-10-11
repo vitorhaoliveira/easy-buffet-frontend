@@ -14,7 +14,8 @@ import {
   Calendar,
   Package,
   UserCheck,
-  DollarSign
+  DollarSign,
+  FileText
 } from 'lucide-react'
 
 import { NavMain } from '@/components/ui/nav-menu/nav-main'
@@ -106,6 +107,21 @@ const data = {
             {
               title: 'Novo Usuário',
               url: '/cadastros/usuarios/novo'
+            }
+          ]
+        },
+        {
+          title: 'Contratos',
+          url: '/cadastros/contratos',
+          icon: FileText,
+          items: [
+            {
+              title: 'Listar',
+              url: '/cadastros/contratos'
+            },
+            {
+              title: 'Novo Contrato',
+              url: '/cadastros/contratos/novo'
             }
           ]
         }
