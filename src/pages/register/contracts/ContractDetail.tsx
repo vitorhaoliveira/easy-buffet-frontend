@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowLeft, Edit, FileText, Calendar, DollarSign, User, Calculator, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/data-table/table'
@@ -55,7 +55,7 @@ const mockContrato = {
 }
 
 export default function ContractDetail() {
-  const { id } = useParams()
+  // const { id } = useParams()
   const [contrato] = useState(mockContrato)
 
   const formatCurrency = (value: number) => {
