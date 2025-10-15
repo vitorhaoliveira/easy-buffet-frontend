@@ -129,16 +129,24 @@ const data = {
     },
     {
       title: 'Financeiro',
-      url: '#',
+      url: '/financeiro',
       icon: DollarSign,
       items: [
         {
-          title: 'Condições de Pagamento',
-          url: '/financeiro/condicoes-pagamento'
+          title: 'Dashboard',
+          url: '/financeiro'
         },
         {
-          title: 'Lançamentos',
-          url: '/financeiro/lancamentos'
+          title: 'Parcelas de Entrada',
+          url: '/financeiro/parcelas'
+        },
+        {
+          title: 'Custos e Despesas',
+          url: '/financeiro/custos'
+        },
+        {
+          title: 'Resumo Financeiro',
+          url: '/financeiro/resumo'
         }
       ]
     },

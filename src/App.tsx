@@ -16,6 +16,7 @@ import UserForm from './pages/register/users/UserForm'
 import ContractsList from './pages/register/contracts/ContractsList'
 import ContractForm from './pages/register/contracts/ContractForm'
 import ContractDetail from './pages/register/contracts/ContractDetail'
+import { FinancialDashboard, InstallmentsList, InstallmentForm, InstallmentDetail, CostsList, CostForm, CostDetail, FinancialSummary } from './pages/financial'
 
 function App() {
   return (
@@ -53,6 +54,18 @@ function App() {
           <Route path='/cadastros/contratos/novo' element={<ContractForm />} />
           <Route path='/cadastros/contratos/editar/:id' element={<ContractForm />} />
           <Route path='/cadastros/contratos/visualizar/:id' element={<ContractDetail />} />
+          
+          {/* Rotas Financeiras */}
+          <Route path='/financeiro' element={<FinancialDashboard />} />
+          <Route path='/financeiro/parcelas' element={<InstallmentsList />} />
+          <Route path='/financeiro/parcelas/nova' element={<InstallmentForm />} />
+          <Route path='/financeiro/parcelas/editar/:id' element={<InstallmentForm />} />
+          <Route path='/financeiro/parcelas/visualizar/:id' element={<InstallmentDetail />} />
+          <Route path='/financeiro/custos' element={<CostsList />} />
+          <Route path='/financeiro/custos/novo' element={<CostForm />} />
+          <Route path='/financeiro/custos/editar/:id' element={<CostForm />} />
+          <Route path='/financeiro/custos/visualizar/:id' element={<CostDetail />} />
+          <Route path='/financeiro/resumo' element={<FinancialSummary />} />
         </Route>
       </Routes>
     </BrowserRouter>
