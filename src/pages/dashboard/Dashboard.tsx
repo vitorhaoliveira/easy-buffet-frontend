@@ -440,7 +440,7 @@ export default function Dashboard() {
           </Button>
 
           <Button variant="outline" asChild className="h-auto p-4">
-            <Link to="/relatorios">
+            <Link to="/financeiro/relatorio">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-orange-50 rounded-lg">
                   <TrendingUp className="h-5 w-5 text-orange-600" />
