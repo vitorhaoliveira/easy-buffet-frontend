@@ -17,6 +17,7 @@ import ContractsList from './pages/register/contracts/ContractsList'
 import ContractForm from './pages/register/contracts/ContractForm'
 import ContractDetail from './pages/register/contracts/ContractDetail'
 import { FinancialDashboard, InstallmentsList, InstallmentForm, InstallmentDetail, CostsList, CostForm, CostDetail, FinancialSummary } from './pages/financial'
+import { MonthlyReport } from './pages/reports'
 
 function App() {
   return (
@@ -66,6 +67,9 @@ function App() {
           <Route path='/financeiro/custos/editar/:id' element={<CostForm />} />
           <Route path='/financeiro/custos/visualizar/:id' element={<CostDetail />} />
           <Route path='/financeiro/resumo' element={<FinancialSummary />} />
+          
+          {/* Rotas de Relatórios */}
+          <Route path='/financeiro/relatorio' element={<MonthlyReport />} />
         </Route>
       </Routes>
     </BrowserRouter>

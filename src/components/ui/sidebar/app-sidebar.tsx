@@ -147,6 +147,10 @@ const data = {
         {
           title: 'Resumo Financeiro',
           url: '/financeiro/resumo'
+        },
+        {
+          title: 'Relatórios',
+          url: '/financeiro/relatorio'
         }
       ]
     },
