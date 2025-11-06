@@ -6,6 +6,7 @@
 /out-tsc
 /bazel-out
 /cursor
+.cursor
 
 # Node
 /node_modules
