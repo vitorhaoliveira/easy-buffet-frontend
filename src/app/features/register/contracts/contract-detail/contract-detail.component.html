@@ -1,0 +1,259 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+      <button appButton variant="ghost" size="sm" (click)="handleBack()">
+        <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Voltar
+      </button>
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Detalhes do Contrato</h1>
+        <p class="text-muted-foreground">
+          Visualize todas as informações do contrato e parcelas
+        </p>
+      </div>
+    </div>
+    @if (!isLoading && contract) {
+      <button appButton variant="outline" (click)="handleEdit()">
+        <lucide-icon [img]="EditIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Editar Contrato
+      </button>
+    }
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando detalhes do contrato...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="w-full p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Contract Details -->
+  @if (!isLoading && contract) {
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Total Amount -->
+      <div class="bg-white rounded-lg border p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Valor Total</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ formatCurrency(contract.totalAmount) }}
+            </p>
+          </div>
+          <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="DollarSignIcon" class="h-6 w-6 text-blue-600"></lucide-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Paid -->
+      <div class="bg-white rounded-lg border p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Total Pago</p>
+            <p class="text-2xl font-bold text-green-600 mt-1">
+              {{ formatCurrency(getTotalPaid()) }}
+            </p>
+          </div>
+          <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="CheckCircle2Icon" class="h-6 w-6 text-green-600"></lucide-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remaining Amount -->
+      <div class="bg-white rounded-lg border p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">A Receber</p>
+            <p class="text-2xl font-bold text-orange-600 mt-1">
+              {{ formatCurrency(getRemainingAmount()) }}
+            </p>
+          </div>
+          <div class="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="ClockIcon" class="h-6 w-6 text-orange-600"></lucide-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Installments Progress -->
+      <div class="bg-white rounded-lg border p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Parcelas Pagas</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">
+              {{ getPaidInstallmentsCount() }}/{{ contract.installmentCount }}
+            </p>
+          </div>
+          <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <lucide-icon [img]="CreditCardIcon" class="h-6 w-6 text-purple-600"></lucide-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Left Column - Contract Details -->
+      <div class="bg-white rounded-lg border p-6 space-y-4">
+        <div class="flex items-center gap-2 pb-4 border-b">
+          <lucide-icon [img]="FileTextIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+          <h2 class="text-lg font-semibold">Informações do Contrato</h2>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex justify-between items-start">
+            <span class="text-sm font-medium text-gray-600">Valor por Parcela:</span>
+            <span class="text-sm font-semibold text-gray-900">{{ formatCurrency(contract.installmentAmount) }}</span>
+          </div>
+
+          <div class="flex justify-between items-start">
+            <span class="text-sm font-medium text-gray-600">Quantidade de Parcelas:</span>
+            <span class="text-sm font-semibold text-gray-900">{{ contract.installmentCount }}x</span>
+          </div>
+
+          <div class="flex justify-between items-start">
+            <span class="text-sm font-medium text-gray-600">Periodicidade:</span>
+            <span class="text-sm font-semibold text-gray-900">{{ contract.periodicity }}</span>
+          </div>
+
+          <div class="flex justify-between items-start">
+            <span class="text-sm font-medium text-gray-600">Primeiro Vencimento:</span>
+            <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.firstDueDate) }}</span>
+          </div>
+
+          <div class="flex justify-between items-start">
+            <span class="text-sm font-medium text-gray-600">Comissão:</span>
+            <span class="text-sm font-semibold text-gray-900">
+              {{ contract.commissionPercentage }}% ({{ formatCurrency(contract.commissionAmount) }})
+            </span>
+          </div>
+
+          <div class="flex justify-between items-start">
+            <span class="text-sm font-medium text-gray-600">Data de Criação:</span>
+            <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.createdAt) }}</span>
+          </div>
+
+          @if (getOverdueInstallmentsCount() > 0) {
+            <div class="pt-3 border-t">
+              <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <lucide-icon [img]="AlertCircleIcon" class="h-5 w-5 text-red-600"></lucide-icon>
+                <span class="text-sm font-medium text-red-800">
+                  {{ getOverdueInstallmentsCount() }} parcela(s) atrasada(s)
+                </span>
+              </div>
+            </div>
+          }
+
+          @if (contract.notes) {
+            <div class="pt-3 border-t">
+              <span class="text-sm font-medium text-gray-600">Observações:</span>
+              <p class="text-sm text-gray-900 mt-1">{{ contract.notes }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right Column - Event and Client Details -->
+      <div class="space-y-6">
+        <!-- Event Information -->
+        @if (contract.event) {
+          <div class="bg-white rounded-lg border p-6 space-y-4">
+            <div class="flex items-center gap-2 pb-4 border-b">
+              <lucide-icon [img]="CalendarIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+              <h2 class="text-lg font-semibold">Informações do Evento</h2>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex justify-between items-start">
+                <span class="text-sm font-medium text-gray-600">Nome do Evento:</span>
+                <span class="text-sm font-semibold text-gray-900">{{ contract.event.name }}</span>
+              </div>
+
+              <div class="flex justify-between items-start">
+                <span class="text-sm font-medium text-gray-600">Data do Evento:</span>
+                <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.event.eventDate) }}</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Client Information -->
+        @if (contract.client) {
+          <div class="bg-white rounded-lg border p-6 space-y-4">
+            <div class="flex items-center gap-2 pb-4 border-b">
+              <lucide-icon [img]="UserIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+              <h2 class="text-lg font-semibold">Informações do Cliente</h2>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex justify-between items-start">
+                <span class="text-sm font-medium text-gray-600">Nome do Cliente:</span>
+                <span class="text-sm font-semibold text-gray-900">{{ contract.client.name }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Installments List -->
+    @if (contract.installments && contract.installments.length > 0) {
+      <div class="bg-white rounded-lg border p-6 space-y-4">
+        <div class="flex items-center gap-2 pb-4 border-b">
+          <lucide-icon [img]="CreditCardIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+          <h2 class="text-lg font-semibold">Parcelas do Contrato</h2>
+        </div>
+
+        <div class="rounded-md border">
+          <app-table>
+            <thead appTableHeader>
+              <tr appTableRow>
+                <th appTableHead>Nº</th>
+                <th appTableHead>Valor</th>
+                <th appTableHead>Vencimento</th>
+                <th appTableHead>Status</th>
+                <th appTableHead>Data Pagamento</th>
+                <th appTableHead>Valor Pago</th>
+                <th appTableHead>Observações</th>
+              </tr>
+            </thead>
+            <tbody appTableBody>
+              @for (installment of contract.installments; track installment.id) {
+                <tr appTableRow>
+                  <td appTableCell class="font-medium">{{ installment.installmentNumber }}</td>
+                  <td appTableCell>{{ formatCurrency(installment.amount) }}</td>
+                  <td appTableCell>{{ formatDate(installment.dueDate) }}</td>
+                  <td appTableCell>
+                    <span [class]="getStatusBadgeClass(installment.status)">
+                      <lucide-icon [img]="getStatusIcon(installment.status)" class="h-3 w-3"></lucide-icon>
+                      {{ getStatusText(installment.status) }}
+                    </span>
+                  </td>
+                  <td appTableCell>
+                    {{ installment.paymentDate ? formatDate(installment.paymentDate) : '-' }}
+                  </td>
+                  <td appTableCell>
+                    {{ installment.paymentAmount ? formatCurrency(installment.paymentAmount) : '-' }}
+                  </td>
+                  <td appTableCell>
+                    {{ installment.notes || '-' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </app-table>
+        </div>
+      </div>
+    }
+  }
+</div>
+

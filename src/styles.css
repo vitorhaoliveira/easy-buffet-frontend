@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-accent: #4b5563;
+  --color-accent-foreground: #f9fafb;
+  --color-border: #e5e7eb;
+  --color-ring: #4b5563;
+
+  --sidebar:  hsl(0 0% 98%);
+  --sidebar-foreground:  hsl(240 5.3% 26.1%);
+  --sidebar-primary:  hsl(240 5.9% 10%);
+  --sidebar-primary-foreground:  hsl(0 0% 98%);
+  --sidebar-accent:  hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground:  hsl(240 5.9% 10%);
+  --sidebar-border:  hsl(220 13% 91%);
+  --sidebar-ring:  hsl(217.2 91.2% 59.8%);
+}
+
+.dark {
+  color-scheme: dark;
+  --color-background: #0a0a0a;
+  --color-foreground: #f9fafb;
+  --color-accent: #9ca3af;
+  --color-accent-foreground: #111827;
+  --color-border: #1f2937;
+  --color-ring: #9ca3af;
+
+  --sidebar:  hsl(240 5.9% 10%);
+  --sidebar-foreground:  hsl(240 4.8% 95.9%);
+  --sidebar-primary:  hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground:  hsl(0 0% 100%);
+  --sidebar-accent:  hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground:  hsl(240 4.8% 95.9%);
+  --sidebar-border:  hsl(240 3.7% 15.9%);
+  --sidebar-ring:  hsl(217.2 91.2% 59.8%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Utility classes for custom colors */
+@layer utilities {
+  .bg-background {
+    background-color: var(--color-background);
+  }
+  .text-foreground {
+    color: var(--color-foreground);
+  }
+  .border-border {
+    border-color: var(--color-border);
+  }
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .text-accent-foreground {
+    color: var(--color-accent-foreground);
+  }
+}

@@ -1,0 +1,260 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center space-x-4">
+    <button appButton variant="ghost" size="sm" (click)="handleCancel()">
+      <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
+      Voltar
+    </button>
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">
+        {{ isEditing ? 'Editar Contrato' : 'Novo Contrato' }}
+      </h1>
+      <p class="text-muted-foreground">
+        {{ isEditing ? 'Atualize as informações do contrato' : 'Preencha os dados do novo contrato' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Formulário -->
+    @if (!isLoadingData) {
+      <form [formGroup]="contractForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold flex items-center space-x-2">
+            <lucide-icon [img]="FileTextIcon" class="h-5 w-5"></lucide-icon>
+            <span>Dados do Contrato</span>
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Evento -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="eventId">Evento *</label>
+              <select
+                id="eventId"
+                formControlName="eventId"
+                [disabled]="isLoadingData"
+                [class]="'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('eventId') ? 'border-red-500' : '')"
+              >
+                <option value="">{{ isLoadingData ? 'Carregando eventos...' : 'Selecione um evento' }}</option>
+                @for (event of events; track event.id) {
+                  <option [value]="event.id">{{ event.name }}</option>
+                }
+              </select>
+              @if (hasError('eventId')) {
+                <p class="text-sm text-red-500">{{ getFieldError('eventId') }}</p>
+              }
+            </div>
+
+            <!-- Cliente -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="clientId">Cliente *</label>
+              <select
+                id="clientId"
+                formControlName="clientId"
+                [disabled]="isLoadingData"
+                [class]="'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('clientId') ? 'border-red-500' : '')"
+              >
+                <option value="">{{ isLoadingData ? 'Carregando clientes...' : 'Selecione um cliente' }}</option>
+                @for (client of clients; track client.id) {
+                  <option [value]="client.id">{{ client.name }}</option>
+                }
+              </select>
+              @if (hasError('clientId')) {
+                <p class="text-sm text-red-500">{{ getFieldError('clientId') }}</p>
+              }
+            </div>
+
+            <!-- Valor Total -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="totalAmount">Valor Total *</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                id="totalAmount"
+                formControlName="totalAmount"
+                placeholder="0.00"
+                [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('totalAmount') ? 'border-red-500' : '')"
+              />
+              @if (hasError('totalAmount')) {
+                <p class="text-sm text-red-500">{{ getFieldError('totalAmount') }}</p>
+              }
+            </div>
+
+            <!-- Número de Parcelas -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="installmentCount">Número de Parcelas *</label>
+              <input
+                type="number"
+                min="1"
+                id="installmentCount"
+                formControlName="installmentCount"
+                placeholder="1"
+                [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('installmentCount') ? 'border-red-500' : '')"
+              />
+              @if (hasError('installmentCount')) {
+                <p class="text-sm text-red-500">{{ getFieldError('installmentCount') }}</p>
+              }
+            </div>
+
+            <!-- Data da Primeira Parcela -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="firstDueDate">Data da Primeira Parcela *</label>
+              <input
+                type="date"
+                id="firstDueDate"
+                formControlName="firstDueDate"
+                [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('firstDueDate') ? 'border-red-500' : '')"
+              />
+              @if (hasError('firstDueDate')) {
+                <p class="text-sm text-red-500">{{ getFieldError('firstDueDate') }}</p>
+              }
+            </div>
+
+            <!-- Periodicidade -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="periodicity">Periodicidade *</label>
+              <select
+                id="periodicity"
+                formControlName="periodicity"
+                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="Mensal">Mensal</option>
+                <option value="Bimestral">Bimestral</option>
+                <option value="Trimestral">Trimestral</option>
+                <option value="Semestral">Semestral</option>
+                <option value="Anual">Anual</option>
+              </select>
+            </div>
+
+            <!-- Percentual de Comissão -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="commissionPercentage">Percentual de Comissão (%) *</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                id="commissionPercentage"
+                formControlName="commissionPercentage"
+                placeholder="0.00"
+                [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('commissionPercentage') ? 'border-red-500' : '')"
+              />
+              @if (hasError('commissionPercentage')) {
+                <p class="text-sm text-red-500">{{ getFieldError('commissionPercentage') }}</p>
+              }
+            </div>
+
+            <!-- Observações -->
+            <div class="space-y-2 md:col-span-2">
+              <label appLabel htmlFor="notes">Observações</label>
+              <textarea
+                id="notes"
+                formControlName="notes"
+                placeholder="Observações adicionais sobre o contrato..."
+                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <!-- Status -->
+            <div class="space-y-2">
+              <label appLabel htmlFor="status">Status *</label>
+              <select
+                id="status"
+                formControlName="status"
+                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="Pendente">Pendente</option>
+                <option value="Assinado">Assinado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+
+            <!-- Data de Assinatura (condicional) -->
+            @if (showSignedAtField) {
+              <div class="space-y-2">
+                <label appLabel htmlFor="signedAt">Data de Assinatura *</label>
+                <input
+                  type="date"
+                  id="signedAt"
+                  formControlName="signedAt"
+                  [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('signedAt') ? 'border-red-500' : '')"
+                />
+                @if (hasError('signedAt')) {
+                  <p class="text-sm text-red-500">{{ getFieldError('signedAt') }}</p>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="flex items-center justify-end space-x-2 pt-6 border-t">
+          <button appButton type="button" variant="outline" (click)="handleCancel()" [disabled]="isLoading">
+            <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+            Cancelar
+          </button>
+          <button appButton type="submit" variant="outline" [disabled]="isLoading">
+            <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+            {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- Resumo do Contrato -->
+    <div class="space-y-4">
+      <h3 class="text-lg font-semibold flex items-center space-x-2">
+        <lucide-icon [img]="FileTextIcon" class="h-5 w-5"></lucide-icon>
+        <span>Resumo do Contrato</span>
+      </h3>
+
+      <div class="bg-blue-50 p-4 rounded-lg space-y-3">
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="font-medium text-blue-900">Valor por Parcela:</span>
+            <p class="text-lg font-bold text-blue-700">
+              {{ installmentAmount > 0 ? formatCurrency(installmentAmount) : 'R$ 0,00' }}
+            </p>
+          </div>
+          <div>
+            <span class="font-medium text-blue-900">Comissão Total:</span>
+            <p class="text-lg font-bold text-blue-700">
+              {{ commissionAmount > 0 ? formatCurrency(commissionAmount) : 'R$ 0,00' }}
+            </p>
+          </div>
+        </div>
+        
+        <div class="pt-2 border-t border-blue-200">
+          <p class="text-sm text-blue-800 mb-2">
+            <strong>Valor Total:</strong> {{ contractForm.get('totalAmount')?.value ? formatCurrency(contractForm.get('totalAmount')?.value) : 'R$ 0,00' }}
+          </p>
+          <p class="text-sm text-blue-800 mb-2">
+            <strong>Parcelas:</strong> {{ contractForm.get('installmentCount')?.value || '0' }} x {{ contractForm.get('periodicity')?.value }}
+          </p>
+          <p class="text-sm text-blue-800">
+            <strong>Comissão:</strong> {{ contractForm.get('commissionPercentage')?.value || '0' }}%
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-green-50 p-4 rounded-lg">
+        <p class="text-sm text-green-800 mb-2">
+          <strong>✨ Criação Automática de Parcelas</strong>
+        </p>
+        <p class="text-sm text-green-700">
+          O sistema criará automaticamente todas as parcelas baseadas na periodicidade escolhida. 
+          Você poderá gerenciar as parcelas na seção Financeiro após a criação do contrato.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

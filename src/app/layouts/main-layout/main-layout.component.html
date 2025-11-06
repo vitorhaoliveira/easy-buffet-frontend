@@ -1,0 +1,162 @@
+<div class="flex h-screen bg-gray-50">
+  <!-- Sidebar -->
+  <aside [class]="'bg-white border-r border-gray-200 flex flex-col shadow-sm transition-all duration-300 ' + (sidebarCollapsed ? 'w-20' : 'w-64')">
+    <!-- Header -->
+    <div class="p-4 border-b border-gray-200">
+      <div class="flex flex-col gap-3">
+        <!-- Logo and Title -->
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+            <span class="text-white font-bold text-lg">EB</span>
+          </div>
+          <div [class]="'transition-all duration-300 overflow-hidden ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">
+            <h2 class="text-sm font-semibold text-gray-900 whitespace-nowrap">Easy Buffet Demo</h2>
+            <p class="text-xs text-gray-500 whitespace-nowrap">Sistema de Gestão</p>
+          </div>
+        </div>
+        
+        <!-- Toggle Button -->
+        <button (click)="toggleSidebar()" [class]="'flex items-center justify-center gap-2 w-full py-2 px-3 hover:bg-gray-100 rounded-lg transition-colors ' + (sidebarCollapsed ? 'justify-center' : 'justify-between')"
+          [title]="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'">
+          <span [class]="'text-xs font-medium text-gray-600 transition-all duration-300 overflow-hidden whitespace-nowrap ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">
+            {{ sidebarCollapsed ? '' : 'Recolher menu' }}
+          </span>
+          <svg 
+            class="w-4 h-4 text-gray-600 transition-transform duration-300 flex-shrink-0" 
+            [class.rotate-180]="sidebarCollapsed"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto px-3 py-4">
+      <ul class="space-y-1">
+        <!-- Dashboard -->
+        <li>
+          <a 
+            routerLink="/" 
+            routerLinkActive="bg-blue-50 text-blue-700 font-semibold"
+            [routerLinkActiveOptions]="{exact: true}"
+            [class]="'flex items-center gap-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors ' + 
+                     (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')"
+            [title]="sidebarCollapsed ? 'Dashboard' : ''">
+            <lucide-icon [img]="HomeIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
+            <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
+                          (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Dashboard</span>
+          </a>
+        </li>
+
+        <!-- Menu Items with Sub-items -->
+        @for (item of menuItems; track item.title) {
+          <li>
+          <!-- Main Item -->
+          <button
+            (click)="toggleMenu(item)"
+            [class]="'w-full flex items-center text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors py-2 ' + 
+                     (sidebarCollapsed ? 'px-2 justify-center' : 'px-3 justify-between') + 
+                     (item.expanded && !sidebarCollapsed ? ' bg-gray-50' : '')"
+            [title]="sidebarCollapsed ? item.title : ''"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <lucide-icon [img]="getIconComponent(item.icon)" class="w-5 h-5 flex-shrink-0"></lucide-icon>
+              <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
+                            (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">{{ item.title }}</span>
+            </div>
+            <svg 
+              [class]="'w-4 h-4 transition-all duration-300 ' + 
+                       (item.expanded ? 'rotate-180 ' : '') + 
+                       (sidebarCollapsed ? 'w-0 opacity-0' : 'w-4 opacity-100')"
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <!-- Sub Items -->
+          <ul 
+            class="overflow-hidden transition-all duration-200 ease-in-out"
+            [style.max-height]="(item.expanded && !sidebarCollapsed) ? (item.items?.length || 0) * 40 + 'px' : '0'"
+          >
+            @for (subItem of item.items; track subItem.title) {
+              <li class="ml-8 mt-1">
+                @if (!subItem.disabled) {
+                  <a
+                    [routerLink]="subItem.url"
+                    routerLinkActive="bg-blue-50 text-blue-600 font-medium"
+                    class="block px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    {{ subItem.title }}
+                  </a>
+                }
+                @if (subItem.disabled) {
+                  <span
+                    class="block px-3 py-2 text-sm text-gray-400 rounded-lg cursor-not-allowed"
+                    title="Em desenvolvimento"
+                  >
+                    {{ subItem.title }} <span class="text-xs">(em breve)</span>
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- Footer Links -->
+    <div class="border-t border-gray-200 p-3 space-y-1">
+      <a 
+        href="#" 
+        [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors ' + 
+                 (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')"
+        [title]="sidebarCollapsed ? 'Suporte' : ''">
+        <lucide-icon [img]="HelpCircleIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
+        <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
+                      (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Suporte</span>
+      </a>
+      <a 
+        href="#" 
+        [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors ' + 
+                 (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')"
+        [title]="sidebarCollapsed ? 'Feedback' : ''">
+        <lucide-icon [img]="MessageCircleIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
+        <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
+                      (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Feedback</span>
+      </a>
+    </div>
+
+    <!-- User Profile -->
+    <div class="border-t border-gray-200 p-3">
+      <button 
+        [class]="'w-full flex items-center gap-3 py-2 text-sm rounded-lg hover:bg-gray-50 transition-colors ' + (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')"
+        [title]="sidebarCollapsed ? 'Administrador' : ''">
+        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow flex-shrink-0">
+          <span class="text-white text-xs font-semibold">CN</span>
+        </div>
+        <div [class]="'flex-1 text-left transition-all duration-300 overflow-hidden ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">
+          <div class="text-sm font-medium text-gray-900 whitespace-nowrap">Administrador</div>
+          <div class="text-xs text-gray-500 whitespace-nowrap">admin@easybuffet.com</div>
+        </div>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 overflow-y-auto bg-gray-50">
+    <header class="h-16 border-b border-gray-200 bg-white flex items-center px-6 shadow-sm">
+      <h1 class="text-xl font-semibold text-gray-900">EasyBuffet - Sistema de Gestão</h1>
+    </header>
+    
+    <div class="p-6">
+      <router-outlet />
+    </div>
+  </main>
+</div>

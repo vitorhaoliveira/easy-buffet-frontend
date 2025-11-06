@@ -1,0 +1,149 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Contratos</h1>
+      <p class="text-muted-foreground">
+        Gerencie os contratos e parcelamentos dos eventos
+      </p>
+    </div>
+    <button appButton variant="outline" routerLink="/cadastros/contratos/novo">
+      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+      Novo Contrato
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex items-center space-x-2">
+    <div class="flex-1">
+      <app-search-bar
+        placeholder="Buscar por evento ou cliente..."
+        [(ngModel)]="searchTerm"
+      ></app-search-bar>
+    </div>
+    <select
+      [(ngModel)]="filterStatus"
+      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <option value="todos">Todos os status</option>
+      <option value="Pendente">Pendente</option>
+      <option value="Assinado">Assinado</option>
+      <option value="Cancelado">Cancelado</option>
+    </select>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="flex items-center justify-center h-64">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <p class="mt-2 text-muted-foreground">Carregando contratos...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Tabela -->
+  @if (!isLoading) {
+    <div class="rounded-md border">
+      <app-table>
+        <thead appTableHeader>
+          <tr appTableRow>
+            <th appTableHead>Evento</th>
+            <th appTableHead>Cliente</th>
+            <th appTableHead>Valor Total</th>
+            <th appTableHead>Status</th>
+            <th appTableHead>Data de Criação</th>
+            <th appTableHead class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody appTableBody>
+          @for (contract of filteredContracts; track contract.id) {
+            <tr appTableRow>
+              <td appTableCell class="font-medium">
+                <div class="flex items-center space-x-2">
+                  <lucide-icon [img]="FileTextIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+                  <span>{{ getEventName(contract.eventId) }}</span>
+                </div>
+              </td>
+              <td appTableCell>
+                <div class="flex items-center space-x-2">
+                  <lucide-icon [img]="UserIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+                  <span>{{ getClientName(contract.clientId) }}</span>
+                </div>
+              </td>
+              <td appTableCell class="font-medium">
+                <div class="flex items-center space-x-2">
+                  <lucide-icon [img]="DollarSignIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+                  <span>{{ formatCurrency(contract.totalAmount) }}</span>
+                </div>
+              </td>
+              <td appTableCell>
+                <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(contract.status || 'Pendente')">
+                  {{ contract.status || 'Pendente' }}
+                </span>
+              </td>
+              <td appTableCell>
+                <div class="flex items-center space-x-2">
+                  <lucide-icon [img]="CalendarIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+                  <span>{{ formatDate(contract.createdAt) }}</span>
+                </div>
+              </td>
+              <td appTableCell class="text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/contratos/visualizar', contract.id]">
+                    <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                  <button 
+                    appButton 
+                    variant="ghost" 
+                    size="sm" 
+                    [routerLink]="['/cadastros/contratos/editar', contract.id]"
+                  >
+                    <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                  <button
+                    appButton
+                    variant="ghost"
+                    size="sm"
+                    (click)="handleDeleteClick(contract)"
+                  >
+                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredContracts.length === 0) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">
+        {{ searchTerm ? 'Nenhum contrato encontrado.' : 'Nenhum contrato cadastrado.' }}
+      </p>
+    </div>
+  }
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteModal"
+    (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()"
+    title="Excluir Contrato"
+    message="Tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita."
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeleting"
+  />
+</div>

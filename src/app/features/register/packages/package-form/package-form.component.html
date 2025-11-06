@@ -1,0 +1,137 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center space-x-4">
+    <button appButton variant="ghost" size="sm" (click)="handleCancel()">
+      <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
+      Voltar
+    </button>
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">
+        {{ isEditing ? 'Editar Pacote' : 'Novo Pacote' }}
+      </h1>
+      <p class="text-muted-foreground">
+        {{ isEditing ? 'Atualize as informações do pacote' : 'Preencha os dados do novo pacote' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoadingData) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando dados do pacote...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Formulário -->
+  @if (!isLoadingData) {
+    <form [formGroup]="packageForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Nome -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="name">Nome *</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            placeholder="Nome do pacote"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')"
+          />
+          @if (hasError('name')) {
+            <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
+          }
+        </div>
+
+        <!-- Tipo -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="type">Tipo *</label>
+          <select
+            id="type"
+            formControlName="type"
+            [class]="'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('type') ? 'border-red-500' : '')"
+          >
+            <option value="">Selecione o tipo</option>
+            <option value="Pacote">Pacote</option>
+            <option value="Serviço">Serviço</option>
+          </select>
+          @if (hasError('type')) {
+            <p class="text-sm text-red-500">{{ getFieldError('type') }}</p>
+          }
+        </div>
+
+        <!-- Preço -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="price">Preço *</label>
+          <input
+            type="number"
+            step="0.01"
+            id="price"
+            formControlName="price"
+            placeholder="0,00"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('price') ? 'border-red-500' : '')"
+          />
+          @if (hasError('price')) {
+            <p class="text-sm text-red-500">{{ getFieldError('price') }}</p>
+          }
+        </div>
+
+        <!-- Duração -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="duration">Duração *</label>
+          <input
+            type="text"
+            id="duration"
+            formControlName="duration"
+            placeholder="Ex: 4 horas, 6 horas"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('duration') ? 'border-red-500' : '')"
+          />
+          @if (hasError('duration')) {
+            <p class="text-sm text-red-500">{{ getFieldError('duration') }}</p>
+          }
+        </div>
+      </div>
+
+      <!-- Descrição -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="description">Descrição</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          placeholder="Descreva o pacote oferecido"
+          class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Notas -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="notes">Notas</label>
+        <textarea
+          id="notes"
+          formControlName="notes"
+          placeholder="Informações adicionais sobre o pacote"
+          class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Botões -->
+      <div class="flex items-center justify-end space-x-2 pt-6 border-t">
+        <button appButton type="button" variant="outline" (click)="handleCancel()">
+          <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          Cancelar
+        </button>
+        <button appButton type="submit" variant="outline" [disabled]="isLoading">
+          <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

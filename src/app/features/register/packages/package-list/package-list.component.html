@@ -1,0 +1,121 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Pacotes e Serviços</h1>
+      <p class="text-muted-foreground">
+        Gerencie os pacotes de buffet e serviços avulsos
+      </p>
+    </div>
+    <button appButton variant="outline" routerLink="/cadastros/pacotes/novo">
+      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+      Novo Pacote/Serviço
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex items-center space-x-2">
+    <div class="flex-1">
+      <app-search-bar
+        placeholder="Buscar por nome ou descrição..."
+        [(ngModel)]="searchTerm"
+      ></app-search-bar>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando pacotes...</p>
+    </div>
+  }
+
+  <!-- Tabela -->
+  @if (!isLoading) {
+    <div class="rounded-md border">
+      <app-table>
+        <thead appTableHeader>
+          <tr appTableRow>
+            <th appTableHead>Nome</th>
+            <th appTableHead>Tipo</th>
+            <th appTableHead>Duração</th>
+            <th appTableHead>Preço</th>
+            <th appTableHead>Data Cadastro</th>
+            <th appTableHead class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody appTableBody>
+          @for (pkg of filteredPackages; track pkg.id) {
+            <tr appTableRow>
+              <td appTableCell class="font-medium">
+                <div class="flex items-center space-x-2">
+                  <lucide-icon [img]="PackageIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+                  <span>{{ pkg.name }}</span>
+                </div>
+              </td>
+              <td appTableCell>
+                <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ pkg.type }}
+                </span>
+              </td>
+              <td appTableCell>{{ pkg.duration }}</td>
+              <td appTableCell class="font-medium">{{ formatCurrency(pkg.price) }}</td>
+              <td appTableCell>{{ formatDate(pkg.createdAt) }}</td>
+              <td appTableCell class="text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <button appButton variant="ghost" size="sm">
+                    <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                  <button 
+                    appButton 
+                    variant="ghost" 
+                    size="sm" 
+                    [routerLink]="['/cadastros/pacotes/editar', pkg.id]"
+                  >
+                    <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                  <button
+                    appButton
+                    variant="ghost"
+                    size="sm"
+                    (click)="handleDeleteClick(pkg)"
+                  >
+                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredPackages.length === 0) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">
+        {{ searchTerm ? 'Nenhum pacote encontrado.' : 'Nenhum pacote cadastrado.' }}
+      </p>
+    </div>
+  }
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteModal"
+    (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()"
+    title="Excluir Pacote/Serviço"
+    [message]="'Tem certeza que deseja excluir o pacote/serviço &quot;' + (packageToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeleting"></app-confirmation-modal>
+</div>

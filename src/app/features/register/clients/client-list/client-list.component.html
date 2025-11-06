@@ -1,0 +1,111 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Clientes</h1>
+      <p class="text-muted-foreground">
+        Gerencie os dados dos seus clientes
+      </p>
+    </div>
+    <button appButton variant="outline" routerLink="/cadastros/clientes/novo">
+      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+      Novo Cliente
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex items-center space-x-2">
+    <div class="flex-1">
+      <app-search-bar
+        placeholder="Buscar por nome, email ou telefone..."
+        [(ngModel)]="searchTerm"
+      ></app-search-bar>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando clientes...</p>
+    </div>
+  }
+
+  <!-- Tabela -->
+  @if (!isLoading) {
+    <div class="rounded-md border">
+    <app-table>
+      <thead appTableHeader>
+        <tr appTableRow>
+          <th appTableHead>Nome</th>
+          <th appTableHead>Email</th>
+          <th appTableHead>Telefone</th>
+          <th appTableHead>Data Cadastro</th>
+          <th appTableHead class="text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody appTableBody>
+        @for (cliente of filteredClientes; track cliente.id) {
+          <tr appTableRow>
+            <td appTableCell class="font-medium">{{ cliente.name }}</td>
+          <td appTableCell>{{ cliente.email || '-' }}</td>
+          <td appTableCell>{{ cliente.phone || '-' }}</td>
+          <td appTableCell>{{ formatDate(cliente.createdAt) }}</td>
+          <td appTableCell class="text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm">
+                <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button 
+                appButton 
+                variant="ghost" 
+                size="sm" 
+                [routerLink]="['/cadastros/clientes/editar', cliente.id]"
+              >
+                <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button
+                appButton
+                variant="ghost"
+                size="sm"
+                (click)="handleDeleteClick(cliente)"
+              >
+                <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+          </td>
+          </tr>
+        }
+      </tbody>
+    </app-table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredClientes.length === 0) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">
+        {{ searchTerm ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.' }}
+      </p>
+    </div>
+  }
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteModal"
+    (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()"
+    title="Excluir Cliente"
+    [message]="'Tem certeza que deseja excluir o cliente &quot;' + (clientToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeleting"></app-confirmation-modal>
+</div>
+

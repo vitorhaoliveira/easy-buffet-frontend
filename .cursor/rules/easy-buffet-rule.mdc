@@ -1,0 +1,230 @@
+---
+alwaysApply: true
+---
+
+# EasyBuffet Angular - Development Standards
+
+## Code Language Standards
+- **All code must be written in English**: variables, methods, functions, classes, interfaces, types, constants
+- **All comments must be written in English**: inline comments, block comments, documentation
+- **All docstrings must be written in English**
+- Exception: User-facing strings can be in Portuguese (labels, messages, validation texts)
+
+## Clean Code Principles
+
+### Naming Conventions
+- Use **meaningful and descriptive names** that reveal intention
+- Variables and functions: `camelCase` (e.g., `getUserData`, `isActive`)
+- Classes and Interfaces: `PascalCase` (e.g., `UserService`, `AuthGuard`)
+- Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_RETRY_ATTEMPTS`, `API_BASE_URL`)
+- Private properties: prefix with `_` or use TypeScript `private` keyword
+- Boolean variables: use prefixes like `is`, `has`, `should`, `can` (e.g., `isLoading`, `hasPermission`)
+- Avoid abbreviations unless universally understood (e.g., `id`, `url`, `http`)
+
+### Functions and Methods
+- **Keep functions small**: one function should do one thing
+- **Function names should be verbs** or verb phrases (e.g., `calculateTotal`, `validateForm`, `fetchUserData`)
+- Avoid side effects: functions should be predictable
+- Maximum of 3-4 parameters (consider using objects for more)
+- Use default parameters when appropriate
+
+### Comments and Documentation
+- **Every function and method must have a docstring** following this format:
+```typescript
+/**
+ * @Function - functionName
+ * @description - Clear description of what the function does
+ * @author - [Author Name]
+ * @param - paramName: Type - description
+ * @returns - ReturnType - description
+ */
+```
+
+- Use JSDoc style for all public methods and complex logic
+- Comments should explain **why**, not **what** (code should be self-explanatory)
+- Keep comments up to date with code changes
+- Remove commented-out code (use version control instead)
+
+### Code Organization
+- **Single Responsibility Principle**: each class/component should have one reason to change
+- **DRY (Don't Repeat Yourself)**: extract repeated code into functions/services
+- Group related functionality together
+- Keep components focused on presentation, move business logic to services
+- Use dependency injection for better testability
+
+## SOLID Principles
+
+### Single Responsibility Principle (SRP)
+- Each class/service should have only one reason to change
+- Components: focus on UI presentation and user interaction
+- Services: handle business logic, data fetching, state management
+- Guards: handle only route protection logic
+- Interceptors: handle only HTTP request/response transformations
+
+### Open/Closed Principle (OCP)
+- Classes should be open for extension but closed for modification
+- Use inheritance and composition when appropriate
+- Favor composition over inheritance
+- Use interfaces to define contracts
+
+### Liskov Substitution Principle (LSP)
+- Subtypes must be substitutable for their base types
+- Child classes should not break parent class functionality
+- Ensure derived classes honor the contract of base classes
+
+### Interface Segregation Principle (ISP)
+- Create specific interfaces rather than general-purpose ones
+- Clients should not be forced to depend on interfaces they don't use
+- Break large interfaces into smaller, more specific ones
+
+### Dependency Inversion Principle (DIP)
+- Depend on abstractions, not concretions
+- Use Angular's dependency injection
+- Inject services through constructors
+- Use interfaces to define dependencies
+
+## Angular Specific Standards
+
+### Component Structure
+```typescript
+@Component({
+  selector: 'app-component-name',
+  templateUrl: './component-name.component.html',
+  styleUrls: ['./component-name.component.css']
+})
+export class ComponentNameComponent implements OnInit, OnDestroy {
+  // Public properties first
+  public title: string
+  
+  // Private properties
+  private subscription$ = new Subject<void>()
+  
+  // Constructor with dependency injection
+  constructor(
+    private readonly serviceName: ServiceName
+  ) {}
+  
+  // Lifecycle hooks
+  ngOnInit(): void {
+    this.initializeComponent()
+  }
+  
+  ngOnDestroy(): void {
+    this.subscription$.next()
+    this.subscription$.complete()
+  }
+  
+  // Public methods
+  public handleAction(): void {
+    // implementation
+  }
+  
+  // Private methods
+  private initializeComponent(): void {
+    // implementation
+  }
+}
+```
+
+### Service Structure
+- Use `providedIn: 'root'` for singleton services
+- Handle errors appropriately with proper error handling
+- Use RxJS operators effectively
+- Always unsubscribe from observables to prevent memory leaks
+
+### RxJS Best Practices
+- Use `async` pipe in templates when possible
+- Use `takeUntil` pattern for subscription management
+- Prefer declarative reactive patterns over imperative
+- Use appropriate RxJS operators (`map`, `filter`, `switchMap`, `catchError`, etc.)
+
+## ESLint Configuration Compliance
+
+### Code Formatting
+- **No semicolons**: Do not use semicolons at end of statements (ESLint rule: `semi: never`)
+- **Indentation**: Use 2 spaces for indentation (ESLint rule: `indent: 2`)
+- **SwitchCase indentation**: Indent case clauses by 1 level
+- Follow all TypeScript ESLint recommended rules
+- Follow all Angular ESLint recommended rules
+
+### TypeScript Standards
+- Use explicit types whenever possible (avoid `any`)
+- Use interfaces for object shapes
+- Use type aliases for union types and complex types
+- Enable strict mode TypeScript features
+- Use optional chaining (`?.`) and nullish coalescing (`??`) operators
+
+## File and Folder Organization
+
+### Naming Conventions
+- Component files: `component-name.component.ts`
+- Service files: `service-name.service.ts`
+- Guard files: `guard-name.guard.ts`
+- Model files: `model-name.model.ts` or `model-name.types.ts`
+- Use kebab-case for file names
+
+### Folder Structure
+```
+src/app/
+├── core/                 # Singleton services, guards, interceptors
+│   ├── guards/
+│   ├── interceptors/
+│   └── services/
+├── features/            # Feature modules (lazy-loaded when possible)
+│   └── feature-name/
+│       ├── components/
+│       ├── pages/
+│       └── services/
+├── shared/              # Shared components, directives, pipes
+│   ├── components/
+│   ├── models/
+│   └── utils/
+└── layouts/             # Layout components
+```
+
+## Error Handling
+- Always handle errors in services and components
+- Provide meaningful error messages to users
+- Log errors appropriately for debugging
+- Use try-catch blocks for synchronous code
+- Use RxJS `catchError` for observable streams
+
+## Testing Standards
+- Write unit tests for services and components
+- Use meaningful test descriptions
+- Follow AAA pattern: Arrange, Act, Assert
+- Mock dependencies properly
+- Aim for high code coverage on critical business logic
+
+## Performance Best Practices
+- Use `OnPush` change detection strategy when possible
+- Lazy load feature modules
+- Use `trackBy` with `*ngFor` directives
+- Avoid complex calculations in templates
+- Optimize bundle size by importing only what's needed
+- Use Angular's built-in optimization features
+
+## Security Best Practices
+- Sanitize user inputs
+- Use Angular's built-in XSS protection
+- Don't expose sensitive data in client-side code
+- Implement proper authentication and authorization
+- Use HTTPS for all API calls
+
+## Git Commit Standards
+- Write clear, descriptive commit messages in English
+- Use conventional commits format when possible
+- Keep commits atomic and focused
+- Reference issue numbers when applicable
+
+## Code Review Checklist
+- [ ] Code follows Clean Code and SOLID principles
+- [ ] All variables, methods, and comments are in English
+- [ ] All functions have proper docstrings
+- [ ] No ESLint errors or warnings
+- [ ] Code is properly typed (no `any` types unless necessary)
+- [ ] No console.logs in production code
+- [ ] Proper error handling implemented
+- [ ] Component logic is minimal (business logic in services)
+- [ ] No code duplication
+- [ ] Readable and self-explanatory code

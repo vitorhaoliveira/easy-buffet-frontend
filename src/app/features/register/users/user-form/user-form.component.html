@@ -1,0 +1,279 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center space-x-4">
+    <button appButton variant="ghost" size="sm" (click)="handleCancel()">
+      <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
+      Voltar
+    </button>
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">
+        {{ isEditing ? 'Editar Usuário' : 'Novo Usuário' }}
+      </h1>
+      <p class="text-muted-foreground">
+        {{ isEditing ? 'Atualize as informações do usuário' : 'Preencha os dados do novo usuário' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoadingData) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando dados do usuário...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Formulário -->
+  @if (!isLoadingData) {
+    <form [formGroup]="userForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+    <!-- Dados Básicos -->
+    <div class="space-y-4">
+      <h2 class="text-xl font-semibold">Dados Básicos</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Nome -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="name">Nome *</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            placeholder="Nome completo do usuário"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')"
+          />
+          @if (hasError('name')) {
+            <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="email">Email *</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="email@exemplo.com"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('email') ? 'border-red-500' : '')"
+          />
+          @if (hasError('email')) {
+            <p class="text-sm text-red-500">{{ getFieldError('email') }}</p>
+          }
+        </div>
+
+        <!-- Senha -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="password">
+            {{ isEditing ? 'Senha (deixe em branco para não alterar)' : 'Senha *' }}
+          </label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="••••••••"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('password') ? 'border-red-500' : '')"
+          />
+          @if (hasError('password')) {
+            <p class="text-sm text-red-500">{{ getFieldError('password') }}</p>
+          }
+        </div>
+
+        <!-- Telefone -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="phone">Telefone</label>
+          <input
+            type="tel"
+            id="phone"
+            formControlName="phone"
+            appPhoneMask
+            placeholder="(11) 99999-9999"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('phone') ? 'border-red-500' : '')"
+          />
+          @if (hasError('phone')) {
+            <p class="text-sm text-red-500">{{ getFieldError('phone') }}</p>
+          }
+        </div>
+
+        <!-- Função -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="role">Função *</label>
+          <select
+            id="role"
+            formControlName="role"
+            (change)="setRolePermissions($event)"
+            [disabled]="isEditing"
+            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          >
+            <option value="Auxiliar">Auxiliar</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>
+
+        <!-- Status (apenas na edição) -->
+        @if (isEditing) {
+          <div class="space-y-2">
+            <label appLabel htmlFor="status">Status *</label>
+            <select
+              id="status"
+              formControlName="status"
+              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            >
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Permissões -->
+    <div class="space-y-4 pt-6 border-t">
+      <h2 class="text-xl font-semibold">Permissões</h2>
+      <div [formGroup]="permissionsForm" class="space-y-6">
+        <!-- Dashboard -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-gray-700">Dashboard</h3>
+          <div class="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="dashboardView"
+              formControlName="dashboardView"
+              class="rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <label htmlFor="dashboardView" class="text-sm">Visualizar</label>
+          </div>
+        </div>
+
+        <!-- Cadastros -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-gray-700">Cadastros</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="cadastrosView"
+                formControlName="cadastrosView"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="cadastrosView" class="text-sm">Visualizar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="cadastrosCreate"
+                formControlName="cadastrosCreate"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="cadastrosCreate" class="text-sm">Criar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="cadastrosEdit"
+                formControlName="cadastrosEdit"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="cadastrosEdit" class="text-sm">Editar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="cadastrosDelete"
+                formControlName="cadastrosDelete"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="cadastrosDelete" class="text-sm">Deletar</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financeiro -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-gray-700">Financeiro</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="financeiroView"
+                formControlName="financeiroView"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="financeiroView" class="text-sm">Visualizar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="financeiroCreate"
+                formControlName="financeiroCreate"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="financeiroCreate" class="text-sm">Criar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="financeiroEdit"
+                formControlName="financeiroEdit"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="financeiroEdit" class="text-sm">Editar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="financeiroDelete"
+                formControlName="financeiroDelete"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="financeiroDelete" class="text-sm">Deletar</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Relatórios -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-gray-700">Relatórios</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="relatoriosView"
+                formControlName="relatoriosView"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="relatoriosView" class="text-sm">Visualizar</label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="relatoriosExport"
+                formControlName="relatoriosExport"
+                class="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="relatoriosExport" class="text-sm">Exportar</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="flex items-center justify-end space-x-2 pt-6 border-t">
+      <button appButton type="button" variant="outline" (click)="handleCancel()">
+        <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Cancelar
+      </button>
+      <button appButton type="submit" variant="outline" [disabled]="isLoading">
+        <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
+      </button>
+    </div>
+    </form>
+  }
+</div>
+

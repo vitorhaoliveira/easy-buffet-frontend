@@ -1,0 +1,65 @@
+{
+  "name": "easybuffet-angular",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "lint": "eslint . --ext .ts,.html",
+    "lint:fix": "eslint . --ext .ts,.html --fix"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "semi": false,
+    "tabWidth": 2,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^20.3.0",
+    "@angular/compiler": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.3.0",
+    "@angular/platform-browser": "^20.3.0",
+    "@angular/router": "^20.3.0",
+    "lucide-angular": "^0.546.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular-eslint/eslint-plugin": "^20.4.0",
+    "@angular-eslint/eslint-plugin-template": "^20.4.0",
+    "@angular-eslint/template-parser": "^20.4.0",
+    "@angular/build": "^20.3.7",
+    "@angular/cli": "^20.3.7",
+    "@angular/compiler-cli": "^20.3.0",
+    "@types/jasmine": "~5.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "autoprefixer": "^10.4.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "eslint": "^9.38.0",
+    "jasmine-core": "~5.9.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "postcss": "^8.5.6",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^3.4.18",
+    "typescript": "~5.9.2"
+  }
+}
