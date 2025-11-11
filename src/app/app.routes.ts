@@ -133,61 +133,37 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
-      // Financial routes - TODO: Create components
-      // {
-      //   path: 'financeiro',
-      //   loadComponent: () => import('./features/financial/financial-dashboard/financial-dashboard.component').then(m => m.FinancialDashboardComponent),
-      //   data: { module: 'financeiro', action: 'view' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/parcelas',
-      //   loadComponent: () => import('./features/financial/installments/installments-list/installments-list.component').then(m => m.InstallmentsListComponent),
-      //   data: { module: 'financeiro', action: 'view' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/parcelas/nova',
-      //   loadComponent: () => import('./features/financial/installments/installment-form/installment-form.component').then(m => m.InstallmentFormComponent),
-      //   data: { module: 'financeiro', action: 'create' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/parcelas/editar/:id',
-      //   loadComponent: () => import('./features/financial/installments/installment-form/installment-form.component').then(m => m.InstallmentFormComponent),
-      //   data: { module: 'financeiro', action: 'edit' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/parcelas/visualizar/:id',
-      //   loadComponent: () => import('./features/financial/installments/installment-detail/installment-detail.component').then(m => m.InstallmentDetailComponent),
-      //   data: { module: 'financeiro', action: 'view' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/custos',
-      //   loadComponent: () => import('./features/financial/costs/costs-list/costs-list.component').then(m => m.CostsListComponent),
-      //   data: { module: 'financeiro', action: 'view' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/custos/novo',
-      //   loadComponent: () => import('./features/financial/costs/cost-form/cost-form.component').then(m => m.CostFormComponent),
-      //   data: { module: 'financeiro', action: 'create' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/custos/editar/:id',
-      //   loadComponent: () => import('./features/financial/costs/cost-form/cost-form.component').then(m => m.CostFormComponent),
-      //   data: { module: 'financeiro', action: 'edit' },
-      //   canActivate: [permissionGuard]
-      // },
-      // {
-      //   path: 'financeiro/custos/visualizar/:id',
-      //   loadComponent: () => import('./features/financial/costs/cost-detail/cost-detail.component').then(m => m.CostDetailComponent),
-      //   data: { module: 'financeiro', action: 'view' },
-      //   canActivate: [permissionGuard]
-      // },
+      // Financial routes
+      {
+        path: 'financeiro',
+        loadComponent: () => import('./features/financial/financial-dashboard/financial-dashboard.component').then(m => m.FinancialDashboardComponent),
+        data: { module: 'financeiro', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'financeiro/parcelas',
+        loadComponent: () => import('./features/financial/installments/installments-list/installments-list.component').then(m => m.InstallmentsListComponent),
+        data: { module: 'financeiro', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'financeiro/parcelas/nova',
+        loadComponent: () => import('./features/financial/installments/installment-form/installment-form.component').then(m => m.InstallmentFormComponent),
+        data: { module: 'financeiro', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'financeiro/custos',
+        loadComponent: () => import('./features/financial/costs/costs-list/costs-list.component').then(m => m.CostsListComponent),
+        data: { module: 'financeiro', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'financeiro/custos/novo',
+        loadComponent: () => import('./features/financial/costs/cost-form/cost-form.component').then(m => m.CostFormComponent),
+        data: { module: 'financeiro', action: 'create' },
+        canActivate: [permissionGuard]
+      },
       
       // Reports route - TODO: Create component
       // {

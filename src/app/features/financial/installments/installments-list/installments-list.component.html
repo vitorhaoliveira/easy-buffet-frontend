@@ -1,0 +1,217 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Parcelas</h1>
+      <p class="text-muted-foreground">
+        Gerencie as parcelas dos contratos
+      </p>
+    </div>
+    <button appButton variant="outline" routerLink="/financeiro/parcelas/nova">
+      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+      Nova Parcela
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex items-center space-x-2">
+    <div class="flex-1">
+      <app-search-bar
+        placeholder="Buscar por cliente, evento ou número..."
+        [(ngModel)]="searchTerm"
+      ></app-search-bar>
+    </div>
+    <select
+      [(ngModel)]="filterStatus"
+      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <option value="todos">Todos os status</option>
+      <option value="pending">Pendente</option>
+      <option value="paid">Pago</option>
+      <option value="overdue">Atrasado</option>
+    </select>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando parcelas...</p>
+    </div>
+  }
+
+  <!-- Tabela -->
+  @if (!isLoading) {
+    <div class="rounded-md border">
+      <app-table>
+        <thead appTableHeader>
+          <tr appTableRow>
+            <th appTableHead>Nº</th>
+            <th appTableHead>Cliente</th>
+            <th appTableHead>Evento</th>
+            <th appTableHead>Valor</th>
+            <th appTableHead>Vencimento</th>
+            <th appTableHead>Status</th>
+            <th appTableHead>Data Pagamento</th>
+            <th appTableHead class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody appTableBody>
+          @for (installment of filteredInstallments; track installment.id) {
+            <tr appTableRow>
+              <td appTableCell class="font-medium">{{ installment.installmentNumber }}</td>
+              <td appTableCell>{{ installment.contract?.client?.name || '-' }}</td>
+              <td appTableCell>{{ installment.contract?.event?.name || '-' }}</td>
+              <td appTableCell>{{ formatCurrency(installment.amount) }}</td>
+              <td appTableCell>{{ formatDate(installment.dueDate) }}</td>
+              <td appTableCell>
+                <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(installment.status)">
+                  {{ translateStatus(installment.status) }}
+                </span>
+              </td>
+              <td appTableCell>
+                {{ installment.paymentDate ? formatDate(installment.paymentDate) : '-' }}
+              </td>
+              <td appTableCell class="text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <button appButton variant="ghost" size="sm" title="Ver detalhes">
+                    <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                  @if (installment.status === 'pending' || installment.status === 'overdue' || installment.status === 'Pendente' || installment.status === 'Atrasado') {
+                    <button 
+                      appButton 
+                      variant="ghost" 
+                      size="sm"
+                      (click)="handlePaymentClick(installment)"
+                      title="Marcar como pago"
+                    >
+                      <lucide-icon [img]="CheckCircle2Icon" class="h-4 w-4"></lucide-icon>
+                    </button>
+                  }
+                  <button
+                    appButton
+                    variant="ghost"
+                    size="sm"
+                    (click)="handleDeleteClick(installment)"
+                    title="Excluir"
+                  >
+                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredInstallments.length === 0) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">
+        {{ searchTerm || filterStatus !== 'todos' ? 'Nenhuma parcela encontrada.' : 'Nenhuma parcela cadastrada.' }}
+      </p>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteModal"
+    (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()"
+    title="Excluir Parcela"
+    [message]="'Tem certeza que deseja excluir a parcela nº ' + (installmentToDelete?.installmentNumber || '') + '? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeleting"
+  ></app-confirmation-modal>
+
+  <!-- Payment Modal -->
+  @if (showPaymentModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="handleCancelPayment()">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
+        <div>
+          <h2 class="text-xl font-semibold">Registrar Pagamento</h2>
+          <p class="text-sm text-muted-foreground mt-1">
+            Parcela nº {{ installmentToPay?.installmentNumber }} - {{ installmentToPay?.contract?.client?.name }}
+          </p>
+        </div>
+
+        <form [formGroup]="paymentForm" (ngSubmit)="handleConfirmPayment()" class="space-y-4">
+          <!-- Payment Date -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="paymentDate">Data do Pagamento *</label>
+            <input
+              type="date"
+              id="paymentDate"
+              formControlName="paymentDate"
+              [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('paymentDate') ? 'border-red-500' : '')"
+            />
+            @if (hasError('paymentDate')) {
+              <p class="text-sm text-red-500">{{ getFieldError('paymentDate') }}</p>
+            }
+          </div>
+
+          <!-- Payment Amount -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="paymentAmount">Valor Pago *</label>
+            <input
+              type="number"
+              id="paymentAmount"
+              formControlName="paymentAmount"
+              step="0.01"
+              placeholder="0.00"
+              [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('paymentAmount') ? 'border-red-500' : '')"
+            />
+            @if (hasError('paymentAmount')) {
+              <p class="text-sm text-red-500">{{ getFieldError('paymentAmount') }}</p>
+            }
+          </div>
+
+          <!-- Notes -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="notes">Observações</label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              rows="3"
+              placeholder="Observações sobre o pagamento (opcional)"
+              class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            ></textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center justify-end space-x-2 pt-4 border-t">
+            <button 
+              appButton 
+              type="button" 
+              variant="outline" 
+              (click)="handleCancelPayment()"
+              [disabled]="isPaymentProcessing"
+            >
+              Cancelar
+            </button>
+            <button 
+              appButton 
+              type="submit" 
+              variant="outline"
+              [disabled]="isPaymentProcessing"
+            >
+              {{ isPaymentProcessing ? 'Processando...' : 'Confirmar Pagamento' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+
+

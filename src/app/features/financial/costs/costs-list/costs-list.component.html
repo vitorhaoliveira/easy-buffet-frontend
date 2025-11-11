@@ -1,0 +1,122 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Custos e Despesas</h1>
+      <p class="text-muted-foreground">
+        Gerencie os custos e despesas dos eventos
+      </p>
+    </div>
+    <button appButton variant="outline" routerLink="/financeiro/custos/novo">
+      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+      Novo Custo
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex items-center space-x-2">
+    <div class="flex-1">
+      <app-search-bar
+        placeholder="Buscar por descrição ou evento..."
+        [(ngModel)]="searchTerm"
+      ></app-search-bar>
+    </div>
+    <select
+      [(ngModel)]="filterCategory"
+      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <option value="todos">Todas as categorias</option>
+      <option value="staff">Pessoal</option>
+      <option value="food">Alimentação</option>
+      <option value="decoration">Decoração</option>
+      <option value="other">Outros</option>
+    </select>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando custos...</p>
+    </div>
+  }
+
+  <!-- Tabela -->
+  @if (!isLoading) {
+    <div class="rounded-md border">
+      <app-table>
+        <thead appTableHeader>
+          <tr appTableRow>
+            <th appTableHead>Descrição</th>
+            <th appTableHead>Evento</th>
+            <th appTableHead>Valor</th>
+            <th appTableHead>Categoria</th>
+            <th appTableHead>Data</th>
+            <th appTableHead class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody appTableBody>
+          @for (cost of filteredCosts; track cost.id) {
+            <tr appTableRow>
+              <td appTableCell class="font-medium">{{ cost.description }}</td>
+              <td appTableCell>{{ cost.event?.name || '-' }}</td>
+              <td appTableCell>{{ formatCurrency(cost.amount) }}</td>
+              <td appTableCell>
+                <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getCategoryColor(cost.category)">
+                  {{ translateCategory(cost.category) }}
+                </span>
+              </td>
+              <td appTableCell>{{ formatDate(cost.createdAt) }}</td>
+              <td appTableCell class="text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <button appButton variant="ghost" size="sm" title="Ver detalhes">
+                    <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                  <button
+                    appButton
+                    variant="ghost"
+                    size="sm"
+                    (click)="handleDeleteClick(cost)"
+                    title="Excluir"
+                  >
+                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredCosts.length === 0) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">
+        {{ searchTerm || filterCategory !== 'todos' ? 'Nenhum custo encontrado.' : 'Nenhum custo cadastrado.' }}
+      </p>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteModal"
+    (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()"
+    title="Excluir Custo"
+    [message]="'Tem certeza que deseja excluir o custo &quot;' + (costToDelete?.description || '') + '&quot;? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeleting"
+  ></app-confirmation-modal>
+</div>
+
+

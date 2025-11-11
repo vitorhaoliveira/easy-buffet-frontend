@@ -133,6 +133,17 @@ export interface Contract {
   signedAt?: string
   createdAt: string
   updatedAt?: string
+  deletedAt?: string | null
+  event?: {
+    id: string
+    name: string
+    eventDate: string
+  }
+  client?: {
+    id: string
+    name: string
+  }
+  installments?: Installment[]
 }
 
 // Installment Types
@@ -181,14 +192,19 @@ export interface DashboardEvent {
 // Cost Types
 export interface Cost {
   id: string
-  name: string
-  description?: string
-  amount: number
-  category: string
+  description: string
+  amount: number | string
+  category: 'staff' | 'food' | 'decoration' | 'other'
   eventId?: string
-  date: string
+  notes?: string
+  organizationId: string
   createdAt: string
   updatedAt?: string
+  deletedAt?: string | null
+  createdBy: string
+  event?: {
+    name: string
+  }
 }
 
 // Dashboard Types
@@ -352,21 +368,19 @@ export interface UpdateInstallmentRequest {
 }
 
 export interface CreateCostRequest {
-  name: string
-  description?: string
+  description: string
   amount: number
-  category: string
+  category: 'staff' | 'food' | 'decoration' | 'other'
   eventId?: string
-  date: string
+  notes?: string
 }
 
 export interface UpdateCostRequest {
-  name?: string
   description?: string
   amount?: number
-  category?: string
+  category?: 'staff' | 'food' | 'decoration' | 'other'
   eventId?: string
-  date?: string
+  notes?: string
 }
 
 export interface UpdateSettingsRequest {
@@ -405,10 +419,10 @@ export interface DashboardStats {
 
 export interface MonthlyEvolution {
   month: string
-  revenue: number
-  costs: number
-  profit: number
-  eventsCount: number
+  year: number
+  revenue: number | string
+  expenses: number | string
+  profit: number | string
 }
 
 // Report Types

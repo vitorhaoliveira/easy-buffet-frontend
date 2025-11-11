@@ -58,9 +58,9 @@ export class MainLayoutComponent {
       icon: 'dollar-sign',
       expanded: false,
       items: [
-        { title: 'Dashboard', url: '/financeiro', disabled: true },
-        { title: 'Parcelas de Entrada', url: '/financeiro/installments', disabled: true },
-        { title: 'Custos e Despesas', url: '/financeiro/costs', disabled: true },
+        { title: 'Dashboard', url: '/financeiro' },
+        { title: 'Parcelas', url: '/financeiro/parcelas' },
+        { title: 'Custos e Despesas', url: '/financeiro/custos' },
         { title: 'Relatório Mensal', url: '/reports/monthly', disabled: true }
       ]
     },
