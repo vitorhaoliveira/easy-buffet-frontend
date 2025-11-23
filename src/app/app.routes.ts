@@ -173,17 +173,12 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
-      // Account settings route - TODO: Create component
-      // {
-      //   path: 'conta',
-      //   loadComponent: () => import('./features/profile/account-settings/account-settings.component').then(m => m.AccountSettingsComponent)
-      // },
+      // Account settings route
+      {
+        path: 'conta',
+        loadComponent: () => import('./features/profile/account-settings/account-settings.component').then(m => m.AccountSettingsComponent)
+      },
       
-      // Settings routes - TODO: Create components
-      // {
-      //   path: 'configuracoes/empresa',
-      //   loadComponent: () => import('./features/settings/company-settings/company-settings.component').then(m => m.CompanySettingsComponent)
-      // },
       // {
       //   path: 'configuracoes/permissoes',
       //   loadComponent: () => import('./features/settings/permissions-settings/permissions-settings.component').then(m => m.PermissionsSettingsComponent)

@@ -505,3 +505,96 @@ export interface ActivityLog {
   createdAt: string
 }
 
+// Company Data Types (for "Minha Conta" page)
+export interface CompanyAddress {
+  zipCode?: string | null
+  street?: string | null
+  number?: string | null
+  complement?: string | null
+  neighborhood?: string | null
+  city?: string | null
+  state?: string | null
+}
+
+export interface CompanyContact {
+  phone?: string | null
+  mobile?: string | null
+  email?: string | null
+  website?: string | null
+}
+
+export interface CompanySocialMedia {
+  instagram?: string | null
+  facebook?: string | null
+  twitter?: string | null
+}
+
+export interface CompanyBankInfo {
+  bank?: string | null
+  agency?: string | null
+  account?: string | null
+  accountType?: string | null
+  pixKey?: string | null
+}
+
+export interface CompanyData {
+  id?: string
+  name: string
+  fantasyName?: string
+  cnpj?: string | null
+  stateRegistration?: string | null
+  address?: CompanyAddress
+  contact?: CompanyContact
+  socialMedia?: CompanySocialMedia
+  bankInfo?: CompanyBankInfo
+  logo?: string | null
+  updatedAt?: string
+}
+
+export interface UpdateCompanyDataRequest {
+  name?: string
+  fantasyName?: string
+  cnpj?: string | null
+  stateRegistration?: string | null
+  address?: CompanyAddress
+  contact?: CompanyContact
+  socialMedia?: CompanySocialMedia
+  bankInfo?: CompanyBankInfo
+  logo?: string | null
+}
+
+// Activity Log Types (for "Minha Conta" page)
+export interface ActivityLogItem {
+  id: string
+  user: string
+  action: string
+  module: string
+  description: string
+  timestamp: string
+  ip: string
+}
+
+export interface ActivityLogFilters {
+  page?: number
+  limit?: number
+  userId?: string
+  module?: string
+  action?: string
+  dateFrom?: string
+  dateTo?: string
+}
+
+export interface PaginationInfo {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean
+  data: T[]
+  pagination: PaginationInfo
+  message?: string
+}
+

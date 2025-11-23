@@ -1,7 +1,8 @@
 import { Component } from '@angular/core'
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'
 import { CommonModule } from '@angular/common'
-import { LucideAngularModule, Home, ClipboardList, DollarSign, Settings, HelpCircle, MessageCircle } from 'lucide-angular'
+import { LucideAngularModule, Home, ClipboardList, DollarSign, Settings, HelpCircle, MessageCircle, LogOut } from 'lucide-angular'
+import { AuthStateService } from '@core/services/auth-state.service'
 
 interface MenuItem {
   title: string;
@@ -37,8 +38,11 @@ export class MainLayoutComponent {
   readonly SettingsIcon = Settings
   readonly HelpCircleIcon = HelpCircle
   readonly MessageCircleIcon = MessageCircle
+  readonly LogOutIcon = LogOut
 
   sidebarCollapsed = false
+
+  constructor(private authStateService: AuthStateService) {}
 
   menuItems: MenuItem[] = [
     {
@@ -69,8 +73,7 @@ export class MainLayoutComponent {
       icon: 'settings',
       expanded: false,
       items: [
-        { title: 'Minha Conta', url: '/profile/account', disabled: true },
-        { title: 'Empresa', url: '/settings/organization', disabled: true },
+        { title: 'Minha Conta', url: '/conta' },
         { title: 'Permissões', url: '/settings/permissions', disabled: true }
       ]
     }
@@ -118,6 +121,16 @@ export class MainLayoutComponent {
       'settings': this.SettingsIcon
     }
     return iconMap[iconName] || this.ClipboardListIcon
+  }
+
+  /**
+   * @Function - logout
+   * @description - Logs out the current user
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async logout(): Promise<void> {
+    await this.authStateService.logout()
   }
 }
 
