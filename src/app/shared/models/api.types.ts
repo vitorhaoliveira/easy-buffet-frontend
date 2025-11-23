@@ -427,22 +427,32 @@ export interface MonthlyEvolution {
 
 // Report Types
 export interface MonthlyReport {
-  period: string
-  revenue: number
-  costs: number
-  profit: number
-  eventsCount: number
-  contractsCount: number
-  topClients: Array<{
-    clientId: string
-    clientName: string
-    totalValue: number
-  }>
-  topPackages: Array<{
-    packageId: string
-    packageName: string
-    usageCount: number
-  }>
+  period: {
+    month: number
+    year: number
+    monthName: string
+  }
+  summary: {
+    revenue: number
+    expenses: number
+    commissions: number
+    netProfit: number
+    paidInstallments: number
+    totalInstallments: number
+    commissionRate: number
+  }
+  kpis: {
+    realizedRevenue: number
+    pendingRevenue: number
+    overdueRevenue: number
+    expectedRevenue: number
+    realizationRate: number
+    overdueRate: number
+    paidCount: number
+    pendingCount: number
+    overdueCount: number
+    totalCount: number
+  }
 }
 
 export interface InstallmentsReport {

@@ -61,7 +61,7 @@ export class MainLayoutComponent {
         { title: 'Dashboard', url: '/financeiro' },
         { title: 'Parcelas', url: '/financeiro/parcelas' },
         { title: 'Custos e Despesas', url: '/financeiro/custos' },
-        { title: 'Relatório Mensal', url: '/reports/monthly', disabled: true }
+        { title: 'Relatório Mensal', url: '/reports/monthly' }
       ]
     },
     {

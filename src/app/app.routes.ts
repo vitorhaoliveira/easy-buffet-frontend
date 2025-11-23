@@ -165,13 +165,13 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
-      // Reports route - TODO: Create component
-      // {
-      //   path: 'financeiro/relatorio',
-      //   loadComponent: () => import('./features/reports/monthly-report/monthly-report.component').then(m => m.MonthlyReportComponent),
-      //   data: { module: 'relatorios', action: 'view' },
-      //   canActivate: [permissionGuard]
-      // },
+      // Reports route
+      {
+        path: 'reports/monthly',
+        loadComponent: () => import('./features/reports/monthly-report/monthly-report.component').then(m => m.MonthlyReportComponent),
+        data: { module: 'relatorios', action: 'view' },
+        canActivate: [permissionGuard]
+      },
       
       // Account settings route - TODO: Create component
       // {

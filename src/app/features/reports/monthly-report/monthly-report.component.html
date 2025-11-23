@@ -1,0 +1,378 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6 print:mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 print:text-2xl">Relatório Mensal</h1>
+          <p class="text-gray-600 mt-1">Visão completa das finanças do mês</p>
+        </div>
+        <div class="flex gap-2 print:hidden">
+          <button
+            (click)="printReport()"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <lucide-icon [img]="PrinterIcon" [size]="18"></lucide-icon>
+            <span>Imprimir</span>
+          </button>
+          <button
+            (click)="exportToPDF()"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
+            <span>PDF</span>
+          </button>
+          <button
+            (click)="exportToExcel()"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
+            <span>Excel</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-lg shadow-sm p-4 print:hidden">
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <lucide-icon [img]="CalendarIcon" [size]="20" class="text-gray-500"></lucide-icon>
+            <label class="text-sm font-medium text-gray-700">Período:</label>
+          </div>
+          <select
+            [(ngModel)]="selectedMonth"
+            (ngModelChange)="loadReport()"
+            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option *ngFor="let month of months" [value]="month.value">
+              {{ month.label }}
+            </option>
+          </select>
+          <select
+            [(ngModel)]="selectedYear"
+            (ngModelChange)="loadReport()"
+            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option *ngFor="let year of years" [value]="year">
+              {{ year }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="bg-white rounded-lg shadow-sm p-12 text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      <p class="mt-4 text-gray-600">Carregando relatório...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+      <lucide-icon [img]="AlertCircleIcon" [size]="20" class="text-red-600 mt-0.5"></lucide-icon>
+      <div>
+        <h3 class="font-semibold text-red-900">Erro ao carregar relatório</h3>
+        <p class="text-red-700 text-sm mt-1">{{ error }}</p>
+      </div>
+    </div>
+
+    <!-- Report Content -->
+    <div *ngIf="reportData && !isLoading" class="space-y-6">
+      <!-- Period Info (visible on print) -->
+      <div class="hidden print:block bg-white rounded-lg shadow-sm p-4 mb-4">
+        <h2 class="text-xl font-bold text-gray-900">
+          {{ reportData.period.monthName }} de {{ reportData.period.year }}
+        </h2>
+      </div>
+
+      <!-- Summary Section -->
+      <div class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300">
+        <div class="flex items-center gap-2 mb-4">
+          <lucide-icon [img]="FileTextIcon" [size]="24" class="text-emerald-600"></lucide-icon>
+          <h2 class="text-xl font-bold text-gray-900">Resumo Financeiro</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Revenue Card -->
+          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 print:border print:border-green-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-green-800">Receita</span>
+              <lucide-icon [img]="TrendingUpIcon" [size]="20" class="text-green-600"></lucide-icon>
+            </div>
+            <p class="text-2xl font-bold text-green-900">
+              {{ formatCurrency(reportData.summary.revenue) }}
+            </p>
+            <p class="text-xs text-green-700 mt-1">
+              {{ reportData.summary.paidInstallments }} de {{ reportData.summary.totalInstallments }} parcelas pagas
+            </p>
+          </div>
+
+          <!-- Expenses Card -->
+          <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 print:border print:border-red-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-red-800">Despesas</span>
+              <lucide-icon [img]="TrendingDownIcon" [size]="20" class="text-red-600"></lucide-icon>
+            </div>
+            <p class="text-2xl font-bold text-red-900">
+              {{ formatCurrency(reportData.summary.expenses) }}
+            </p>
+          </div>
+
+          <!-- Commissions Card -->
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 print:border print:border-blue-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-blue-800">Comissões</span>
+              <lucide-icon [img]="PieChartIcon" [size]="20" class="text-blue-600"></lucide-icon>
+            </div>
+            <p class="text-2xl font-bold text-blue-900">
+              {{ formatCurrency(reportData.summary.commissions) }}
+            </p>
+            <p class="text-xs text-blue-700 mt-1">
+              Taxa média: {{ formatPercentage(reportData.summary.commissionRate) }}
+            </p>
+          </div>
+
+          <!-- Net Profit Card -->
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 print:border print:border-purple-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-purple-800">Lucro Líquido</span>
+              <lucide-icon
+                [img]="getProfitIcon(reportData.summary.netProfit)"
+                [size]="20"
+                [ngClass]="getProfitColor(reportData.summary.netProfit)"
+              ></lucide-icon>
+            </div>
+            <p class="text-2xl font-bold" [ngClass]="getProfitColor(reportData.summary.netProfit)">
+              {{ formatCurrency(reportData.summary.netProfit) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs Section -->
+      <div class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300 print:page-break-before">
+        <div class="flex items-center gap-2 mb-4">
+          <lucide-icon [img]="PieChartIcon" [size]="24" class="text-emerald-600"></lucide-icon>
+          <h2 class="text-xl font-bold text-gray-900">Indicadores de Performance (KPIs)</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Revenue Breakdown -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800">Distribuição de Receita</h3>
+            
+            <div class="space-y-3">
+              <!-- Realized Revenue -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center gap-2">
+                    <lucide-icon [img]="CheckCircleIcon" [size]="16" class="text-green-600"></lucide-icon>
+                    <span class="text-sm font-medium text-gray-700">Receita Realizada</span>
+                  </div>
+                  <span class="text-sm font-bold text-gray-900">
+                    {{ formatCurrency(reportData.kpis.realizedRevenue) }}
+                  </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    class="bg-green-600 h-2 rounded-full transition-all"
+                    [style.width.%]="(reportData.kpis.realizedRevenue / reportData.kpis.expectedRevenue) * 100"
+                  ></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ reportData.kpis.paidCount }} parcelas pagas
+                </p>
+              </div>
+
+              <!-- Pending Revenue -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center gap-2">
+                    <lucide-icon [img]="ClockIcon" [size]="16" class="text-yellow-600"></lucide-icon>
+                    <span class="text-sm font-medium text-gray-700">Receita Pendente</span>
+                  </div>
+                  <span class="text-sm font-bold text-gray-900">
+                    {{ formatCurrency(reportData.kpis.pendingRevenue) }}
+                  </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    class="bg-yellow-500 h-2 rounded-full transition-all"
+                    [style.width.%]="(reportData.kpis.pendingRevenue / reportData.kpis.expectedRevenue) * 100"
+                  ></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ reportData.kpis.pendingCount }} parcelas pendentes
+                </p>
+              </div>
+
+              <!-- Overdue Revenue -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center gap-2">
+                    <lucide-icon [img]="AlertCircleIcon" [size]="16" class="text-red-600"></lucide-icon>
+                    <span class="text-sm font-medium text-gray-700">Receita em Atraso</span>
+                  </div>
+                  <span class="text-sm font-bold text-gray-900">
+                    {{ formatCurrency(reportData.kpis.overdueRevenue) }}
+                  </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    class="bg-red-600 h-2 rounded-full transition-all"
+                    [style.width.%]="(reportData.kpis.overdueRevenue / reportData.kpis.expectedRevenue) * 100"
+                  ></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ reportData.kpis.overdueCount }} parcelas em atraso
+                </p>
+              </div>
+
+              <!-- Expected Revenue -->
+              <div class="pt-3 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-semibold text-gray-800">Receita Esperada (Total)</span>
+                  <span class="text-lg font-bold text-gray-900">
+                    {{ formatCurrency(reportData.kpis.expectedRevenue) }}
+                  </span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ reportData.kpis.totalCount }} parcelas totais
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance Metrics -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800">Métricas de Performance</h3>
+            
+            <div class="space-y-4">
+              <!-- Realization Rate -->
+              <div class="bg-gray-50 rounded-lg p-4 print:border print:border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-gray-700">Taxa de Realização</span>
+                  <span
+                    class="text-2xl font-bold"
+                    [ngClass]="getRealizationRateColor(reportData.kpis.realizationRate)"
+                  >
+                    {{ formatPercentage(reportData.kpis.realizationRate) }}
+                  </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    class="h-3 rounded-full transition-all"
+                    [ngClass]="{
+                      'bg-green-600': reportData.kpis.realizationRate >= 80,
+                      'bg-yellow-500': reportData.kpis.realizationRate >= 60 && reportData.kpis.realizationRate < 80,
+                      'bg-red-600': reportData.kpis.realizationRate < 60
+                    }"
+                    [style.width.%]="reportData.kpis.realizationRate"
+                  ></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                  Percentual de receita realizada sobre a esperada
+                </p>
+              </div>
+
+              <!-- Overdue Rate -->
+              <div class="bg-gray-50 rounded-lg p-4 print:border print:border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-medium text-gray-700">Taxa de Atraso</span>
+                  <span
+                    class="text-2xl font-bold"
+                    [ngClass]="getOverdueRateColor(reportData.kpis.overdueRate)"
+                  >
+                    {{ formatPercentage(reportData.kpis.overdueRate) }}
+                  </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    class="h-3 rounded-full transition-all"
+                    [ngClass]="{
+                      'bg-green-600': reportData.kpis.overdueRate <= 5,
+                      'bg-yellow-500': reportData.kpis.overdueRate > 5 && reportData.kpis.overdueRate <= 15,
+                      'bg-red-600': reportData.kpis.overdueRate > 15
+                    }"
+                    [style.width.%]="reportData.kpis.overdueRate"
+                  ></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                  Percentual de parcelas em atraso sobre o total
+                </p>
+              </div>
+
+              <!-- Summary Stats -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="bg-green-50 rounded-lg p-3 print:border print:border-green-200">
+                  <p class="text-xs text-green-700 font-medium">Parcelas Pagas</p>
+                  <p class="text-xl font-bold text-green-900">{{ reportData.kpis.paidCount }}</p>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-3 print:border print:border-yellow-200">
+                  <p class="text-xs text-yellow-700 font-medium">Parcelas Pendentes</p>
+                  <p class="text-xl font-bold text-yellow-900">{{ reportData.kpis.pendingCount }}</p>
+                </div>
+                <div class="bg-red-50 rounded-lg p-3 print:border print:border-red-200">
+                  <p class="text-xs text-red-700 font-medium">Parcelas Atrasadas</p>
+                  <p class="text-xl font-bold text-red-900">{{ reportData.kpis.overdueCount }}</p>
+                </div>
+                <div class="bg-gray-100 rounded-lg p-3 print:border print:border-gray-300">
+                  <p class="text-xs text-gray-700 font-medium">Total de Parcelas</p>
+                  <p class="text-xl font-bold text-gray-900">{{ reportData.kpis.totalCount }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer (visible on print) -->
+      <div class="hidden print:block mt-8 pt-4 border-t border-gray-300 text-center text-sm text-gray-600">
+        <p>Relatório gerado em {{ currentDate | date: 'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print Styles -->
+<style>
+@media print {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:page-break-before {
+    page-break-before: always;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:border {
+    border-width: 1px !important;
+  }
+
+  .print\:mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  .print\:text-2xl {
+    font-size: 1.5rem !important;
+  }
+}
+</style>
+
