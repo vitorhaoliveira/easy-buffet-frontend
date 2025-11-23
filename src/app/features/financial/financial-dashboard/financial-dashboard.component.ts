@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common'
 import { RouterLink } from '@angular/router'
 import { LucideAngularModule, TrendingUp, TrendingDown, Clock, DollarSign, AlertCircle, Calendar } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
+import { NgApexchartsModule } from 'ng-apexcharts'
+import type { ApexOptions } from 'ng-apexcharts'
 
 import { DashboardService } from '@core/services/dashboard.service'
 import { 
@@ -24,6 +26,7 @@ import { formatDateBR } from '@shared/utils/date.utils'
     CommonModule,
     RouterLink,
     LucideAngularModule,
+    NgApexchartsModule,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
@@ -47,6 +50,106 @@ export class FinancialDashboardComponent implements OnInit {
   monthlyEvolution: MonthlyEvolution[] = []
   isLoading = true
   error = ''
+
+  chartOptions: ApexOptions = {
+    series: [],
+    chart: {
+      type: 'bar',
+      height: 380,
+      fontFamily: 'Inter, system-ui, sans-serif',
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: true,
+          zoom: true,
+          zoomin: true,
+          zoomout: true,
+          pan: true,
+          reset: true
+        }
+      }
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '70%',
+        borderRadius: 8,
+        dataLabels: {
+          position: 'top'
+        }
+      }
+    },
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent']
+    },
+    xaxis: {
+      categories: [],
+      labels: {
+        style: {
+          fontSize: '12px'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        formatter: (value: number) => {
+          return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }).format(value)
+        }
+      }
+    },
+    colors: ['#22c55e', '#ef4444', '#3b82f6'],
+    tooltip: {
+      theme: 'light',
+      y: {
+        formatter: (value: number) => {
+          return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          }).format(value)
+        }
+      }
+    },
+    legend: {
+      position: 'top',
+      horizontalAlign: 'center',
+      fontSize: '14px'
+    },
+    grid: {
+      borderColor: '#f1f5f9',
+      strokeDashArray: 4,
+      xaxis: {
+        lines: {
+          show: false
+        }
+      }
+    },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          plotOptions: {
+            bar: {
+              columnWidth: '90%'
+            }
+          },
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    ]
+  }
 
   constructor(
     private readonly dashboardService: DashboardService
@@ -88,18 +191,83 @@ export class FinancialDashboardComponent implements OnInit {
       }
 
       // Load monthly evolution
-      const evolutionResponse = await firstValueFrom(
-        this.dashboardService.getMonthlyEvolution()
-      )
-      if (evolutionResponse.success && evolutionResponse.data) {
-        this.monthlyEvolution = evolutionResponse.data
-      }
+      await this.loadMonthlyEvolution()
 
     } catch (err: any) {
       console.error('Error loading financial dashboard:', err)
       this.error = err.message || 'Erro ao carregar dados do dashboard financeiro'
     } finally {
       this.isLoading = false
+    }
+  }
+
+  /**
+   * @Function - loadMonthlyEvolution
+   * @description - Load monthly evolution data for specified number of months
+   * @author - Vitor Hugo
+   * @param - months: number - Number of months to fetch (default: 12)
+   * @returns - Promise<void>
+   */
+  async loadMonthlyEvolution(months: number = 12): Promise<void> {
+    try {
+      const evolutionResponse = await firstValueFrom(
+        this.dashboardService.getMonthlyEvolution(months)
+      )
+      if (evolutionResponse.success && evolutionResponse.data) {
+        this.monthlyEvolution = evolutionResponse.data
+        this.updateChart()
+      }
+    } catch (err: any) {
+      console.error('Error loading monthly evolution:', err)
+      throw err
+    }
+  }
+
+  /**
+   * @Function - updateChart
+   * @description - Update chart data with monthly evolution values
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  private updateChart(): void {
+    if (!this.monthlyEvolution.length) return
+
+    const categories = this.monthlyEvolution.map(
+      m => `${m.month} ${m.year}`
+    )
+
+    const revenueData = this.monthlyEvolution.map(m =>
+      typeof m.revenue === 'string' ? parseFloat(m.revenue) : m.revenue
+    )
+
+    const expensesData = this.monthlyEvolution.map(m =>
+      typeof m.expenses === 'string' ? parseFloat(m.expenses) : m.expenses
+    )
+
+    const profitData = this.monthlyEvolution.map(m =>
+      typeof m.profit === 'string' ? parseFloat(m.profit) : m.profit
+    )
+
+    this.chartOptions = {
+      ...this.chartOptions,
+      series: [
+        {
+          name: 'Receita',
+          data: revenueData
+        },
+        {
+          name: 'Despesas',
+          data: expensesData
+        },
+        {
+          name: 'Lucro',
+          data: profitData
+        }
+      ],
+      xaxis: {
+        ...this.chartOptions.xaxis,
+        categories: categories
+      }
     }
   }
 
@@ -159,37 +327,6 @@ export class FinancialDashboardComponent implements OnInit {
       'overdue': 'bg-red-100 text-red-800'
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
-  }
-
-  /**
-   * @Function - getMaxValue
-   * @description - Get maximum value from monthly evolution data for chart scaling
-   * @author - Vitor Hugo
-   * @returns - number - Maximum value
-   */
-  getMaxValue(): number {
-    if (!this.monthlyEvolution.length) return 0
-    
-    const values = this.monthlyEvolution.flatMap(item => [
-      typeof item.revenue === 'string' ? parseFloat(item.revenue) : item.revenue,
-      typeof item.expenses === 'string' ? parseFloat(item.expenses) : item.expenses,
-      typeof item.profit === 'string' ? parseFloat(item.profit) : item.profit
-    ])
-    
-    return Math.max(...values, 0)
-  }
-
-  /**
-   * @Function - getBarHeight
-   * @description - Calculate bar height percentage for chart
-   * @author - Vitor Hugo
-   * @param - value: number | string - Value to calculate height for
-   * @returns - number - Height percentage
-   */
-  getBarHeight(value: number | string): number {
-    const numValue = typeof value === 'string' ? parseFloat(value) : value
-    const maxValue = this.getMaxValue()
-    return maxValue > 0 ? (numValue / maxValue) * 100 : 0
   }
 }
 

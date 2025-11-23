@@ -34,9 +34,9 @@ export class DashboardService {
     )
   }
 
-  getMonthlyEvolution(): Observable<ApiResponse<MonthlyEvolution[]>> {
+  getMonthlyEvolution(months: number = 12): Observable<ApiResponse<MonthlyEvolution[]>> {
     return this.http.get<ApiResponse<MonthlyEvolution[]>>(
-      `${this.apiUrl}/dashboard/monthly-evolution`
+      `${this.apiUrl}/dashboard/monthly-evolution?months=${months}`
     )
   }
 }
