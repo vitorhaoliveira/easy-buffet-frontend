@@ -31,7 +31,6 @@ type TabType = 'profile' | 'company' | 'logs'
     LucideAngularModule,
     ButtonComponent,
     LabelComponent,
-    PhoneMaskDirective
   ],
   templateUrl: './account-settings.component.html'
 })
@@ -105,12 +104,12 @@ export class AccountSettingsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         this.currentUser = user
-        this.isAdmin = user?.currentOrganization?.role === 'Administrador'
+        const role = user?.currentOrganization?.role || user?.organizations?.[0]?.role
+        this.isAdmin = role === 'Administrador'
         if (user) {
           this.loadProfileData(user)
         }
       })
-
     await this.loadCompanyData()
     await this.loadActivityLogs()
   }

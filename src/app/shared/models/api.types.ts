@@ -57,6 +57,8 @@ export interface User {
 export interface Organization {
   id: string
   name: string
+  role?: string
+  permissions?: UserPermissions
   createdAt: string
 }
 

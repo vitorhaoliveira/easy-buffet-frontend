@@ -71,10 +71,14 @@ export class AuthStateService {
           const organization = user.currentOrganization ? {
             id: user.currentOrganization.id,
             name: user.currentOrganization.name,
+            role: user.currentOrganization.role,
+            permissions: user.currentOrganization.permissions,
             createdAt: new Date().toISOString()
           } : user.organizations?.[0] ? {
             id: user.organizations[0].id,
             name: user.organizations[0].name,
+            role: user.organizations[0].role,
+            permissions: user.organizations[0].permissions,
             createdAt: new Date().toISOString()
           } : null
           
@@ -108,6 +112,8 @@ export class AuthStateService {
         const organization = user.organizations?.[0] ? {
           id: user.organizations[0].id,
           name: user.organizations[0].name,
+          role: user.organizations[0].role,
+          permissions: user.organizations[0].permissions,
           createdAt: new Date().toISOString()
         } : null
         
@@ -163,6 +169,8 @@ export class AuthStateService {
         const organization = user.organizations?.[0] ? {
           id: user.organizations[0].id,
           name: user.organizations[0].name,
+          role: user.organizations[0].role,
+          permissions: user.organizations[0].permissions,
           createdAt: new Date().toISOString()
         } : null
         
