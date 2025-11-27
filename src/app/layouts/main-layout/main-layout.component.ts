@@ -74,7 +74,6 @@ export class MainLayoutComponent {
       expanded: false,
       items: [
         { title: 'Minha Conta', url: '/conta' },
-        { title: 'Permissões', url: '/settings/permissions', disabled: true }
       ]
     }
   ]
