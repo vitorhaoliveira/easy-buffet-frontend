@@ -35,8 +35,7 @@ interface SubMenuItem {
     RouterLink, 
     RouterLinkActive, 
     LucideAngularModule,
-    ReactiveFormsModule,
-    PhoneMaskDirective
+    ReactiveFormsModule
   ],
   templateUrl: './main-layout.component.html',
   styles: [`
