@@ -148,11 +148,30 @@ export class StorageService {
 
   // Organization switching
   switchOrganization(organizationId: string): boolean {
+    console.log('💾 switchOrganization called with ID:', organizationId)
+    
     const user = this.getUser()
-    if (!user || !user.organizations) return false
+    console.log('👤 Current user:', user)
+    
+    if (!user) {
+      console.error('❌ No user found in storage')
+      return false
+    }
+    
+    if (!user.organizations) {
+      console.error('❌ User has no organizations array')
+      return false
+    }
+    
+    console.log('📋 User organizations:', user.organizations)
 
     const targetOrg = user.organizations.find(org => org.id === organizationId)
-    if (!targetOrg) return false
+    console.log('🎯 Target organization found:', targetOrg)
+    
+    if (!targetOrg) {
+      console.error('❌ Target organization not found in user organizations')
+      return false
+    }
 
     // Update current organization in user data
     const updatedUser = {
@@ -172,11 +191,14 @@ export class StorageService {
       createdAt: new Date().toISOString()
     }
 
+    console.log('💾 Updating storage with:', { updatedUser, organization })
+
     // Update stored data
     this.setUser(updatedUser)
     this.setOrganization(organization)
     this.setCurrentOrganizationId(organizationId)
 
+    console.log('✅ Storage updated successfully')
     return true
   }
 

@@ -87,13 +87,14 @@
               </div>
             </div>
             <div *ngIf="!isEditingProfile && currentUser">
-              <app-button
+              <button
+                appButton
                 (click)="enableProfileEdit()"
                 variant="outline"
                 size="sm"
               >
                 Editar Perfil
-              </app-button>
+              </button>
             </div>
           </div>
 
@@ -167,7 +168,8 @@
 
             <!-- Action Buttons -->
             <div *ngIf="isEditingProfile" class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-              <app-button
+              <button
+                appButton
                 type="button"
                 (click)="cancelProfileEdit()"
                 variant="outline"
@@ -175,14 +177,15 @@
               >
                 <lucide-icon [img]="XIcon" class="w-4 h-4 mr-2"></lucide-icon>
                 Cancelar
-              </app-button>
-              <app-button
+              </button>
+              <button
+                appButton
                 type="submit"
                 [disabled]="isLoadingProfile || profileForm.invalid"
               >
                 <lucide-icon [img]="SaveIcon" class="w-4 h-4 mr-2"></lucide-icon>
                 {{ isLoadingProfile ? 'Salvando...' : 'Salvar Alterações' }}
-              </app-button>
+              </button>
             </div>
           </form>
         </div>
@@ -213,13 +216,14 @@
                 </p>
               </div>
               <div *ngIf="!isEditingCompany && isAdmin">
-                <app-button
+                <button
+                  appButton
                   (click)="enableCompanyEdit()"
                   variant="outline"
                   size="sm"
                 >
                   Editar Dados
-                </app-button>
+                </button>
               </div>
             </div>
 
@@ -520,7 +524,8 @@
 
               <!-- Action Buttons -->
               <div *ngIf="isEditingCompany" class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <app-button
+                <button
+                  appButton
                   type="button"
                   (click)="cancelCompanyEdit()"
                   variant="outline"
@@ -528,14 +533,15 @@
                 >
                   <lucide-icon [img]="XIcon" class="w-4 h-4 mr-2"></lucide-icon>
                   Cancelar
-                </app-button>
-                <app-button
+                </button>
+                <button
+                  appButton
                   type="submit"
                   [disabled]="isLoadingCompany || companyForm.invalid"
                 >
                   <lucide-icon [img]="SaveIcon" class="w-4 h-4 mr-2"></lucide-icon>
                   {{ isLoadingCompany ? 'Salvando...' : 'Salvar Alterações' }}
-                </app-button>
+                </button>
               </div>
             </form>
           </div>
@@ -556,14 +562,15 @@
                 Visualize todas as ações realizadas na organização
               </p>
             </div>
-            <app-button
+            <button
+              appButton
               (click)="toggleFilters()"
               variant="outline"
               size="sm"
             >
               <lucide-icon [img]="FilterIcon" class="w-4 h-4 mr-2"></lucide-icon>
               {{ showFilters ? 'Ocultar Filtros' : 'Filtros' }}
-            </app-button>
+            </button>
           </div>
 
           <!-- Filters (collapsed by default) -->
@@ -596,19 +603,21 @@
               </div>
             </div>
             <div class="flex justify-end space-x-2 mt-4">
-              <app-button
+              <button
+                appButton
                 (click)="clearFilters()"
                 variant="outline"
                 size="sm"
               >
                 Limpar
-              </app-button>
-              <app-button
+              </button>
+              <button
+                appButton
                 (click)="loadActivityLogs()"
                 size="sm"
               >
                 Aplicar Filtros
-              </app-button>
+              </button>
             </div>
           </div>
 

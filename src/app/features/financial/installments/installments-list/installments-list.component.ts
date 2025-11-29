@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2 } from 'lucide-angular'
+import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -20,6 +20,18 @@ import {
 import { InstallmentService } from '@core/services/installment.service'
 import type { Installment } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
+
+interface InstallmentGroup {
+  id: string
+  clientName: string
+  eventName: string
+  totalAmount: number
+  paidCount: number
+  pendingCount: number
+  totalCount: number
+  nextDueDate: string | null
+  installments: Installment[]
+}
 
 @Component({
   selector: 'app-installments-list',
@@ -48,6 +60,8 @@ export class InstallmentsListComponent implements OnInit {
   readonly EyeIcon = Eye
   readonly Trash2Icon = Trash2
   readonly CheckCircle2Icon = CheckCircle2
+  readonly ChevronDownIcon = ChevronDown
+  readonly ChevronRightIcon = ChevronRight
 
   installments: Installment[] = []
   searchTerm: string = ''
@@ -65,6 +79,8 @@ export class InstallmentsListComponent implements OnInit {
   installmentToPay: Installment | null = null
   isPaymentProcessing: boolean = false
   paymentForm!: FormGroup
+
+  expandedGroups: Record<string, boolean> = {}
 
   constructor(
     private installmentService: InstallmentService,
@@ -94,6 +110,7 @@ export class InstallmentsListComponent implements OnInit {
       const response = await firstValueFrom(this.installmentService.getInstallments())
       if (response.success && response.data) {
         this.installments = response.data as Installment[]
+        this.expandedGroups = {}
       } else {
         this.error = 'Erro ao carregar parcelas'
       }
@@ -136,6 +153,60 @@ export class InstallmentsListComponent implements OnInit {
     }
 
     return filtered
+  }
+
+  /**
+   * @Function - groupedInstallments
+   * @description - Group filtered installments by contract to display as cards
+   * @author - Vitor Hugo
+   * @returns - InstallmentGroup[] - Array of grouped installments
+   */
+  get groupedInstallments(): InstallmentGroup[] {
+    const groups = new Map<string, InstallmentGroup>()
+
+    this.filteredInstallments.forEach(installment => {
+      const groupId = installment.contractId || installment.contract?.event?.name || installment.id
+      if (!groups.has(groupId)) {
+        groups.set(groupId, {
+          id: groupId,
+          clientName: installment.contract?.client?.name || 'Cliente não informado',
+          eventName: installment.contract?.event?.name || 'Evento não informado',
+          totalAmount: 0,
+          paidCount: 0,
+          pendingCount: 0,
+          totalCount: 0,
+          nextDueDate: null,
+          installments: []
+        })
+      }
+
+      const group = groups.get(groupId)!
+      group.installments.push(installment)
+      group.totalAmount += Number(installment.amount) || 0
+      group.totalCount += 1
+
+      const status = installment.status.toLowerCase()
+      if (status === 'paid' || status === 'pago') {
+        group.paidCount += 1
+      } else {
+        group.pendingCount += 1
+      }
+    })
+
+    groups.forEach(group => {
+      const sortedByDueDate = [...group.installments].sort(
+        (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      )
+      const upcomingInstallment = sortedByDueDate.find(inst => !inst.paymentDate)
+      group.nextDueDate = upcomingInstallment?.dueDate || sortedByDueDate[0]?.dueDate || null
+    })
+
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.clientName === b.clientName) {
+        return a.eventName.localeCompare(b.eventName)
+      }
+      return a.clientName.localeCompare(b.clientName)
+    })
   }
 
   /**
@@ -272,6 +343,28 @@ export class InstallmentsListComponent implements OnInit {
     this.showPaymentModal = false
     this.installmentToPay = null
     this.paymentForm.reset()
+  }
+
+  /**
+   * @Function - toggleGroup
+   * @description - Toggle the visibility of a grouped installment card
+   * @author - Vitor Hugo
+   * @param - groupId: string - Identifier of the group
+   * @returns - void
+   */
+  toggleGroup(groupId: string): void {
+    this.expandedGroups[groupId] = !this.expandedGroups[groupId]
+  }
+
+  /**
+   * @Function - isGroupExpanded
+   * @description - Check if a grouped installment card is expanded
+   * @author - Vitor Hugo
+   * @param - groupId: string - Identifier of the group
+   * @returns - boolean - True when group is expanded
+   */
+  isGroupExpanded(groupId: string): boolean {
+    return !!this.expandedGroups[groupId]
   }
 
   /**

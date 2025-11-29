@@ -35,7 +35,7 @@ export class App implements OnInit {
             if (this.authState.token) {
               this.router.navigate(['/'])
             } else {
-              this.router.navigate(['/signin'])
+              this.router.navigate(['/entrar'])
             }
           }, 100)
         }

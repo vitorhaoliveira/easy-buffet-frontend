@@ -5,11 +5,11 @@ import { permissionGuard } from './core/guards/permission.guard'
 export const routes: Routes = [
   // Auth routes (no guard)
   {
-    path: 'signin',
+    path: 'entrar',
     loadComponent: () => import('./features/auth/pages/signin/signin.component').then(m => m.SigninComponent)
   },
   {
-    path: 'signup',
+    path: 'cadastrar',
     loadComponent: () => import('./features/auth/pages/signup/signup.component').then(m => m.SignupComponent)
   },
   
@@ -167,7 +167,7 @@ export const routes: Routes = [
       
       // Reports route
       {
-        path: 'reports/monthly',
+        path: 'relatorios/mensal',
         loadComponent: () => import('./features/reports/monthly-report/monthly-report.component').then(m => m.MonthlyReportComponent),
         data: { module: 'relatorios', action: 'view' },
         canActivate: [permissionGuard]

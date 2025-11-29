@@ -16,16 +16,27 @@ export class SignupComponent {
   email = ''
   password = ''
   confirmPassword = ''
+  organizationName = ''
   isLoading = false
   error = ''
+  showPassword = false
+  showConfirmPassword = false
 
   constructor(
     private authState: AuthStateService,
     private router: Router
   ) {}
 
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword
+  }
+
+  toggleConfirmPasswordVisibility() {
+    this.showConfirmPassword = !this.showConfirmPassword
+  }
+
   async onSubmit() {
-    if (!this.name || !this.email || !this.password || !this.confirmPassword) {
+    if (!this.name || !this.email || !this.password || !this.confirmPassword || !this.organizationName) {
       this.error = 'Por favor, preencha todos os campos'
       return
     }
@@ -43,7 +54,8 @@ export class SignupComponent {
         this.name,
         this.email,
         this.password,
-        this.confirmPassword
+        this.confirmPassword,
+        this.organizationName
       )
       
       if (success) {
@@ -52,6 +64,7 @@ export class SignupComponent {
         this.error = 'Erro ao criar conta. Tente novamente.'
       }
     } catch (err: any) {
+      console.error('Signup component error:', err)
       this.error = err.message || 'Erro ao criar conta. Tente novamente.'
     } finally {
       this.isLoading = false

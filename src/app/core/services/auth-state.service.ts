@@ -44,62 +44,86 @@ export class AuthStateService {
   }
 
   private async initializeAuth(): Promise<void> {
-    if (this.storageService.isAuthenticated()) {
-      const storedData = this.storageService.getStoredUserData()
-      if (storedData) {
-        this.tokenSubject.next(this.storageService.getAccessToken())
-        this.userSubject.next(storedData.user)
-        this.organizationSubject.next(storedData.organization)
-      } else {
-        const token = this.storageService.getAccessToken()
-        const user = this.storageService.getUser()
-        const organization = this.storageService.getOrganization()
-        
-        if (token && user && organization) {
-          this.tokenSubject.next(token)
-          this.userSubject.next(user)
-          this.organizationSubject.next(organization)
-        }
-      }
-
-      // Try to verify token with API
-      try {
-        const response = await firstValueFrom(this.authService.getMe())
-        if (response.success && response.data?.user) {
-          const user = response.data.user
+    console.log('🔄 Initializing auth...')
+    
+    try {
+      if (this.storageService.isAuthenticated()) {
+        console.log('✅ User is authenticated, loading stored data...')
+        const storedData = this.storageService.getStoredUserData()
+        if (storedData) {
+          this.tokenSubject.next(this.storageService.getAccessToken())
+          this.userSubject.next(storedData.user)
+          this.organizationSubject.next(storedData.organization)
+        } else {
+          const token = this.storageService.getAccessToken()
+          const user = this.storageService.getUser()
+          const organization = this.storageService.getOrganization()
           
-          const organization = user.currentOrganization ? {
-            id: user.currentOrganization.id,
-            name: user.currentOrganization.name,
-            role: user.currentOrganization.role,
-            permissions: user.currentOrganization.permissions,
-            createdAt: new Date().toISOString()
-          } : user.organizations?.[0] ? {
-            id: user.organizations[0].id,
-            name: user.organizations[0].name,
-            role: user.organizations[0].role,
-            permissions: user.organizations[0].permissions,
-            createdAt: new Date().toISOString()
-          } : null
-          
-          if (organization) {
+          if (token && user && organization) {
+            this.tokenSubject.next(token)
             this.userSubject.next(user)
             this.organizationSubject.next(organization)
-            this.storageService.setUser(user)
-            this.storageService.setOrganization(organization)
           }
         }
-      } catch (error) {
-        console.error('Error verifying token:', error)
+
+        // Try to verify token with API
+        try {
+          console.log('🔍 Verifying token with API...')
+          const response = await firstValueFrom(this.authService.getMe())
+          if (response.success && response.data?.user) {
+            console.log('✅ Token verified successfully')
+            const user = response.data.user
+            console.log('👤 User data from API:', user)
+            console.log('📋 User organizations from API:', user.organizations)
+            
+            const organization = user.currentOrganization ? {
+              id: user.currentOrganization.id,
+              name: user.currentOrganization.name,
+              role: user.currentOrganization.role,
+              permissions: user.currentOrganization.permissions,
+              createdAt: new Date().toISOString()
+            } : user.organizations?.[0] ? {
+              id: user.organizations[0].id,
+              name: user.organizations[0].name,
+              role: user.organizations[0].role,
+              permissions: user.organizations[0].permissions,
+              createdAt: new Date().toISOString()
+            } : null
+            
+            if (organization) {
+              console.log('💾 Saving user to storage:', user)
+              this.userSubject.next(user)
+              this.organizationSubject.next(organization)
+              this.storageService.setUser(user)
+              this.storageService.setOrganization(organization)
+              
+              // Verify what was saved
+              const savedUser = this.storageService.getUser()
+              console.log('✅ Verified saved user:', savedUser)
+              console.log('✅ Verified saved organizations:', savedUser?.organizations)
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error verifying token:', error)
+          // Clear invalid auth data
+          this.storageService.clearAll()
+          this.tokenSubject.next(null)
+          this.userSubject.next(null)
+          this.organizationSubject.next(null)
+        }
+      } else {
+        console.log('❌ User is not authenticated')
+        this.storageService.clearAll()
+        this.tokenSubject.next(null)
+        this.userSubject.next(null)
+        this.organizationSubject.next(null)
       }
-    } else {
-      this.storageService.clearAll()
-      this.tokenSubject.next(null)
-      this.userSubject.next(null)
-      this.organizationSubject.next(null)
+    } catch (error) {
+      console.error('❌ Error in initializeAuth:', error)
+    } finally {
+      console.log('✅ Auth initialization complete, setting loading to false')
+      this.loadingSubject.next(false)
     }
-    
-    this.loadingSubject.next(false)
   }
 
   async login(email: string, password: string): Promise<boolean> {
@@ -108,6 +132,10 @@ export class AuthStateService {
       
       if (response.success && response.data) {
         const { user, tokens } = response.data
+        
+        console.log('🔐 Login successful')
+        console.log('👤 User data from login:', user)
+        console.log('📋 User organizations from login:', user.organizations)
         
         const organization = user.organizations?.[0] ? {
           id: user.organizations[0].id,
@@ -127,6 +155,13 @@ export class AuthStateService {
         this.storageService.setOrganization(organization)
         this.storageService.setCurrentOrganizationId(organization.id)
         
+        console.log('💾 User saved to storage')
+        
+        // Verify what was saved
+        const savedUser = this.storageService.getUser()
+        console.log('✅ Verified saved user after login:', savedUser)
+        console.log('✅ Verified saved organizations after login:', savedUser?.organizations)
+        
         this.tokenSubject.next(tokens.accessToken)
         this.userSubject.next(user)
         this.organizationSubject.next(organization)
@@ -134,9 +169,16 @@ export class AuthStateService {
         return true
       }
       return false
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error)
-      return false
+      
+      if (error.error) {
+        const errorMessage = error.error.error?.message || error.error.message
+        const errorCode = error.error.error?.code || error.error.code
+        throw new Error(errorMessage || 'Erro ao fazer login')
+      }
+      
+      throw error
     }
   }
 
@@ -153,47 +195,59 @@ export class AuthStateService {
       this.tokenSubject.next(null)
       this.userSubject.next(null)
       this.organizationSubject.next(null)
-      this.router.navigate(['/signin'])
+      this.router.navigate(['/entrar'])
     }
   }
 
-  async signup(name: string, email: string, password: string, confirmPassword: string): Promise<boolean> {
+  async signup(name: string, email: string, password: string, confirmPassword: string, organizationName: string): Promise<boolean> {
     try {
       const response = await firstValueFrom(
-        this.authService.register(name, email, password, confirmPassword)
+        this.authService.register(name, email, password, confirmPassword, organizationName)
       )
       
       if (response.success && response.data) {
-        const { user, tokens } = response.data
-        
-        const organization = user.organizations?.[0] ? {
-          id: user.organizations[0].id,
-          name: user.organizations[0].name,
-          role: user.organizations[0].role,
-          permissions: user.organizations[0].permissions,
-          createdAt: new Date().toISOString()
-        } : null
+        const { user, tokens, organization } = response.data
         
         if (!organization) {
-          console.error('No organization found for user')
+          console.error('No organization found in response')
           return false
+        }
+
+        const organizationData: Organization = {
+          id: organization.id,
+          name: organization.name,
+          role: 'Administrador',
+          permissions: {
+            dashboard: { view: true },
+            cadastros: { create: true, edit: true, delete: true, view: true },
+            financeiro: { create: true, edit: true, delete: true, view: true },
+            relatorios: { view: true, export: true }
+          },
+          createdAt: new Date().toISOString()
         }
         
         this.storageService.setTokens(tokens)
         this.storageService.setUser(user)
-        this.storageService.setOrganization(organization)
+        this.storageService.setOrganization(organizationData)
         this.storageService.setCurrentOrganizationId(organization.id)
         
         this.tokenSubject.next(tokens.accessToken)
         this.userSubject.next(user)
-        this.organizationSubject.next(organization)
+        this.organizationSubject.next(organizationData)
         
         return true
       }
       return false
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error)
-      return false
+      
+      if (error.error) {
+        const errorMessage = error.error.error?.message || error.error.message
+        const errorCode = error.error.error?.code || error.error.code
+        throw new Error(errorMessage || 'Erro ao criar conta')
+      }
+      
+      throw error
     }
   }
 

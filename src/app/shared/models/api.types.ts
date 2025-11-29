@@ -75,6 +75,10 @@ export interface LoginResponse {
 export interface RegisterResponse {
   user: User
   tokens: AuthTokens
+  organization: {
+    id: string
+    name: string
+  }
 }
 
 // Client Types
@@ -398,10 +402,18 @@ export interface UpdateSettingsRequest {
 // Organization Request Types
 export interface CreateOrganizationRequest {
   name: string
+  fantasyName?: string
+  cnpj?: string
+  email?: string
+  phone?: string
 }
 
 export interface UpdateOrganizationRequest {
   name?: string
+  fantasyName?: string
+  cnpj?: string
+  email?: string
+  phone?: string
 }
 
 // Dashboard Types

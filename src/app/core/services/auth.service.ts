@@ -31,17 +31,23 @@ export class AuthService {
   }
 
   /**
-   * Register new user with auto-generated organization name
+   * @Function - register
+   * @description - Register new user with provided organization name
+   * @author - EasyBuffet Team
+   * @param - name: string - User's full name
+   * @param - email: string - User's email address
+   * @param - password: string - User's password
+   * @param - confirmPassword: string - Password confirmation
+   * @param - organizationName: string - Name of the organization/company
+   * @returns - Observable<ApiResponse<RegisterResponse>> - Registration response with user data and tokens
    */
   register(
     name: string,
     email: string,
     password: string,
-    confirmPassword: string
+    confirmPassword: string,
+    organizationName: string
   ): Observable<ApiResponse<RegisterResponse>> {
-    // Auto-generate organization name from user name
-    const organizationName = `${name}'s Organization`
-    
     return this.http.post<ApiResponse<RegisterResponse>>(
       `${this.apiUrl}/auth/register`,
       {

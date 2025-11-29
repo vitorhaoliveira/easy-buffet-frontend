@@ -16,11 +16,16 @@ export class SigninComponent {
   password = ''
   isLoading = false
   error = ''
+  showPassword = false
 
   constructor(
     private authState: AuthStateService,
     private router: Router
   ) {}
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword
+  }
 
   async onSubmit() {
     if (!this.email || !this.password) {
@@ -38,11 +43,16 @@ export class SigninComponent {
       } else {
         this.error = 'Email ou senha inválidos'
       }
-    } catch (err) {
-      this.error = 'Erro ao fazer login. Tente novamente.'
+    } catch (err: any) {
+      console.error('Login component error:', err)
+      this.error = err.message || 'Erro ao fazer login. Tente novamente.'
     } finally {
       this.isLoading = false
     }
+  }
+
+  navigateToSignup() {
+    this.router.navigate(['/cadastrar'])
   }
 }
 
