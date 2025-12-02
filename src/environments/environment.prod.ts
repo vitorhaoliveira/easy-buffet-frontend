@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://localhost:3000/api' // Update this to your production API URL
+  apiBaseUrl: 'https://easy-buffet-backend.onrender.com/api'
 }
 
