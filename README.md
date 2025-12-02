@@ -1,59 +1,238 @@
-# EasybuffetAngular
+# EasyBuffet Angular
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.
+A modern, comprehensive event management and financial control system built with Angular. EasyBuffet helps businesses manage clients, contracts, events, packages, and financial operations with an intuitive and responsive interface.
 
-## Development server
+## 📋 Table of Contents
 
-To start a local development server, run:
+- [About](#about)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Development](#development)
+- [Code Standards](#code-standards)
+- [Building](#building)
+- [Testing](#testing)
+- [Contributing](#contributing)
+
+## 🎯 About
+
+EasyBuffet is a complete business management solution designed for event planning and catering companies. It provides tools to manage the entire business workflow, from client registration to financial reports, all in one integrated platform.
+
+## ✨ Features
+
+- **Authentication & Authorization**: Secure login system with role-based access control
+- **Dashboard**: Real-time overview of business metrics and KPIs
+- **Client Management**: Complete CRUD operations for client data
+- **Event Management**: Plan and track events with detailed information
+- **Contract Management**: Create and manage contracts with clients
+- **Package Management**: Define and manage service packages
+- **Financial Control**:
+  - Cost tracking and management
+  - Installment payments
+  - Financial dashboard with reports
+- **User Management**: Multi-user support with permission management
+- **Reports**: Generate monthly reports and analytics
+- **Settings**: Company settings and permission configuration
+- **Responsive Design**: Mobile-friendly interface built with Tailwind CSS
+
+## 🚀 Tech Stack
+
+- **Framework**: Angular 20.x
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: RxJS with service-based state management
+- **HTTP Client**: Angular HttpClient with interceptors
+- **Routing**: Angular Router with guards
+- **Build Tool**: Angular CLI
+- **Code Quality**: ESLint with Angular and TypeScript rules
+
+## 📁 Project Structure
+
+```
+src/app/
+├── core/                    # Core functionality (singleton services)
+│   ├── guards/             # Route guards (auth, permissions)
+│   ├── interceptors/       # HTTP interceptors (auth, token refresh)
+│   └── services/           # Core services (auth, storage, API services)
+├── features/               # Feature modules
+│   ├── auth/              # Authentication pages
+│   ├── dashboard/         # Main dashboard
+│   ├── financial/         # Financial management (costs, installments)
+│   ├── profile/           # User profile and settings
+│   ├── register/          # Registration modules (clients, events, contracts, packages, users)
+│   ├── reports/           # Report generation
+│   └── settings/          # Application settings
+├── layouts/               # Layout components
+│   └── main-layout/       # Main application layout
+├── shared/                # Shared resources
+│   ├── components/        # Reusable components
+│   ├── directives/        # Custom directives
+│   ├── models/            # TypeScript interfaces and types
+│   ├── utils/             # Utility functions
+│   └── validators/        # Custom form validators
+└── environments/          # Environment configurations
+```
+
+## 🏁 Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Angular CLI (`npm install -g @angular/cli`)
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd easybuffet-angular
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+   - Configure `src/environments/environment.ts` for development
+   - Configure `src/environments/environment.prod.ts` for production
+
+4. Start the development server:
+```bash
+ng serve
+```
+
+5. Open your browser and navigate to `http://localhost:4200/`
+
+## 💻 Development
+
+### Development Server
+
+Run the development server with live reload:
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+The application will automatically reload when you modify source files.
 
-## Code scaffolding
+### Code Scaffolding
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Generate new components, services, and other Angular artifacts:
 
 ```bash
+# Generate a new component
+ng generate component features/feature-name/component-name
+
+# Generate a new service
+ng generate service core/services/service-name
+
+# Generate a new guard
+ng generate guard core/guards/guard-name
+
+# See all available schematics
 ng generate --help
 ```
 
-## Building
+### Linting
 
-To build the project run:
+Check code quality and style:
+
+```bash
+npm run lint
+```
+
+Fix auto-fixable linting issues:
+
+```bash
+npm run lint:fix
+```
+
+## 📏 Code Standards
+
+This project follows strict coding standards to ensure consistency and quality:
+
+- **Language**: All code, comments, and documentation must be in English
+- **Style Guide**: Follows Angular style guide and Clean Code principles
+- **SOLID Principles**: Applied throughout the codebase
+- **TypeScript**: Strict mode enabled, explicit typing required
+- **ESLint**: Configured with Angular and TypeScript rules
+- **No Semicolons**: Following the project's ESLint configuration
+- **Indentation**: 2 spaces
+- **Documentation**: All functions must have JSDoc comments
+
+For detailed standards, see the workspace rules and development guidelines.
+
+## 🏗️ Building
+
+### Development Build
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+### Production Build
 
-## Running unit tests
+```bash
+ng build --configuration production
+```
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Build artifacts will be stored in the `dist/` directory. Production builds are optimized for performance and speed.
+
+## 🧪 Testing
+
+### Unit Tests
+
+Run unit tests with Karma:
 
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+### End-to-End Tests
 
 ```bash
 ng e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Note: E2E testing framework needs to be configured separately.
 
-## Additional Resources
+## 🤝 Contributing
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1. Follow the established code standards and style guide
+2. Write meaningful commit messages in English
+3. Ensure all tests pass before submitting
+4. Update documentation as needed
+5. Keep components focused and services reusable
+
+### Commit Message Convention
+
+Follow conventional commits format:
+
+```
+feat: add new feature
+fix: bug fix
+docs: documentation changes
+style: code style changes
+refactor: code refactoring
+test: adding tests
+chore: maintenance tasks
+```
+
+## 📚 Additional Resources
+
+- [Angular Documentation](https://angular.dev)
+- [Angular CLI Reference](https://angular.dev/tools/cli)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [RxJS Documentation](https://rxjs.dev/)
+
+## 📝 License
+
+This project is proprietary software. All rights reserved.
+
+---
+
+**Built with ❤️ using Angular**
