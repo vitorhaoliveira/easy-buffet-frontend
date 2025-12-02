@@ -181,6 +181,45 @@ ng build --configuration production
 
 Build artifacts will be stored in the `dist/` directory. Production builds are optimized for performance and speed.
 
+## 🚀 Deployment
+
+### Vercel Deployment
+
+This project is configured to deploy on Vercel. The `vercel.json` file includes all necessary configurations.
+
+#### Automatic Deployment
+
+1. Connect your repository to Vercel
+2. Vercel will automatically detect the Angular framework
+3. Push to your main branch to trigger automatic deployments
+
+#### Manual Deployment
+
+Install Vercel CLI:
+```bash
+npm install -g vercel
+```
+
+Deploy to production:
+```bash
+vercel --prod
+```
+
+#### Configuration
+
+The `vercel.json` file includes:
+- Correct output directory (`dist/easybuffet-angular/browser`)
+- SPA routing configuration (all routes redirect to `index.html`)
+- Optimized caching headers for static assets
+- Framework detection for Angular
+
+#### Environment Variables
+
+Set up environment variables in Vercel dashboard:
+1. Go to Project Settings → Environment Variables
+2. Add required variables for production
+3. Redeploy to apply changes
+
 ## 🧪 Testing
 
 ### Unit Tests
