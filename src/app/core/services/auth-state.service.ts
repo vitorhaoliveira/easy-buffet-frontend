@@ -43,12 +43,15 @@ export class AuthStateService {
     this.initializeAuth()
   }
 
+  /**
+   * @Function - initializeAuth
+   * @description - Initializes authentication state from stored data and verifies token
+   * @author - EasyBuffet Team
+   * @returns - Promise<void>
+   */
   private async initializeAuth(): Promise<void> {
-    console.log('🔄 Initializing auth...')
-    
     try {
       if (this.storageService.isAuthenticated()) {
-        console.log('✅ User is authenticated, loading stored data...')
         const storedData = this.storageService.getStoredUserData()
         if (storedData) {
           this.tokenSubject.next(this.storageService.getAccessToken())
@@ -66,15 +69,11 @@ export class AuthStateService {
           }
         }
 
-        // Try to verify token with API
+        // Verify token with API
         try {
-          console.log('🔍 Verifying token with API...')
           const response = await firstValueFrom(this.authService.getMe())
           if (response.success && response.data?.user) {
-            console.log('✅ Token verified successfully')
             const user = response.data.user
-            console.log('👤 User data from API:', user)
-            console.log('📋 User organizations from API:', user.organizations)
             
             const organization = user.currentOrganization ? {
               id: user.currentOrganization.id,
@@ -91,20 +90,13 @@ export class AuthStateService {
             } : null
             
             if (organization) {
-              console.log('💾 Saving user to storage:', user)
               this.userSubject.next(user)
               this.organizationSubject.next(organization)
               this.storageService.setUser(user)
               this.storageService.setOrganization(organization)
-              
-              // Verify what was saved
-              const savedUser = this.storageService.getUser()
-              console.log('✅ Verified saved user:', savedUser)
-              console.log('✅ Verified saved organizations:', savedUser?.organizations)
             }
           }
         } catch (error) {
-          console.error('❌ Error verifying token:', error)
           // Clear invalid auth data
           this.storageService.clearAll()
           this.tokenSubject.next(null)
@@ -112,30 +104,32 @@ export class AuthStateService {
           this.organizationSubject.next(null)
         }
       } else {
-        console.log('❌ User is not authenticated')
         this.storageService.clearAll()
         this.tokenSubject.next(null)
         this.userSubject.next(null)
         this.organizationSubject.next(null)
       }
     } catch (error) {
-      console.error('❌ Error in initializeAuth:', error)
+      // Silent fail - auth will be handled by login
     } finally {
-      console.log('✅ Auth initialization complete, setting loading to false')
       this.loadingSubject.next(false)
     }
   }
 
+  /**
+   * @Function - login
+   * @description - Authenticates user and sets up application state
+   * @author - EasyBuffet Team
+   * @param - email: string - User's email
+   * @param - password: string - User's password
+   * @returns - Promise<boolean> - True if login successful
+   */
   async login(email: string, password: string): Promise<boolean> {
     try {
       const response = await firstValueFrom(this.authService.login(email, password))
       
       if (response.success && response.data) {
         const { user, tokens } = response.data
-        
-        console.log('🔐 Login successful')
-        console.log('👤 User data from login:', user)
-        console.log('📋 User organizations from login:', user.organizations)
         
         const organization = user.organizations?.[0] ? {
           id: user.organizations[0].id,
@@ -146,21 +140,13 @@ export class AuthStateService {
         } : null
         
         if (!organization) {
-          console.error('No organization found for user')
-          return false
+          throw new Error('Nenhuma organização encontrada para este usuário')
         }
         
         this.storageService.setTokens(tokens)
         this.storageService.setUser(user)
         this.storageService.setOrganization(organization)
         this.storageService.setCurrentOrganizationId(organization.id)
-        
-        console.log('💾 User saved to storage')
-        
-        // Verify what was saved
-        const savedUser = this.storageService.getUser()
-        console.log('✅ Verified saved user after login:', savedUser)
-        console.log('✅ Verified saved organizations after login:', savedUser?.organizations)
         
         this.tokenSubject.next(tokens.accessToken)
         this.userSubject.next(user)
@@ -170,11 +156,8 @@ export class AuthStateService {
       }
       return false
     } catch (error: any) {
-      console.error('Login error:', error)
-      
       if (error.error) {
         const errorMessage = error.error.error?.message || error.error.message
-        const errorCode = error.error.error?.code || error.error.code
         throw new Error(errorMessage || 'Erro ao fazer login')
       }
       
@@ -182,6 +165,12 @@ export class AuthStateService {
     }
   }
 
+  /**
+   * @Function - logout
+   * @description - Logs out user and clears application state
+   * @author - EasyBuffet Team
+   * @returns - Promise<void>
+   */
   async logout(): Promise<void> {
     try {
       const refreshToken = this.storageService.getRefreshToken()
@@ -189,7 +178,7 @@ export class AuthStateService {
         await firstValueFrom(this.authService.logout(refreshToken))
       }
     } catch (error) {
-      console.error('Logout error:', error)
+      // Silent fail on logout error
     } finally {
       this.storageService.clearAll()
       this.tokenSubject.next(null)
@@ -199,6 +188,17 @@ export class AuthStateService {
     }
   }
 
+  /**
+   * @Function - signup
+   * @description - Registers new user and sets up application state
+   * @author - EasyBuffet Team
+   * @param - name: string - User's full name
+   * @param - email: string - User's email
+   * @param - password: string - User's password
+   * @param - confirmPassword: string - Password confirmation
+   * @param - organizationName: string - Organization/company name
+   * @returns - Promise<boolean> - True if signup successful
+   */
   async signup(name: string, email: string, password: string, confirmPassword: string, organizationName: string): Promise<boolean> {
     try {
       const response = await firstValueFrom(
@@ -209,8 +209,7 @@ export class AuthStateService {
         const { user, tokens, organization } = response.data
         
         if (!organization) {
-          console.error('No organization found in response')
-          return false
+          throw new Error('Organização não encontrada na resposta')
         }
 
         const organizationData: Organization = {
@@ -239,11 +238,8 @@ export class AuthStateService {
       }
       return false
     } catch (error: any) {
-      console.error('Signup error:', error)
-      
       if (error.error) {
         const errorMessage = error.error.error?.message || error.error.message
-        const errorCode = error.error.error?.code || error.error.code
         throw new Error(errorMessage || 'Erro ao criar conta')
       }
       
@@ -251,6 +247,13 @@ export class AuthStateService {
     }
   }
 
+  /**
+   * @Function - updateUser
+   * @description - Updates current user data
+   * @author - EasyBuffet Team
+   * @param - userData: Partial<User> - User data to update
+   * @returns - Promise<boolean> - True if update successful
+   */
   async updateUser(userData: Partial<User>): Promise<boolean> {
     const currentUser = this.userSubject.value
     if (!currentUser) {
@@ -266,7 +269,6 @@ export class AuthStateService {
       
       return true
     } catch (error) {
-      console.error('Error updating user:', error)
       return false
     }
   }

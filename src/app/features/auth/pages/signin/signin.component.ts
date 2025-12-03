@@ -44,7 +44,6 @@ export class SigninComponent {
         this.error = 'Email ou senha inválidos'
       }
     } catch (err: any) {
-      console.error('Login component error:', err)
       this.error = err.message || 'Erro ao fazer login. Tente novamente.'
     } finally {
       this.isLoading = false

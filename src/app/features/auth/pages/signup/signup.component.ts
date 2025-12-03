@@ -64,7 +64,6 @@ export class SignupComponent {
         this.error = 'Erro ao criar conta. Tente novamente.'
       }
     } catch (err: any) {
-      console.error('Signup component error:', err)
       this.error = err.message || 'Erro ao criar conta. Tente novamente.'
     } finally {
       this.isLoading = false

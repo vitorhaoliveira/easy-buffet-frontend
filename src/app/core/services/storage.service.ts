@@ -23,7 +23,12 @@ export class StorageService {
   private readonly ACCESS_TOKEN_KEY = 'accessToken'
   private readonly REFRESH_TOKEN_KEY = 'refreshToken'
 
-  // User data methods
+  /**
+   * @Function - getUser
+   * @description - Retrieves user data from local storage
+   * @author - EasyBuffet Team
+   * @returns - User | null
+   */
   getUser(): User | null {
     try {
       const userData = localStorage.getItem(this.USER_KEY)
@@ -32,7 +37,6 @@ export class StorageService {
       }
       return JSON.parse(userData)
     } catch (error) {
-      console.error('Error parsing stored user:', error)
       return null
     }
   }
@@ -41,7 +45,12 @@ export class StorageService {
     localStorage.setItem(this.USER_KEY, JSON.stringify(user))
   }
 
-  // Organization data methods
+  /**
+   * @Function - getOrganization
+   * @description - Retrieves organization data from local storage
+   * @author - EasyBuffet Team
+   * @returns - Organization | null
+   */
   getOrganization(): Organization | null {
     try {
       const orgData = localStorage.getItem(this.ORGANIZATION_KEY)
@@ -50,7 +59,6 @@ export class StorageService {
       }
       return JSON.parse(orgData)
     } catch (error) {
-      console.error('Error parsing stored organization:', error)
       return null
     }
   }
@@ -146,30 +154,23 @@ export class StorageService {
     return (modulePermissions as any)[action] === true
   }
 
-  // Organization switching
+  /**
+   * @Function - switchOrganization
+   * @description - Switches the current active organization
+   * @author - EasyBuffet Team
+   * @param - organizationId: string - ID of the organization to switch to
+   * @returns - boolean - True if switch was successful
+   */
   switchOrganization(organizationId: string): boolean {
-    console.log('💾 switchOrganization called with ID:', organizationId)
-    
     const user = this.getUser()
-    console.log('👤 Current user:', user)
     
-    if (!user) {
-      console.error('❌ No user found in storage')
+    if (!user || !user.organizations) {
       return false
     }
-    
-    if (!user.organizations) {
-      console.error('❌ User has no organizations array')
-      return false
-    }
-    
-    console.log('📋 User organizations:', user.organizations)
 
     const targetOrg = user.organizations.find(org => org.id === organizationId)
-    console.log('🎯 Target organization found:', targetOrg)
     
     if (!targetOrg) {
-      console.error('❌ Target organization not found in user organizations')
       return false
     }
 
@@ -191,14 +192,11 @@ export class StorageService {
       createdAt: new Date().toISOString()
     }
 
-    console.log('💾 Updating storage with:', { updatedUser, organization })
-
     // Update stored data
     this.setUser(updatedUser)
     this.setOrganization(organization)
     this.setCurrentOrganizationId(organizationId)
 
-    console.log('✅ Storage updated successfully')
     return true
   }
 

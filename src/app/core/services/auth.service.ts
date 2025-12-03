@@ -97,8 +97,14 @@ export class AuthService {
     )
   }
 
+  /**
+   * @Function - handleError
+   * @description - Handles and rethrows authentication errors
+   * @author - EasyBuffet Team
+   * @param - error: any - The error to handle
+   * @returns - Observable<never> - Throws the error
+   */
   private handleError(error: any): Observable<never> {
-    console.error('Auth service error:', error)
     throw error
   }
 }
