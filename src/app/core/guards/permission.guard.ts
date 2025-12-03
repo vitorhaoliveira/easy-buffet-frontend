@@ -3,6 +3,12 @@ import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router'
 import { StorageService } from '../services/storage.service'
 import type { UserPermissions } from '@shared/models/api.types'
 
+/**
+ * @Function - permissionGuard
+ * @description - Guards routes that require specific permissions
+ * @author - EasyBuffet Team
+ * @returns - boolean - True if user has required permission
+ */
 export const permissionGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const storageService = inject(StorageService)
   const router = inject(Router)
@@ -10,24 +16,19 @@ export const permissionGuard: CanActivateFn = (route: ActivatedRouteSnapshot) =>
   const module = route.data['module'] as keyof UserPermissions
   const action = route.data['action'] as string
 
-  console.log('🔐 Permission guard - module:', module, 'action:', action)
-
+  // Allow if no permission requirements specified
   if (!module || !action) {
-    console.log('✅ Permission guard - no requirements, access granted')
-    return true // Allow if no permission requirements specified
+    return true
   }
 
   const hasPermission = storageService.hasPermission(module, action)
-  console.log('🔐 Permission guard - hasPermission:', hasPermission)
 
   if (!hasPermission) {
-    console.log('❌ Permission guard - access denied, redirecting to /')
-    // Redirect to dashboard or show forbidden page
-    router.navigate(['/'])
+    // Redirect to account settings page (no permission guard)
+    router.navigate(['/conta'])
     return false
   }
 
-  console.log('✅ Permission guard - access granted')
   return true
 }
 

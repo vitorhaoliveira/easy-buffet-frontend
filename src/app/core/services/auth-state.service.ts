@@ -131,25 +131,45 @@ export class AuthStateService {
       if (response.success && response.data) {
         const { user, tokens } = response.data
         
-        const organization = user.organizations?.[0] ? {
-          id: user.organizations[0].id,
-          name: user.organizations[0].name,
-          role: user.organizations[0].role,
-          permissions: user.organizations[0].permissions,
-          createdAt: new Date().toISOString()
-        } : null
+        // Get organization from user data or currentOrganization
+        const orgData = user.currentOrganization || user.organizations?.[0]
         
-        if (!organization) {
+        if (!orgData) {
           throw new Error('Nenhuma organização encontrada para este usuário')
+        }
+
+        const organization: Organization = {
+          id: orgData.id,
+          name: orgData.name,
+          role: orgData.role,
+          permissions: orgData.permissions,
+          createdAt: new Date().toISOString()
+        }
+
+        // Ensure user object has proper structure
+        const updatedUser = {
+          ...user,
+          organizations: user.organizations || [{
+            id: orgData.id,
+            name: orgData.name,
+            role: orgData.role,
+            permissions: orgData.permissions
+          }],
+          currentOrganization: {
+            id: orgData.id,
+            name: orgData.name,
+            role: orgData.role,
+            permissions: orgData.permissions
+          }
         }
         
         this.storageService.setTokens(tokens)
-        this.storageService.setUser(user)
+        this.storageService.setUser(updatedUser)
         this.storageService.setOrganization(organization)
         this.storageService.setCurrentOrganizationId(organization.id)
         
         this.tokenSubject.next(tokens.accessToken)
-        this.userSubject.next(user)
+        this.userSubject.next(updatedUser)
         this.organizationSubject.next(organization)
         
         return true
@@ -212,26 +232,45 @@ export class AuthStateService {
           throw new Error('Organização não encontrada na resposta')
         }
 
+        const defaultPermissions = {
+          dashboard: { view: true },
+          cadastros: { create: true, edit: true, delete: true, view: true },
+          financeiro: { create: true, edit: true, delete: true, view: true },
+          relatorios: { view: true, export: true }
+        }
+
         const organizationData: Organization = {
           id: organization.id,
           name: organization.name,
           role: 'Administrador',
-          permissions: {
-            dashboard: { view: true },
-            cadastros: { create: true, edit: true, delete: true, view: true },
-            financeiro: { create: true, edit: true, delete: true, view: true },
-            relatorios: { view: true, export: true }
-          },
+          permissions: defaultPermissions,
           createdAt: new Date().toISOString()
+        }
+
+        // Update user object to include organizations array with permissions
+        const updatedUser = {
+          ...user,
+          organizations: [{
+            id: organization.id,
+            name: organization.name,
+            role: 'Administrador',
+            permissions: defaultPermissions
+          }],
+          currentOrganization: {
+            id: organization.id,
+            name: organization.name,
+            role: 'Administrador',
+            permissions: defaultPermissions
+          }
         }
         
         this.storageService.setTokens(tokens)
-        this.storageService.setUser(user)
+        this.storageService.setUser(updatedUser)
         this.storageService.setOrganization(organizationData)
         this.storageService.setCurrentOrganizationId(organization.id)
         
         this.tokenSubject.next(tokens.accessToken)
-        this.userSubject.next(user)
+        this.userSubject.next(updatedUser)
         this.organizationSubject.next(organizationData)
         
         return true
