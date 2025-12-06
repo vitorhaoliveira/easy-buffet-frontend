@@ -19,7 +19,8 @@ import {
 import { EventService } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
 import { PackageService } from '@core/services/package.service'
-import type { Event, Client, Package } from '@shared/models/api.types'
+import { UnitService } from '@core/services/unit.service'
+import type { Event, Client, Package, Unit } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -53,8 +54,10 @@ export class EventsListComponent implements OnInit {
   events: Event[] = []
   clients: Client[] = []
   packages: Package[] = []
+  units: Unit[] = []
   searchTerm: string = ''
   filterStatus: string = 'todos'
+  filterUnitId: string = ''
   isLoading: boolean = true
   error: string = ''
   showDeleteModal: boolean = false
@@ -64,7 +67,8 @@ export class EventsListComponent implements OnInit {
   constructor(
     private eventService: EventService,
     private clientService: ClientService,
-    private packageService: PackageService
+    private packageService: PackageService,
+    private unitService: UnitService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -76,10 +80,12 @@ export class EventsListComponent implements OnInit {
       this.isLoading = true
       this.error = ''
 
-      const [eventsResponse, clientsResponse, packagesResponse] = await Promise.all([
-        firstValueFrom(this.eventService.getEvents()),
+      const unitId = this.filterUnitId || undefined
+      const [eventsResponse, clientsResponse, packagesResponse, unitsResponse] = await Promise.all([
+        firstValueFrom(this.eventService.getEvents(unitId)),
         firstValueFrom(this.clientService.getClients()),
-        firstValueFrom(this.packageService.getPackages())
+        firstValueFrom(this.packageService.getPackages()),
+        firstValueFrom(this.unitService.getUnits(true))
       ])
 
       if (eventsResponse.success && eventsResponse.data) {
@@ -95,11 +101,25 @@ export class EventsListComponent implements OnInit {
       if (packagesResponse.success && packagesResponse.data) {
         this.packages = packagesResponse.data
       }
+
+      if (unitsResponse.success && unitsResponse.data) {
+        this.units = unitsResponse.data
+      }
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar dados'
     } finally {
       this.isLoading = false
     }
+  }
+
+  /**
+   * @Function - onUnitFilterChange
+   * @description - Handles unit filter change and reloads events
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async onUnitFilterChange(): Promise<void> {
+    await this.loadData()
   }
 
   get filteredEvents(): Event[] {
@@ -219,6 +239,31 @@ export class EventsListComponent implements OnInit {
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  /**
+   * @Function - getUnitName
+   * @description - Gets the unit name from an event
+   * @author - Vitor Hugo
+   * @param - event: Event - The event to get unit from
+   * @returns - string
+   */
+  getUnitName(event: Event): string | null {
+    if (event.unit) {
+      return event.unit.code || event.unit.name
+    }
+    return null
+  }
+
+  /**
+   * @Function - getUnitColor
+   * @description - Gets the unit color from an event
+   * @author - Vitor Hugo
+   * @param - event: Event - The event to get unit color from
+   * @returns - string
+   */
+  getUnitColor(event: Event): string {
+    return event.unit?.color || '#6c757d'
   }
 }
 

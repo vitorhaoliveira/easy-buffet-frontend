@@ -22,6 +22,16 @@
       ></app-search-bar>
     </div>
     <select
+      [(ngModel)]="filterUnitId"
+      (ngModelChange)="onUnitFilterChange()"
+      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <option value="">Todas as unidades</option>
+      @for (unit of units; track unit.id) {
+        <option [value]="unit.id">{{ unit.name }}</option>
+      }
+    </select>
+    <select
       [(ngModel)]="filterStatus"
       class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
     >
@@ -59,6 +69,7 @@
             <th appTableHead>Nome</th>
             <th appTableHead>Cliente</th>
             <th appTableHead>Pacote</th>
+            <th appTableHead>Unidade</th>
             <th appTableHead>Data</th>
             <th appTableHead>Local</th>
             <th appTableHead>Status</th>
@@ -71,6 +82,18 @@
               <td appTableCell class="font-medium">{{ event.name }}</td>
               <td appTableCell>{{ getClientName(event.clientId) }}</td>
               <td appTableCell>{{ getPackageName(event.packageId) }}</td>
+              <td appTableCell>
+                @if (event.unit) {
+                  <span 
+                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
+                    [style.backgroundColor]="getUnitColor(event)"
+                  >
+                    {{ getUnitName(event) }}
+                  </span>
+                } @else {
+                  <span class="text-muted-foreground">-</span>
+                }
+              </td>
               <td appTableCell>
                 <div class="flex items-center space-x-2">
                   <lucide-icon [img]="CalendarIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>

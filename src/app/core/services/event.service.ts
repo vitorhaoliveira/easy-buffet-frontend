@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { Observable } from 'rxjs'
 import { environment } from '@environments/environment'
 import type {
@@ -17,8 +17,19 @@ export class EventService {
 
   constructor(private http: HttpClient) {}
 
-  getEvents(): Observable<ApiResponse<Event[]>> {
-    return this.http.get<ApiResponse<Event[]>>(`${this.apiUrl}/events`)
+  /**
+   * @Function - getEvents
+   * @description - Retrieves a list of events, optionally filtered by unit
+   * @author - Vitor Hugo
+   * @param - unitId?: string - Optional filter for events by unit
+   * @returns - Observable<ApiResponse<Event[]>>
+   */
+  getEvents(unitId?: string): Observable<ApiResponse<Event[]>> {
+    let params = new HttpParams()
+    if (unitId) {
+      params = params.set('unitId', unitId)
+    }
+    return this.http.get<ApiResponse<Event[]>>(`${this.apiUrl}/events`, { params })
   }
 
   getEventById(id: string): Observable<ApiResponse<Event>> {

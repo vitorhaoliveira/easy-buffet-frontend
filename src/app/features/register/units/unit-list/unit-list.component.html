@@ -1,0 +1,148 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">Unidades</h1>
+      <p class="text-muted-foreground">
+        Gerencie as unidades da sua organização
+      </p>
+    </div>
+    <button appButton variant="outline" routerLink="/cadastros/unidades/novo">
+      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+      Nova Unidade
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex items-center space-x-2">
+    <div class="flex-1">
+      <app-search-bar
+        placeholder="Buscar por nome, código, cidade ou estado..."
+        [(ngModel)]="searchTerm"
+      ></app-search-bar>
+    </div>
+    <select
+      [(ngModel)]="filterActive"
+      (ngModelChange)="onFilterChange()"
+      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <option value="all">Todas as unidades</option>
+      <option value="active">Apenas ativas</option>
+      <option value="inactive">Apenas inativas</option>
+    </select>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="flex items-center justify-center h-64">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <p class="mt-2 text-muted-foreground">Carregando unidades...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Tabela -->
+  @if (!isLoading) {
+    <div class="rounded-md border">
+      <app-table>
+        <thead appTableHeader>
+          <tr appTableRow>
+            <th appTableHead>Nome</th>
+            <th appTableHead>Código</th>
+            <th appTableHead>Localização</th>
+            <th appTableHead>Status</th>
+            <th appTableHead>Eventos</th>
+            <th appTableHead>Clientes</th>
+            <th appTableHead class="text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody appTableBody>
+          @for (unit of filteredUnits; track unit.id) {
+            <tr appTableRow>
+              <td appTableCell class="font-medium">
+                <div class="flex items-center space-x-2">
+                  <div 
+                    class="w-3 h-3 rounded-full"
+                    [style.backgroundColor]="getUnitColor(unit)"
+                  ></div>
+                  <span>{{ unit.name }}</span>
+                </div>
+              </td>
+              <td appTableCell>
+                @if (unit.code) {
+                  <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ unit.code }}
+                  </span>
+                } @else {
+                  <span class="text-muted-foreground">-</span>
+                }
+              </td>
+              <td appTableCell>{{ getLocationString(unit) }}</td>
+              <td appTableCell>
+                <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + (unit.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800')">
+                  {{ unit.isActive ? 'Ativa' : 'Inativa' }}
+                </span>
+              </td>
+              <td appTableCell>
+                {{ unit._count?.events || 0 }}
+              </td>
+              <td appTableCell>
+                {{ unit._count?.clients || 0 }}
+              </td>
+              <td appTableCell class="text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <button 
+                    appButton 
+                    variant="ghost" 
+                    size="sm" 
+                    [routerLink]="['/cadastros/unidades/editar', unit.id]"
+                  >
+                    <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                  <button
+                    appButton
+                    variant="ghost"
+                    size="sm"
+                    (click)="handleDeleteClick(unit)"
+                  >
+                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </app-table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && filteredUnits.length === 0) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">
+        {{ searchTerm ? 'Nenhuma unidade encontrada.' : 'Nenhuma unidade cadastrada.' }}
+      </p>
+    </div>
+  }
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteModal"
+    (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()"
+    title="Excluir Unidade"
+    [message]="'Tem certeza que deseja excluir a unidade &quot;' + (unitToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeleting"></app-confirmation-modal>
+</div>
+

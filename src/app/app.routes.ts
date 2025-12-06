@@ -107,6 +107,26 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
+      // Units routes
+      {
+        path: 'cadastros/unidades',
+        loadComponent: () => import('./features/register/units/unit-list/unit-list.component').then(m => m.UnitListComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/unidades/novo',
+        loadComponent: () => import('./features/register/units/unit-form/unit-form.component').then(m => m.UnitFormComponent),
+        data: { module: 'cadastros', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/unidades/editar/:id',
+        loadComponent: () => import('./features/register/units/unit-form/unit-form.component').then(m => m.UnitFormComponent),
+        data: { module: 'cadastros', action: 'edit' },
+        canActivate: [permissionGuard]
+      },
+      
       // Contracts routes
       {
         path: 'cadastros/contratos',

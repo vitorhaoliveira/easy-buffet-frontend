@@ -10,7 +10,8 @@ import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { EventService } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
 import { PackageService } from '@core/services/package.service'
-import type { Client, Package, CreateEventRequest, UpdateEventRequest } from '@shared/models/api.types'
+import { UnitService } from '@core/services/unit.service'
+import type { Client, Package, Unit, CreateEventRequest, UpdateEventRequest } from '@shared/models/api.types'
 
 @Component({
   selector: 'app-events-form',
@@ -32,6 +33,7 @@ export class EventsFormComponent implements OnInit {
   eventForm!: FormGroup
   clients: Client[] = []
   packages: Package[] = []
+  units: Unit[] = []
   isEditing: boolean = false
   eventId: string | null = null
   isLoading: boolean = false
@@ -43,12 +45,14 @@ export class EventsFormComponent implements OnInit {
     private eventService: EventService,
     private clientService: ClientService,
     private packageService: PackageService,
+    private unitService: UnitService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     this.eventForm = this.fb.group({
       clientId: ['', [Validators.required]],
       packageId: ['', [Validators.required]],
+      unitId: [''],
       name: ['', [Validators.required]],
       eventDate: ['', [Validators.required]],
       eventTime: ['', [Validators.required]],
@@ -74,9 +78,10 @@ export class EventsFormComponent implements OnInit {
 
   async loadClientsAndPackages(): Promise<void> {
     try {
-      const [clientsResponse, packagesResponse] = await Promise.all([
+      const [clientsResponse, packagesResponse, unitsResponse] = await Promise.all([
         firstValueFrom(this.clientService.getClients()),
-        firstValueFrom(this.packageService.getPackages())
+        firstValueFrom(this.packageService.getPackages()),
+        firstValueFrom(this.unitService.getUnits(true))
       ])
 
       if (clientsResponse.success && clientsResponse.data) {
@@ -85,6 +90,10 @@ export class EventsFormComponent implements OnInit {
 
       if (packagesResponse.success && packagesResponse.data) {
         this.packages = packagesResponse.data
+      }
+
+      if (unitsResponse.success && unitsResponse.data) {
+        this.units = unitsResponse.data
       }
     } catch (err: any) {
       this.errorMessage = err.message || 'Erro ao carregar dados'
@@ -99,6 +108,7 @@ export class EventsFormComponent implements OnInit {
         this.eventForm.patchValue({
           clientId: event.clientId,
           packageId: event.packageId,
+          unitId: event.unitId || '',
           name: event.name,
           eventDate: event.eventDate.split('T')[0],
           eventTime: this.formatTimeToString(event.eventTime),
@@ -147,6 +157,7 @@ export class EventsFormComponent implements OnInit {
       const eventData = {
         clientId: formValue.clientId,
         packageId: formValue.packageId,
+        unitId: formValue.unitId || undefined,
         name: formValue.name,
         eventDate: formValue.eventDate,
         eventTime: this.formatTimeToString(formValue.eventTime),

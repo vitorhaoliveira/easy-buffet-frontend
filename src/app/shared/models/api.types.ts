@@ -106,11 +106,39 @@ export interface Package {
   updatedAt?: string
 }
 
+// Unit Types
+export interface Unit {
+  id: string
+  organizationId: string
+  name: string
+  code?: string
+  color?: string
+  zipCode?: string
+  street?: string
+  number?: string
+  complement?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  isActive: boolean
+  notes?: string
+  createdAt: string
+  updatedAt?: string
+  deletedAt?: string | null
+  _count?: {
+    events?: number
+    clients?: number
+    packages?: number
+    contracts?: number
+  }
+}
+
 // Event Types
 export interface Event {
   id: string
   clientId: string
   packageId: string
+  unitId?: string
   name: string
   eventDate: string
   eventTime: string
@@ -120,6 +148,12 @@ export interface Event {
   notes?: string
   createdAt: string
   updatedAt?: string
+  unit?: {
+    id: string
+    name: string
+    code?: string
+    color?: string
+  }
 }
 
 // Contract Types
@@ -318,6 +352,7 @@ export interface UpdatePackageRequest {
 export interface CreateEventRequest {
   clientId: string
   packageId: string
+  unitId?: string
   name: string
   eventDate: string
   eventTime: string
@@ -330,6 +365,7 @@ export interface CreateEventRequest {
 export interface UpdateEventRequest {
   clientId?: string
   packageId?: string
+  unitId?: string
   name?: string
   eventDate?: string
   eventTime?: string
@@ -386,6 +422,35 @@ export interface UpdateCostRequest {
   amount?: number
   category?: 'staff' | 'food' | 'decoration' | 'other'
   eventId?: string
+  notes?: string
+}
+
+export interface CreateUnitRequest {
+  name: string
+  code?: string
+  color?: string
+  zipCode?: string
+  street?: string
+  number?: string
+  complement?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  notes?: string
+}
+
+export interface UpdateUnitRequest {
+  name?: string
+  code?: string
+  color?: string
+  zipCode?: string
+  street?: string
+  number?: string
+  complement?: string
+  neighborhood?: string
+  city?: string
+  state?: string
+  isActive?: boolean
   notes?: string
 }
 

@@ -94,6 +94,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         { title: 'Clientes', url: '/cadastros/clientes' },
         { title: 'Pacotes/Serviços', url: '/cadastros/pacotes' },
         { title: 'Eventos/Reservas', url: '/cadastros/eventos' },
+        { title: 'Unidades', url: '/cadastros/unidades' },
         { title: 'Usuários', url: '/cadastros/usuarios' },
         { title: 'Contratos', url: '/cadastros/contratos' }
       ]
