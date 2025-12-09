@@ -139,7 +139,13 @@
               @if (calendarDay.events.length > 0) {
                 <div class="space-y-1">
                   @for (event of calendarDay.events; track event.id) {
-                    <div [class]="'text-xs px-2 py-1 rounded ' + getStatusColor(event.status)">
+                    <div 
+                      [style]="getEventColor(event)"
+                      [class]="getEventColorClasses(event)"
+                      (click)="onEventClick(event)"
+                      class="cursor-pointer hover:opacity-80 transition-opacity"
+                      [title]="event.eventName"
+                    >
                       {{ event.eventName }}
                     </div>
                   }
@@ -150,21 +156,41 @@
         }
       </div>
 
-      <!-- Calendar Legend -->
-      <div class="mt-6 flex items-center justify-center gap-6">
-        <div class="flex items-center gap-2">
-          <div class="w-4 h-4 rounded bg-green-100 border border-green-200"></div>
-          <span class="text-sm text-gray-700">Confirmado</span>
+      <!-- Calendar Legend - Units -->
+      @if (units.length > 0) {
+        <div class="mt-6 flex items-center justify-center gap-6 flex-wrap">
+          @for (unit of units; track unit.id) {
+            <div class="flex items-center gap-2">
+              <div 
+                class="w-4 h-4 rounded border-2 border-white shadow-sm"
+                [style.backgroundColor]="getUnitColor(unit.color)"
+              ></div>
+              <span class="text-sm text-gray-700">
+                {{ unit.name }}
+                @if (unit.code) {
+                  <span class="text-gray-500">({{ unit.code }})</span>
+                }
+              </span>
+            </div>
+          }
         </div>
-        <div class="flex items-center gap-2">
-          <div class="w-4 h-4 rounded bg-blue-100 border border-blue-200"></div>
-          <span class="text-sm text-gray-700">Preparação</span>
+      } @else {
+        <!-- Fallback to status legend if no units -->
+        <div class="mt-6 flex items-center justify-center gap-6">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-green-100 border border-green-200"></div>
+            <span class="text-sm text-gray-700">Confirmado</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-blue-100 border border-blue-200"></div>
+            <span class="text-sm text-gray-700">Preparação</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded bg-yellow-100 border border-yellow-200"></div>
+            <span class="text-sm text-gray-700">Pendente</span>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="w-4 h-4 rounded bg-yellow-100 border border-yellow-200"></div>
-          <span class="text-sm text-gray-700">Pendente</span>
-        </div>
-      </div>
+      }
     </div>
 
     <!-- Installments and Events Section -->
@@ -358,4 +384,14 @@
       </div>
     </div>
   }
+
+  <!-- Event Detail Modal -->
+  <app-event-detail-modal
+    [isOpen]="showEventModal"
+    [event]="selectedEvent"
+    [isLoading]="isLoadingEventDetails"
+    [error]="eventDetailsError"
+    (onClose)="closeEventModal()"
+    (onEdit)="onEditEvent()"
+  ></app-event-detail-modal>
 </div>

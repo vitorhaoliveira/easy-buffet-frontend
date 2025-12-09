@@ -154,6 +154,18 @@ export interface Event {
     code?: string
     color?: string
   }
+  client?: {
+    id: string
+    name: string
+    email?: string
+    phone?: string
+  }
+  package?: {
+    id: string
+    name: string
+    type?: string
+    price?: number
+  }
 }
 
 // Contract Types
@@ -227,6 +239,12 @@ export interface DashboardEvent {
   eventDate: string
   status: string
   daysUntilEvent: number
+  unit?: {
+    id: string
+    name: string
+    code?: string
+    color?: string
+  }
 }
 
 // Cost Types

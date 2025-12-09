@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
-import { RouterLink } from '@angular/router'
+import { RouterLink, Router } from '@angular/router'
 import { DashboardService } from '@core/services/dashboard.service'
+import { EventService } from '@core/services/event.service'
+import { UnitService } from '@core/services/unit.service'
 import { firstValueFrom } from 'rxjs'
-import type { DashboardStats, DashboardInstallment, DashboardEvent } from '@shared/models/api.types'
+import type { DashboardStats, DashboardInstallment, DashboardEvent, Event, Unit } from '@shared/models/api.types'
 import { parseDateIgnoringTimezone, formatDateBR, getDaysUntil, isSameDayAsDate } from '@shared/utils/date.utils'
+import { EventDetailModalComponent } from '@shared/components/ui/event-detail-modal/event-detail-modal.component'
 
 interface CalendarDay {
   date: number
@@ -17,7 +20,7 @@ interface CalendarDay {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, EventDetailModalComponent],
   templateUrl: './dashboard.component.html',
   styles: []
 })
@@ -25,6 +28,7 @@ export class DashboardComponent implements OnInit {
   stats: DashboardStats | null = null
   upcomingInstallments: DashboardInstallment[] = []
   upcomingEvents: DashboardEvent[] = []
+  units: Unit[] = []
   isLoading = true
   error = ''
   
@@ -38,8 +42,17 @@ export class DashboardComponent implements OnInit {
   // Pagination
   installmentsLimit = 5
 
+  // Event detail modal
+  showEventModal = false
+  selectedEvent: Event | null = null
+  isLoadingEventDetails = false
+  eventDetailsError: string | null = null
+
   constructor(
-    private readonly dashboardService: DashboardService
+    private readonly dashboardService: DashboardService,
+    private readonly eventService: EventService,
+    private readonly unitService: UnitService,
+    private readonly router: Router
   ) {}
 
   /**
@@ -94,6 +107,14 @@ export class DashboardComponent implements OnInit {
       )
       if (eventsResponse.success && eventsResponse.data) {
         this.upcomingEvents = eventsResponse.data as DashboardEvent[]
+      }
+
+      // Load units for legend
+      const unitsResponse = await firstValueFrom(
+        this.unitService.getUnits(true)
+      )
+      if (unitsResponse.success && unitsResponse.data) {
+        this.units = unitsResponse.data
       }
 
     } catch (err: any) {
@@ -332,6 +353,138 @@ export class DashboardComponent implements OnInit {
       }
     } catch (err) {
       console.error('Error loading installments:', err)
+    }
+  }
+
+  /**
+   * @Function - getEventColor
+   * @description - Get event color from unit (always use unit color if available) - applies to background
+   * @author - Vitor Hugo
+   * @param - event: DashboardEvent
+   * @returns - string - CSS style string with background color or empty string
+   */
+  getEventColor(event: DashboardEvent): string {
+    if (event.unit?.color) {
+      console.log('event.unit.color', event.unit.color)
+      // Ensure color has # prefix if not present
+      const color = event.unit.color.startsWith('#') ? event.unit.color : `#${event.unit.color}`
+      // Apply unit color as background, white text, no border
+      return `background-color: ${color} !important; color: #fff !important; border: none !important;`
+    }
+    // Return empty string - will use status color via getStatusColorStyle
+    return ''
+  }
+
+  /**
+   * @Function - getStatusColorStyle
+   * @description - Get inline style for status color (fallback when no unit color)
+   * @author - Vitor Hugo
+   * @param - event: DashboardEvent
+   * @returns - string - CSS style string with status-based background color
+   */
+  getStatusColorStyle(event: DashboardEvent): string {
+    // Only use status color if no unit color
+    if (event.unit?.color) {
+      return ''
+    }
+    
+    // Map status to color
+    const statusColors: Record<string, string> = {
+      'Pendente': '#fef3c7', // yellow-100
+      'Confirmado': '#d1fae5', // green-100
+      'Realizado': '#e9d5ff', // purple-100
+      'Cancelado': '#f3f4f6', // gray-100
+      'Preparação': '#dbeafe' // blue-100
+    }
+    
+    const bgColor = statusColors[event.status] || '#f3f4f6'
+    const textColor = event.status === 'Pendente' ? '#92400e' : 
+                     event.status === 'Confirmado' ? '#065f46' :
+                     event.status === 'Realizado' ? '#6b21a8' :
+                     event.status === 'Cancelado' ? '#374151' : '#1e40af'
+    
+    return `background-color: ${bgColor}; color: ${textColor};`
+  }
+
+  /**
+   * @Function - getEventColorClasses
+   * @description - Get CSS classes for event - always use base classes, color comes from style
+   * @author - Vitor Hugo
+   * @param - event: DashboardEvent
+   * @returns - string - CSS classes
+   */
+  getEventColorClasses(event: DashboardEvent): string {
+    // Always return base classes - color is applied via inline style
+    // Remove any border classes to ensure unit color shows as background
+    return 'text-xs px-2 py-1 rounded font-medium border-0'
+  }
+
+  /**
+   * @Function - getUnitColor
+   * @description - Get formatted unit color with # prefix if needed
+   * @author - Vitor Hugo
+   * @param - color: string | undefined
+   * @returns - string - Formatted color
+   */
+  getUnitColor(color: string | undefined): string {
+    if (!color) return '#6c757d'
+    return color.startsWith('#') ? color : `#${color}`
+  }
+
+  /**
+   * @Function - onEventClick
+   * @description - Handle event click in calendar to show details
+   * @author - Vitor Hugo
+   * @param - event: DashboardEvent
+   * @returns - Promise<void>
+   */
+  async onEventClick(event: DashboardEvent): Promise<void> {
+    this.showEventModal = true
+    this.selectedEvent = null
+    this.isLoadingEventDetails = true
+    this.eventDetailsError = null
+
+    try {
+      const response = await firstValueFrom(
+        this.eventService.getEventById(event.id)
+      )
+      if (response.success && response.data) {
+        this.selectedEvent = response.data
+      } else {
+        this.eventDetailsError = 'Não foi possível carregar os detalhes do evento'
+      }
+    } catch (err: any) {
+      console.error('Error loading event details:', err)
+      this.eventDetailsError = err.message || 'Erro ao carregar detalhes do evento'
+    } finally {
+      this.isLoadingEventDetails = false
+    }
+  }
+
+  /**
+   * @Function - closeEventModal
+   * @description - Close event detail modal
+   * @author - Vitor Hugo
+   * @param - void
+   * @returns - void
+   */
+  closeEventModal(): void {
+    this.showEventModal = false
+    this.selectedEvent = null
+    this.eventDetailsError = null
+  }
+
+  /**
+   * @Function - onEditEvent
+   * @description - Navigate to event edit page
+   * @author - Vitor Hugo
+   * @param - void
+   * @returns - void
+   */
+  onEditEvent(): void {
+    if (this.selectedEvent) {
+      this.router.navigate(['/cadastros/eventos/editar', this.selectedEvent.id])
+      this.closeEventModal()
     }
   }
 }
