@@ -104,6 +104,9 @@
             <p class="text-xs text-green-700 mt-1">
               {{ reportData.summary.paidInstallments }} de {{ reportData.summary.totalInstallments }} parcelas pagas
             </p>
+            <p *ngIf="reportData.kpis.additionalPaymentsTotal !== undefined && reportData.kpis.additionalPaymentsTotal > 0" class="text-xs text-green-600 mt-1">
+              + {{ reportData.kpis.additionalPaymentsCount || 0 }} pagamento(s) adicional(is): {{ formatCurrency(reportData.kpis.additionalPaymentsTotal) }}
+            </p>
           </div>
 
           <!-- Expenses Card -->
@@ -172,14 +175,18 @@
                     {{ formatCurrency(reportData.kpis.realizedRevenue) }}
                   </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div
                     class="bg-green-600 h-2 rounded-full transition-all"
-                    [style.width.%]="(reportData.kpis.realizedRevenue / reportData.kpis.expectedRevenue) * 100"
+                    [style.width.%]="Math.min((reportData.kpis.realizedRevenue / reportData.kpis.expectedRevenue) * 100, 100)"
+                    [style.max-width]="'100%'"
                   ></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">
                   {{ reportData.kpis.paidCount }} parcelas pagas
+                  <span *ngIf="reportData.kpis.additionalPaymentsCount !== undefined && reportData.kpis.additionalPaymentsCount > 0" class="text-green-600 font-medium">
+                    + {{ reportData.kpis.additionalPaymentsCount }} pagamento(s) adicional(is)
+                  </span>
                 </p>
               </div>
 
@@ -194,10 +201,11 @@
                     {{ formatCurrency(reportData.kpis.pendingRevenue) }}
                   </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div
                     class="bg-yellow-500 h-2 rounded-full transition-all"
-                    [style.width.%]="(reportData.kpis.pendingRevenue / reportData.kpis.expectedRevenue) * 100"
+                    [style.width.%]="Math.min((reportData.kpis.pendingRevenue / reportData.kpis.expectedRevenue) * 100, 100)"
+                    [style.max-width]="'100%'"
                   ></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">
@@ -216,10 +224,11 @@
                     {{ formatCurrency(reportData.kpis.overdueRevenue) }}
                   </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div
                     class="bg-red-600 h-2 rounded-full transition-all"
-                    [style.width.%]="(reportData.kpis.overdueRevenue / reportData.kpis.expectedRevenue) * 100"
+                    [style.width.%]="Math.min((reportData.kpis.overdueRevenue / reportData.kpis.expectedRevenue) * 100, 100)"
+                    [style.max-width]="'100%'"
                   ></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">
@@ -258,7 +267,7 @@
                     {{ formatPercentage(reportData.kpis.realizationRate) }}
                   </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div
                     class="h-3 rounded-full transition-all"
                     [ngClass]="{
@@ -266,7 +275,8 @@
                       'bg-yellow-500': reportData.kpis.realizationRate >= 60 && reportData.kpis.realizationRate < 80,
                       'bg-red-600': reportData.kpis.realizationRate < 60
                     }"
-                    [style.width.%]="reportData.kpis.realizationRate"
+                    [style.width.%]="Math.min(reportData.kpis.realizationRate, 100)"
+                    [style.max-width]="'100%'"
                   ></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">
@@ -285,7 +295,7 @@
                     {{ formatPercentage(reportData.kpis.overdueRate) }}
                   </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-3">
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div
                     class="h-3 rounded-full transition-all"
                     [ngClass]="{
@@ -293,7 +303,8 @@
                       'bg-yellow-500': reportData.kpis.overdueRate > 5 && reportData.kpis.overdueRate <= 15,
                       'bg-red-600': reportData.kpis.overdueRate > 15
                     }"
-                    [style.width.%]="reportData.kpis.overdueRate"
+                    [style.width.%]="Math.min(reportData.kpis.overdueRate, 100)"
+                    [style.max-width]="'100%'"
                   ></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">
@@ -318,6 +329,18 @@
                 <div class="bg-gray-100 rounded-lg p-3 print:border print:border-gray-300">
                   <p class="text-xs text-gray-700 font-medium">Total de Parcelas</p>
                   <p class="text-xl font-bold text-gray-900">{{ reportData.kpis.totalCount }}</p>
+                </div>
+                <div *ngIf="reportData.kpis.additionalPaymentsCount !== undefined && reportData.kpis.additionalPaymentsCount > 0" class="bg-emerald-50 rounded-lg p-3 print:border print:border-emerald-200 col-span-2">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-xs text-emerald-700 font-medium">Pagamentos Adicionais</p>
+                      <p class="text-xl font-bold text-emerald-900">{{ reportData.kpis.additionalPaymentsCount }} pagamento(s)</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-emerald-600 font-medium">Total</p>
+                      <p class="text-lg font-bold text-emerald-800">{{ formatCurrency(reportData.kpis.additionalPaymentsTotal || 0) }}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

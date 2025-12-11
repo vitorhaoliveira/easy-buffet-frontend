@@ -7,6 +7,7 @@ import type {
   Installment,
   CreateInstallmentRequest,
   UpdateInstallmentRequest,
+  PayInstallmentRequest,
 } from '@shared/models/api.types'
 
 @Injectable({
@@ -41,7 +42,7 @@ export class InstallmentService {
     return this.http.get<ApiResponse<Installment[]>>(`${this.apiUrl}/installments/upcoming`)
   }
 
-  payInstallment(id: string, paymentData: { paymentDate: string; paymentAmount: number }): Observable<ApiResponse<Installment>> {
+  payInstallment(id: string, paymentData: PayInstallmentRequest): Observable<ApiResponse<Installment>> {
     return this.http.patch<ApiResponse<Installment>>(`${this.apiUrl}/installments/${id}/pay`, paymentData)
   }
 

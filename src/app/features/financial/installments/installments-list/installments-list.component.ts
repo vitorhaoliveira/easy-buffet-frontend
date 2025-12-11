@@ -18,7 +18,7 @@ import {
   TableCellComponent
 } from '@shared/components/ui/table/table.component'
 import { InstallmentService } from '@core/services/installment.service'
-import type { Installment } from '@shared/models/api.types'
+import type { Installment, PaymentMethod } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface InstallmentGroup {
@@ -82,6 +82,17 @@ export class InstallmentsListComponent implements OnInit {
 
   expandedGroups: Record<string, boolean> = {}
 
+  paymentMethods: PaymentMethod[] = [
+    'Dinheiro',
+    'PIX',
+    'Cartão de Débito',
+    'Cartão de Crédito',
+    'Transferência Bancária',
+    'Boleto',
+    'Cheque',
+    'Outro'
+  ]
+
   constructor(
     private installmentService: InstallmentService,
     private fb: FormBuilder
@@ -89,6 +100,7 @@ export class InstallmentsListComponent implements OnInit {
     this.paymentForm = this.fb.group({
       paymentDate: [new Date().toISOString().split('T')[0], [Validators.required]],
       paymentAmount: ['', [Validators.required, Validators.min(0.01)]],
+      paymentMethod: [''],
       notes: ['']
     })
   }
@@ -287,7 +299,8 @@ export class InstallmentsListComponent implements OnInit {
     this.paymentForm.patchValue({
       paymentDate: new Date().toISOString().split('T')[0],
       paymentAmount: installment.amount,
-      notes: ''
+      paymentMethod: installment.paymentMethod || '',
+      notes: installment.notes || ''
     })
     this.showPaymentModal = true
     this.error = ''
@@ -310,11 +323,18 @@ export class InstallmentsListComponent implements OnInit {
     try {
       this.isPaymentProcessing = true
       const formValue = this.paymentForm.value
+      const paymentData: any = {
+        paymentDate: formValue.paymentDate,
+        paymentAmount: parseFloat(formValue.paymentAmount)
+      }
+      if (formValue.paymentMethod) {
+        paymentData.paymentMethod = formValue.paymentMethod
+      }
+      if (formValue.notes) {
+        paymentData.notes = formValue.notes
+      }
       const response = await firstValueFrom(
-        this.installmentService.payInstallment(this.installmentToPay.id, {
-          paymentDate: formValue.paymentDate,
-          paymentAmount: parseFloat(formValue.paymentAmount)
-        })
+        this.installmentService.payInstallment(this.installmentToPay.id, paymentData)
       )
       
       if (response.success) {

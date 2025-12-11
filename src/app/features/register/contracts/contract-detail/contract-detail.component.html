@@ -62,6 +62,12 @@
             <p class="text-2xl font-bold text-green-600 mt-1">
               {{ formatCurrency(getTotalPaid()) }}
             </p>
+            @if (contract && (contract.paidInstallments !== undefined || contract.additionalPaymentsTotal !== undefined)) {
+              <p class="text-xs text-gray-500 mt-1">
+                Parcelas: {{ formatCurrency(contract.paidInstallments || 0) }} + 
+                Adicionais: {{ formatCurrency(contract.additionalPaymentsTotal || 0) }}
+              </p>
+            }
           </div>
           <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
             <lucide-icon [img]="CheckCircle2Icon" class="h-6 w-6 text-green-600"></lucide-icon>
@@ -223,6 +229,7 @@
                 <th appTableHead>Status</th>
                 <th appTableHead>Data Pagamento</th>
                 <th appTableHead>Valor Pago</th>
+                <th appTableHead>Forma de Pagamento</th>
                 <th appTableHead>Observações</th>
               </tr>
             </thead>
@@ -245,6 +252,9 @@
                     {{ installment.paymentAmount ? formatCurrency(installment.paymentAmount) : '-' }}
                   </td>
                   <td appTableCell>
+                    {{ installment.paymentMethod || '-' }}
+                  </td>
+                  <td appTableCell>
                     {{ installment.notes || '-' }}
                   </td>
                 </tr>
@@ -254,6 +264,202 @@
         </div>
       </div>
     }
+
+    <!-- Additional Payments List -->
+    <div class="bg-white rounded-lg border p-6 space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b">
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="DollarSignIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+          <h2 class="text-lg font-semibold">Pagamentos Adicionais</h2>
+        </div>
+        <button 
+          appButton 
+          variant="outline" 
+          size="sm"
+          (click)="handleAddAdditionalPayment()"
+        >
+          <lucide-icon [img]="PlusIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          Adicionar Pagamento
+        </button>
+      </div>
+
+      @if (isLoadingAdditionalPayments) {
+        <div class="text-center py-4">
+          <p class="text-muted-foreground">Carregando pagamentos adicionais...</p>
+        </div>
+      } @else if (additionalPayments.length > 0) {
+        <div class="rounded-md border">
+          <app-table>
+            <thead appTableHeader>
+              <tr appTableRow>
+                <th appTableHead>Data</th>
+                <th appTableHead>Valor</th>
+                <th appTableHead>Forma de Pagamento</th>
+                <th appTableHead>Observações</th>
+                <th appTableHead class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody appTableBody>
+              @for (payment of additionalPayments; track payment.id) {
+                <tr appTableRow>
+                  <td appTableCell>{{ formatDate(payment.paymentDate) }}</td>
+                  <td appTableCell class="font-medium">{{ formatCurrency(payment.amount) }}</td>
+                  <td appTableCell>{{ payment.paymentMethod }}</td>
+                  <td appTableCell>{{ payment.notes || '-' }}</td>
+                  <td appTableCell class="text-right">
+                    <div class="flex items-center justify-end space-x-2">
+                      <button 
+                        appButton 
+                        variant="ghost" 
+                        size="sm"
+                        (click)="handleEditAdditionalPayment(payment)"
+                        title="Editar"
+                      >
+                        <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+                      </button>
+                      <button 
+                        appButton 
+                        variant="ghost" 
+                        size="sm"
+                        (click)="handleDeleteAdditionalPayment(payment)"
+                        title="Excluir"
+                      >
+                        <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </app-table>
+        </div>
+        <div class="pt-4 border-t">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-600">Total de Pagamentos Adicionais:</span>
+            <span class="text-lg font-bold text-gray-900">{{ formatCurrency(getTotalAdditionalPayments()) }}</span>
+          </div>
+        </div>
+      } @else {
+        <div class="text-center py-8">
+          <p class="text-muted-foreground">Nenhum pagamento adicional registrado para este contrato.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Additional Payment Modal -->
+  @if (showAdditionalPaymentModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="handleCloseAdditionalPaymentModal()">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between pb-4 border-b">
+          <div>
+            <h2 class="text-xl font-semibold">
+              {{ isEditMode ? 'Editar Pagamento Adicional' : 'Novo Pagamento Adicional' }}
+            </h2>
+            <p class="text-sm text-muted-foreground mt-1">
+              {{ contract?.client?.name }} - {{ contract?.event?.name }}
+            </p>
+          </div>
+          <button 
+            appButton 
+            variant="ghost" 
+            size="sm"
+            (click)="handleCloseAdditionalPaymentModal()"
+          >
+            <lucide-icon [img]="XIcon" class="h-4 w-4"></lucide-icon>
+          </button>
+        </div>
+
+        @if (error) {
+          <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            {{ error }}
+          </div>
+        }
+
+        <form [formGroup]="additionalPaymentForm" (ngSubmit)="handleSubmitAdditionalPayment()" class="space-y-4">
+          <!-- Amount -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="amount">Valor *</label>
+            <input
+              type="number"
+              id="amount"
+              formControlName="amount"
+              step="0.01"
+              placeholder="0.00"
+              [class]="'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasFormError('amount') ? 'border-red-500' : '')"
+            />
+            @if (hasFormError('amount')) {
+              <p class="text-sm text-red-500">{{ getFormFieldError('amount') }}</p>
+            }
+          </div>
+
+          <!-- Payment Date -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="paymentDate">Data do Pagamento *</label>
+            <input
+              type="date"
+              id="paymentDate"
+              formControlName="paymentDate"
+              [class]="'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasFormError('paymentDate') ? 'border-red-500' : '')"
+            />
+            @if (hasFormError('paymentDate')) {
+              <p class="text-sm text-red-500">{{ getFormFieldError('paymentDate') }}</p>
+            }
+          </div>
+
+          <!-- Payment Method -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="paymentMethod">Forma de Pagamento *</label>
+            <select
+              id="paymentMethod"
+              formControlName="paymentMethod"
+              [class]="'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasFormError('paymentMethod') ? 'border-red-500' : '')"
+            >
+              <option value="">Selecione uma forma de pagamento</option>
+              @for (method of paymentMethods; track method) {
+                <option [value]="method">{{ method }}</option>
+              }
+            </select>
+            @if (hasFormError('paymentMethod')) {
+              <p class="text-sm text-red-500">{{ getFormFieldError('paymentMethod') }}</p>
+            }
+          </div>
+
+          <!-- Notes -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="notes">Observações</label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              rows="3"
+              placeholder="Observações sobre o pagamento (opcional)"
+              class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            ></textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center justify-end space-x-2 pt-4 border-t">
+            <button 
+              appButton 
+              type="button" 
+              variant="outline" 
+              (click)="handleCloseAdditionalPaymentModal()"
+              [disabled]="isSubmitting"
+            >
+              Cancelar
+            </button>
+            <button 
+              appButton 
+              type="submit" 
+              variant="default"
+              [disabled]="isSubmitting || additionalPaymentForm.invalid"
+            >
+              {{ isSubmitting ? 'Salvando...' : (isEditMode ? 'Atualizar' : 'Criar') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   }
 </div>
 

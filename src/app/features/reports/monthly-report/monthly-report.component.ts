@@ -39,6 +39,9 @@ export class MonthlyReportComponent implements OnInit {
   selectedYear: number
   currentDate = new Date()
 
+  // Expose Math to template
+  Math = Math
+
   months = [
     { value: 1, label: 'Janeiro' },
     { value: 2, label: 'Fevereiro' },

@@ -93,6 +93,7 @@
                     <th appTableHead>Vencimento</th>
                     <th appTableHead>Status</th>
                     <th appTableHead>Data Pagamento</th>
+                    <th appTableHead>Forma de Pagamento</th>
                     <th appTableHead class="text-right">Ações</th>
                   </tr>
                 </thead>
@@ -111,6 +112,9 @@
                       </td>
                       <td appTableCell>
                         {{ installment.paymentDate ? formatDate(installment.paymentDate) : '-' }}
+                      </td>
+                      <td appTableCell>
+                        {{ installment.paymentMethod || '-' }}
                       </td>
                       <td appTableCell class="text-right">
                         <div class="flex items-center justify-end space-x-2">
@@ -217,6 +221,21 @@
             @if (hasError('paymentAmount')) {
               <p class="text-sm text-red-500">{{ getFieldError('paymentAmount') }}</p>
             }
+          </div>
+
+          <!-- Payment Method -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="paymentMethod">Forma de Pagamento</label>
+            <select
+              id="paymentMethod"
+              formControlName="paymentMethod"
+              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+            >
+              <option value="">Selecione uma forma de pagamento</option>
+              @for (method of paymentMethods; track method) {
+                <option [value]="method">{{ method }}</option>
+              }
+            </select>
           </div>
 
           <!-- Notes -->

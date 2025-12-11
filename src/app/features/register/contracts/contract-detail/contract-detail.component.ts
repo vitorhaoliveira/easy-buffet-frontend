@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute, RouterModule } from '@angular/router'
-import { LucideAngularModule, ArrowLeft, Edit, FileText, User, Calendar, DollarSign, CreditCard, CheckCircle2, Clock, AlertCircle } from 'lucide-angular'
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
+import { LucideAngularModule, ArrowLeft, Edit, FileText, User, Calendar, DollarSign, CreditCard, CheckCircle2, Clock, AlertCircle, Plus, Trash2, X } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
+import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { 
   TableComponent, 
   TableHeaderComponent, 
@@ -14,7 +16,8 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { ContractService } from '@core/services/contract.service'
-import type { Contract, Installment } from '@shared/models/api.types'
+import { AdditionalPaymentService } from '@core/services/additional-payment.service'
+import type { Contract, Installment, AdditionalPayment, PaymentMethod } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface ContractWithDetails extends Contract {
@@ -36,8 +39,11 @@ interface ContractWithDetails extends Contract {
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
     LucideAngularModule,
     ButtonComponent,
+    LabelComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
@@ -58,17 +64,49 @@ export class ContractDetailComponent implements OnInit {
   readonly CheckCircle2Icon = CheckCircle2
   readonly ClockIcon = Clock
   readonly AlertCircleIcon = AlertCircle
+  readonly PlusIcon = Plus
+  readonly Trash2Icon = Trash2
+  readonly XIcon = X
 
   contract: ContractWithDetails | null = null
   contractId: string | null = null
   isLoading: boolean = true
   error: string = ''
+  additionalPayments: AdditionalPayment[] = []
+  isLoadingAdditionalPayments: boolean = false
+
+  // Additional Payment Modal
+  showAdditionalPaymentModal: boolean = false
+  isEditMode: boolean = false
+  paymentToEdit: AdditionalPayment | null = null
+  isSubmitting: boolean = false
+  additionalPaymentForm!: FormGroup
+
+  paymentMethods: PaymentMethod[] = [
+    'Dinheiro',
+    'PIX',
+    'Cartão de Débito',
+    'Cartão de Crédito',
+    'Transferência Bancária',
+    'Boleto',
+    'Cheque',
+    'Outro'
+  ]
 
   constructor(
     private contractService: ContractService,
+    private additionalPaymentService: AdditionalPaymentService,
     private router: Router,
-    private route: ActivatedRoute
-  ) {}
+    private route: ActivatedRoute,
+    private fb: FormBuilder
+  ) {
+    this.additionalPaymentForm = this.fb.group({
+      amount: ['', [Validators.required, Validators.min(0.01)]],
+      paymentDate: [new Date().toISOString().split('T')[0], [Validators.required]],
+      paymentMethod: ['', [Validators.required]],
+      notes: ['']
+    })
+  }
 
   /**
    * @Function - ngOnInit
@@ -101,6 +139,12 @@ export class ContractDetailComponent implements OnInit {
       
       if (response.success && response.data) {
         this.contract = response.data as ContractWithDetails
+        // Load additional payments if not included in contract response
+        if (!this.contract.additionalPayments || this.contract.additionalPayments.length === 0) {
+          await this.loadAdditionalPayments(id)
+        } else {
+          this.additionalPayments = this.contract.additionalPayments
+        }
       } else {
         this.error = 'Erro ao carregar detalhes do contrato'
       }
@@ -247,11 +291,17 @@ export class ContractDetailComponent implements OnInit {
 
   /**
    * @Function - getTotalPaid
-   * @description - Calculates total amount paid from installments
+   * @description - Gets total paid amount from API calculation or calculates manually
    * @author - Vitor Hugo
    * @returns - number - Total paid amount
    */
   getTotalPaid(): number {
+    if (this.contract?.totalPaid !== undefined) {
+      return typeof this.contract.totalPaid === 'string' 
+        ? parseFloat(this.contract.totalPaid) 
+        : this.contract.totalPaid
+    }
+    // Fallback calculation if API doesn't provide
     if (!this.contract?.installments) return 0
     return this.contract.installments
       .filter(i => i.status.toLowerCase() === 'paid' || i.status.toLowerCase() === 'pago')
@@ -260,16 +310,22 @@ export class ContractDetailComponent implements OnInit {
           ? parseFloat(i.paymentAmount) 
           : (i.paymentAmount || 0)
         return sum + amount
-      }, 0)
+      }, 0) + this.getTotalAdditionalPayments()
   }
 
   /**
    * @Function - getRemainingAmount
-   * @description - Calculates remaining amount to be paid
+   * @description - Gets remaining amount from API calculation or calculates manually
    * @author - Vitor Hugo
    * @returns - number - Remaining amount
    */
   getRemainingAmount(): number {
+    if (this.contract?.remainingBalance !== undefined) {
+      return typeof this.contract.remainingBalance === 'string' 
+        ? parseFloat(this.contract.remainingBalance) 
+        : this.contract.remainingBalance
+    }
+    // Fallback calculation if API doesn't provide
     if (!this.contract) return 0
     const total = typeof this.contract.totalAmount === 'string' 
       ? parseFloat(this.contract.totalAmount) 
@@ -288,6 +344,220 @@ export class ContractDetailComponent implements OnInit {
     return this.contract.installments.filter(
       i => i.status.toLowerCase() === 'overdue' || i.status.toLowerCase() === 'atrasado'
     ).length
+  }
+
+  /**
+   * @Function - loadAdditionalPayments
+   * @description - Load additional payments for the contract
+   * @author - Vitor Hugo
+   * @param - contractId: string - Contract ID
+   * @returns - Promise<void>
+   */
+  async loadAdditionalPayments(contractId: string): Promise<void> {
+    try {
+      this.isLoadingAdditionalPayments = true
+      const response = await firstValueFrom(
+        this.additionalPaymentService.getAdditionalPaymentsByContract(contractId)
+      )
+      if (response.success && response.data) {
+        this.additionalPayments = response.data
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar pagamentos adicionais:', err)
+    } finally {
+      this.isLoadingAdditionalPayments = false
+    }
+  }
+
+  /**
+   * @Function - getTotalAdditionalPayments
+   * @description - Calculate total amount of additional payments
+   * @author - Vitor Hugo
+   * @returns - number - Total amount
+   */
+  getTotalAdditionalPayments(): number {
+    return this.additionalPayments.reduce((sum, payment) => {
+      const amount = typeof payment.amount === 'string' ? parseFloat(payment.amount) : payment.amount
+      return sum + (amount || 0)
+    }, 0)
+  }
+
+  /**
+   * @Function - handleAddAdditionalPayment
+   * @description - Open modal to add additional payment
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleAddAdditionalPayment(): void {
+    this.isEditMode = false
+    this.paymentToEdit = null
+    this.additionalPaymentForm.reset({
+      amount: '',
+      paymentDate: new Date().toISOString().split('T')[0],
+      paymentMethod: '',
+      notes: ''
+    })
+    this.showAdditionalPaymentModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleEditAdditionalPayment
+   * @description - Open modal to edit additional payment
+   * @author - Vitor Hugo
+   * @param - payment: AdditionalPayment - Payment to edit
+   * @returns - void
+   */
+  handleEditAdditionalPayment(payment: AdditionalPayment): void {
+    this.isEditMode = true
+    this.paymentToEdit = payment
+    this.additionalPaymentForm.patchValue({
+      amount: payment.amount,
+      paymentDate: payment.paymentDate,
+      paymentMethod: payment.paymentMethod,
+      notes: payment.notes || ''
+    })
+    this.showAdditionalPaymentModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleCloseAdditionalPaymentModal
+   * @description - Close additional payment modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCloseAdditionalPaymentModal(): void {
+    this.showAdditionalPaymentModal = false
+    this.isEditMode = false
+    this.paymentToEdit = null
+    this.additionalPaymentForm.reset()
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleSubmitAdditionalPayment
+   * @description - Submit additional payment form
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleSubmitAdditionalPayment(): Promise<void> {
+    if (this.additionalPaymentForm.invalid || !this.contractId) {
+      Object.keys(this.additionalPaymentForm.controls).forEach(key => {
+        this.additionalPaymentForm.controls[key].markAsTouched()
+      })
+      return
+    }
+
+    try {
+      this.isSubmitting = true
+      this.error = ''
+      const formValue = this.additionalPaymentForm.value
+
+      if (this.isEditMode && this.paymentToEdit) {
+        const updateData: any = {}
+        if (formValue.amount) updateData.amount = parseFloat(formValue.amount)
+        if (formValue.paymentDate) updateData.paymentDate = formValue.paymentDate
+        if (formValue.paymentMethod) updateData.paymentMethod = formValue.paymentMethod
+        if (formValue.notes !== undefined) updateData.notes = formValue.notes
+
+        const response = await firstValueFrom(
+          this.additionalPaymentService.updateAdditionalPayment(this.paymentToEdit.id, updateData)
+        )
+        if (response.success) {
+          await this.loadContractDetails(this.contractId!)
+          this.handleCloseAdditionalPaymentModal()
+        } else {
+          this.error = response.message || 'Erro ao atualizar pagamento adicional'
+        }
+      } else {
+        const createData = {
+          contractId: this.contractId,
+          amount: parseFloat(formValue.amount),
+          paymentDate: formValue.paymentDate,
+          paymentMethod: formValue.paymentMethod,
+          notes: formValue.notes || undefined
+        }
+
+        const response = await firstValueFrom(
+          this.additionalPaymentService.createAdditionalPayment(createData)
+        )
+        if (response.success) {
+          await this.loadContractDetails(this.contractId!)
+          this.handleCloseAdditionalPaymentModal()
+        } else {
+          this.error = response.message || 'Erro ao criar pagamento adicional'
+        }
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = this.isEditMode ? 'Erro ao atualizar pagamento adicional' : 'Erro ao criar pagamento adicional'
+      }
+    } finally {
+      this.isSubmitting = false
+    }
+  }
+
+  /**
+   * @Function - hasFormError
+   * @description - Check if form field has error
+   * @author - Vitor Hugo
+   * @param - fieldName: string - Field name
+   * @returns - boolean - True if has error
+   */
+  hasFormError(fieldName: string): boolean {
+    const field = this.additionalPaymentForm.get(fieldName)
+    return !!(field?.invalid && field.touched)
+  }
+
+  /**
+   * @Function - getFormFieldError
+   * @description - Get error message for form field
+   * @author - Vitor Hugo
+   * @param - fieldName: string - Field name
+   * @returns - string - Error message
+   */
+  getFormFieldError(fieldName: string): string {
+    const field = this.additionalPaymentForm.get(fieldName)
+    if (field?.hasError('required') && field.touched) {
+      return 'Campo obrigatório'
+    }
+    if (field?.hasError('min') && field.touched) {
+      return 'Valor deve ser maior que zero'
+    }
+    return ''
+  }
+
+  /**
+   * @Function - handleDeleteAdditionalPayment
+   * @description - Delete additional payment
+   * @author - Vitor Hugo
+   * @param - payment: AdditionalPayment - Payment to delete
+   * @returns - Promise<void>
+   */
+  async handleDeleteAdditionalPayment(payment: AdditionalPayment): Promise<void> {
+    if (!confirm(`Tem certeza que deseja excluir o pagamento adicional de ${this.formatCurrency(payment.amount)}?`)) {
+      return
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.additionalPaymentService.deleteAdditionalPayment(payment.id)
+      )
+      if (response.success && this.contractId) {
+        await this.loadAdditionalPayments(this.contractId)
+      } else {
+        this.error = response.message || 'Erro ao excluir pagamento adicional'
+      }
+    } catch (err: any) {
+      this.error = err.error?.message || err.message || 'Erro ao excluir pagamento adicional'
+    }
   }
 }
 

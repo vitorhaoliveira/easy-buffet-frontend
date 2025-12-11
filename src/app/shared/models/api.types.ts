@@ -186,6 +186,10 @@ export interface Contract {
   createdAt: string
   updatedAt?: string
   deletedAt?: string | null
+  totalPaid?: number | string
+  remainingBalance?: number | string
+  paidInstallments?: number | string
+  additionalPaymentsTotal?: number | string
   event?: {
     id: string
     name: string
@@ -196,7 +200,19 @@ export interface Contract {
     name: string
   }
   installments?: Installment[]
+  additionalPayments?: AdditionalPayment[]
 }
+
+// Payment Method Types
+export type PaymentMethod = 
+  | 'Dinheiro'
+  | 'PIX'
+  | 'Cartão de Débito'
+  | 'Cartão de Crédito'
+  | 'Transferência Bancária'
+  | 'Boleto'
+  | 'Cheque'
+  | 'Outro'
 
 // Installment Types
 export interface Installment {
@@ -209,6 +225,7 @@ export interface Installment {
   paidAt?: string
   paymentDate?: string
   paymentAmount?: number
+  paymentMethod?: PaymentMethod | null
   notes?: string | null
   organizationId: string
   createdAt: string
@@ -216,6 +233,32 @@ export interface Installment {
   contract?: {
     event: { name: string; eventDate: string }
     client: { name: string }
+  }
+}
+
+// Additional Payment Types
+export interface AdditionalPayment {
+  id: string
+  contractId: string
+  amount: number | string
+  paymentDate: string
+  paymentMethod: PaymentMethod
+  notes?: string | null
+  createdAt: string
+  updatedAt?: string
+  contract?: {
+    id: string
+    event: {
+      name: string
+      eventDate: string
+    }
+    client: {
+      name: string
+    }
+  }
+  creator?: {
+    id: string
+    name: string
   }
 }
 
@@ -427,6 +470,28 @@ export interface UpdateInstallmentRequest {
   paidAt?: string
 }
 
+export interface PayInstallmentRequest {
+  paymentDate: string
+  paymentAmount: number
+  paymentMethod?: PaymentMethod
+  notes?: string
+}
+
+export interface CreateAdditionalPaymentRequest {
+  contractId: string
+  amount: number
+  paymentDate: string
+  paymentMethod: PaymentMethod
+  notes?: string
+}
+
+export interface UpdateAdditionalPaymentRequest {
+  amount?: number
+  paymentDate?: string
+  paymentMethod?: PaymentMethod
+  notes?: string
+}
+
 export interface CreateCostRequest {
   description: string
   amount: number
@@ -506,6 +571,8 @@ export interface DashboardStats {
   pendingInstallments?: number
   totalClients?: number
   monthlyRevenue?: number | string
+  monthlyRevenueFromInstallments?: number | string
+  monthlyRevenueFromAdditionalPayments?: number | string
   monthlyCosts?: number | string
   monthlyProfit?: number | string
   upcomingEvents?: number
@@ -549,6 +616,8 @@ export interface MonthlyReport {
     pendingCount: number
     overdueCount: number
     totalCount: number
+    additionalPaymentsTotal?: number
+    additionalPaymentsCount?: number
   }
 }
 

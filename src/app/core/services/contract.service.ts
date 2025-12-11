@@ -39,6 +39,10 @@ export class ContractService {
     return this.http.get<ApiResponse<Installment[]>>(`${this.apiUrl}/contracts/${id}/installments`)
   }
 
+  getContractAdditionalPayments(id: string): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/contracts/${id}/additional-payments`)
+  }
+
   deleteContract(id: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/contracts/${id}`)
   }
