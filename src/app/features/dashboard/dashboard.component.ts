@@ -64,7 +64,6 @@ export class DashboardComponent implements OnInit {
    */
   async ngOnInit(): Promise<void> {
     await this.loadDashboardData()
-    this.generateCalendar()
   }
 
   /**
@@ -101,12 +100,38 @@ export class DashboardComponent implements OnInit {
         this.upcomingInstallments = installmentsResponse.data
       }
 
-      // Load upcoming events
+      // Load upcoming events for list
       const eventsResponse = await firstValueFrom(
         this.dashboardService.getUpcomingEvents(10)
       )
+      const upcomingEventsList: DashboardEvent[] = []
       if (eventsResponse.success && eventsResponse.data) {
-        this.upcomingEvents = eventsResponse.data as DashboardEvent[]
+        upcomingEventsList.push(...eventsResponse.data as DashboardEvent[])
+      }
+
+      // Load all events for calendar (including past events)
+      const allEventsResponse = await firstValueFrom(
+        this.eventService.getEvents()
+      )
+      if (allEventsResponse.success && allEventsResponse.data) {
+        // Convert Event[] to DashboardEvent[] for calendar
+        const allEvents = allEventsResponse.data.map(event => ({
+          id: event.id,
+          clientName: event.client?.name || 'Cliente não informado',
+          eventName: event.name,
+          eventDate: event.eventDate,
+          status: event.status,
+          daysUntilEvent: this.getDaysUntil(event.eventDate),
+          unit: event.unit
+        }))
+        // Merge with upcoming events, avoiding duplicates
+        const eventMap = new Map<string, DashboardEvent>()
+        allEvents.forEach(event => eventMap.set(event.id, event))
+        upcomingEventsList.forEach(event => eventMap.set(event.id, event))
+        this.upcomingEvents = Array.from(eventMap.values())
+      } else {
+        // Fallback to upcoming events only if all events request fails
+        this.upcomingEvents = upcomingEventsList
       }
 
       // Load units for legend
@@ -123,6 +148,8 @@ export class DashboardComponent implements OnInit {
       this.loadMockData()
     } finally {
       this.isLoading = false
+      // Regenerate calendar after loading all events
+      this.generateCalendar()
     }
   }
 

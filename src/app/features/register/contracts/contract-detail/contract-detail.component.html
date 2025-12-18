@@ -138,9 +138,12 @@
 
           <div class="flex justify-between items-start">
             <span class="text-sm font-medium text-gray-600">Comissão:</span>
-            <span class="text-sm font-semibold text-gray-900">
-              {{ contract.commissionPercentage }}% ({{ formatCurrency(contract.commissionAmount) }})
-            </span>
+            <div class="text-right">
+              <span class="text-sm font-semibold text-gray-900">
+                {{ contract.commissionPercentage }}% ({{ formatCurrency(contract.commissionAmount) }})
+              </span>
+              <p class="text-xs text-amber-600 mt-1">Valor fixo da criação</p>
+            </div>
           </div>
 
           <div class="flex justify-between items-start">
