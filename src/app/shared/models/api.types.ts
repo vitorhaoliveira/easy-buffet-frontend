@@ -92,6 +92,30 @@ export interface Client {
   updatedAt?: string
 }
 
+// Seller Types
+export interface Seller {
+  id: string
+  organizationId: string
+  name: string
+  email: string
+  phone: string
+  notes?: string
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string | null
+  createdBy: string
+  contracts?: Array<{
+    id: string
+    totalAmount: string
+    createdAt: string
+    event: {
+      id: string
+      name: string
+      eventDate: string
+    }
+  }>
+}
+
 // Package Types
 export interface Package {
   id: string
@@ -173,6 +197,7 @@ export interface Contract {
   id: string
   eventId: string
   clientId: string
+  sellerId?: string | null
   totalAmount: number
   installmentCount: number
   installmentAmount: number
@@ -199,6 +224,11 @@ export interface Contract {
     id: string
     name: string
   }
+  seller?: {
+    id: string
+    name: string
+    email: string
+  } | null
   installments?: Installment[]
   additionalPayments?: AdditionalPayment[]
 }
@@ -390,6 +420,20 @@ export interface UpdateClientRequest {
   address?: string
 }
 
+export interface CreateSellerRequest {
+  name: string
+  email: string
+  phone: string
+  notes?: string
+}
+
+export interface UpdateSellerRequest {
+  name?: string
+  email?: string
+  phone?: string
+  notes?: string
+}
+
 export interface CreatePackageRequest {
   name: string
   type: string
@@ -444,12 +488,14 @@ export interface CreateContractRequest {
   firstDueDate: string
   periodicity: 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual'
   commissionPercentage: number
+  sellerId?: string | null
   notes?: string
 }
 
 export interface UpdateContractRequest {
   status?: 'Pendente' | 'Assinado' | 'Cancelado'
   signedAt?: string
+  sellerId?: string | null
 }
 
 export interface CreateContractResponse {

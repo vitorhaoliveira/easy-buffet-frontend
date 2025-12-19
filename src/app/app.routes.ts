@@ -127,6 +127,26 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
+      // Sellers routes
+      {
+        path: 'cadastros/vendedoras',
+        loadComponent: () => import('./features/register/sellers/seller-list/seller-list.component').then(m => m.SellerListComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/vendedoras/novo',
+        loadComponent: () => import('./features/register/sellers/seller-form/seller-form.component').then(m => m.SellerFormComponent),
+        data: { module: 'cadastros', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/vendedoras/editar/:id',
+        loadComponent: () => import('./features/register/sellers/seller-form/seller-form.component').then(m => m.SellerFormComponent),
+        data: { module: 'cadastros', action: 'edit' },
+        canActivate: [permissionGuard]
+      },
+      
       // Contracts routes
       {
         path: 'cadastros/contratos',

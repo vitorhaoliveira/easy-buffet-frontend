@@ -1,0 +1,109 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center space-x-4">
+    <button appButton variant="ghost" size="sm" (click)="handleCancel()">
+      <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
+      Voltar
+    </button>
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight">
+        {{ isEditing ? 'Editar Vendedor(a)' : 'Novo(a) Vendedor(a)' }}
+      </h1>
+      <p class="text-muted-foreground">
+        {{ isEditing ? 'Atualize as informações do(a) vendedor(a)' : 'Preencha os dados do(a) novo(a) vendedor(a)' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoadingData) {
+    <div class="text-center py-8">
+      <p class="text-muted-foreground">Carregando dados do(a) vendedor(a)...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Formulário -->
+  @if (!isLoadingData) {
+    <form [formGroup]="sellerForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Nome -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="name">Nome *</label>
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          placeholder="Nome completo do(a) vendedor(a)"
+          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')"
+        />
+        @if (hasError('name')) {
+          <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
+        }
+      </div>
+
+      <!-- Email -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="email">Email *</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="email@exemplo.com"
+          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('email') ? 'border-red-500' : '')"
+        />
+        @if (hasError('email')) {
+          <p class="text-sm text-red-500">{{ getFieldError('email') }}</p>
+        }
+      </div>
+
+      <!-- Telefone -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="phone">Telefone *</label>
+        <input
+          type="tel"
+          id="phone"
+          formControlName="phone"
+          appPhoneMask
+          placeholder="(11) 99999-9999"
+          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('phone') ? 'border-red-500' : '')"
+        />
+        @if (hasError('phone')) {
+          <p class="text-sm text-red-500">{{ getFieldError('phone') }}</p>
+        }
+      </div>
+
+      <!-- Observações -->
+      <div class="space-y-2 md:col-span-2">
+        <label appLabel htmlFor="notes">Observações</label>
+        <textarea
+          id="notes"
+          formControlName="notes"
+          placeholder="Observações sobre o(a) vendedor(a) (opcional)"
+          rows="4"
+          class="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="flex items-center justify-end space-x-2 pt-6 border-t">
+      <button appButton type="button" variant="outline" (click)="handleCancel()">
+        <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Cancelar
+      </button>
+      <button appButton type="submit" variant="outline" [disabled]="isLoading">
+        <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
+      </button>
+    </div>
+    </form>
+  }
+</div>
+
