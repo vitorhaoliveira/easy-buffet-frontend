@@ -690,5 +690,18 @@
       </div>
     </div>
   }
+
+  <!-- Delete Item Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteItemModal"
+    (onClose)="handleCancelDeleteItem()"
+    (onConfirm)="handleConfirmDeleteItem()"
+    title="Excluir Item do Contrato"
+    [message]="'Tem certeza que deseja excluir o item &quot;' + (itemToDelete?.description || '') + '&quot;? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeletingItem"
+  ></app-confirmation-modal>
 </div>
 

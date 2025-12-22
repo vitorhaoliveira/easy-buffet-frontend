@@ -15,6 +15,7 @@ import {
   TableHeadComponent, 
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
+import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 import { ContractService } from '@core/services/contract.service'
 import { AdditionalPaymentService } from '@core/services/additional-payment.service'
 import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem } from '@shared/models/api.types'
@@ -49,7 +50,8 @@ interface ContractWithDetails extends Contract {
     TableBodyComponent,
     TableRowComponent,
     TableHeadComponent,
-    TableCellComponent
+    TableCellComponent,
+    ConfirmationModalComponent
   ],
   templateUrl: './contract-detail.component.html'
 })
@@ -85,6 +87,9 @@ export class ContractDetailComponent implements OnInit {
   itemToEdit: ContractItem | null = null
   isSubmittingItem: boolean = false
   contractItemForm!: FormGroup
+  showDeleteItemModal: boolean = false
+  itemToDelete: ContractItem | null = null
+  isDeletingItem: boolean = false
 
   // Additional Payment Modal
   showAdditionalPaymentModal: boolean = false
@@ -736,29 +741,54 @@ export class ContractDetailComponent implements OnInit {
 
   /**
    * @Function - handleDeleteContractItem
-   * @description - Delete contract item
+   * @description - Open modal to confirm deletion of contract item
    * @author - Vitor Hugo
    * @param - item: ContractItem - Item to delete
+   * @returns - void
+   */
+  handleDeleteContractItem(item: ContractItem): void {
+    this.itemToDelete = item
+    this.showDeleteItemModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleCancelDeleteItem
+   * @description - Cancel item deletion
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCancelDeleteItem(): void {
+    this.showDeleteItemModal = false
+    this.itemToDelete = null
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleConfirmDeleteItem
+   * @description - Confirm and delete contract item
+   * @author - Vitor Hugo
    * @returns - Promise<void>
    */
-  async handleDeleteContractItem(item: ContractItem): Promise<void> {
-    if (!confirm(`Tem certeza que deseja excluir o item "${item.description}"?`)) {
-      return
-    }
-
-    if (!this.contractId) return
+  async handleConfirmDeleteItem(): Promise<void> {
+    if (!this.itemToDelete || !this.contractId) return
 
     try {
+      this.isDeletingItem = true
+      this.error = ''
       const response = await firstValueFrom(
-        this.contractService.deleteContractItem(this.contractId, item.id)
+        this.contractService.deleteContractItem(this.contractId, this.itemToDelete.id)
       )
       if (response.success) {
         await this.loadContractDetails(this.contractId)
+        this.handleCancelDeleteItem()
       } else {
         this.error = response.message || 'Erro ao excluir item do contrato'
       }
     } catch (err: any) {
       this.error = err.error?.message || err.message || 'Erro ao excluir item do contrato'
+    } finally {
+      this.isDeletingItem = false
     }
   }
 
