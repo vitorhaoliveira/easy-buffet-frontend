@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute, RouterModule } from '@angular/router'
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, ArrowLeft, Edit, FileText, User, Calendar, DollarSign, CreditCard, CheckCircle2, Clock, AlertCircle, Plus, Trash2, X } from 'lucide-angular'
+import { LucideAngularModule, ArrowLeft, Edit, FileText, User, Calendar, DollarSign, CreditCard, CheckCircle2, Clock, AlertCircle, Plus, Trash2, X, Lock, Download } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -17,7 +17,7 @@ import {
 } from '@shared/components/ui/table/table.component'
 import { ContractService } from '@core/services/contract.service'
 import { AdditionalPaymentService } from '@core/services/additional-payment.service'
-import type { Contract, Installment, AdditionalPayment, PaymentMethod } from '@shared/models/api.types'
+import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface ContractWithDetails extends Contract {
@@ -67,6 +67,8 @@ export class ContractDetailComponent implements OnInit {
   readonly PlusIcon = Plus
   readonly Trash2Icon = Trash2
   readonly XIcon = X
+  readonly LockIcon = Lock
+  readonly DownloadIcon = Download
 
   contract: ContractWithDetails | null = null
   contractId: string | null = null
@@ -75,12 +77,24 @@ export class ContractDetailComponent implements OnInit {
   additionalPayments: AdditionalPayment[] = []
   isLoadingAdditionalPayments: boolean = false
 
+  // Contract Items
+  contractItems: ContractItem[] = []
+  isLoadingItems: boolean = false
+  showItemModal: boolean = false
+  isItemEditMode: boolean = false
+  itemToEdit: ContractItem | null = null
+  isSubmittingItem: boolean = false
+  contractItemForm!: FormGroup
+
   // Additional Payment Modal
   showAdditionalPaymentModal: boolean = false
   isEditMode: boolean = false
   paymentToEdit: AdditionalPayment | null = null
   isSubmitting: boolean = false
   additionalPaymentForm!: FormGroup
+
+  // Close Contract
+  isClosingContract: boolean = false
 
   paymentMethods: PaymentMethod[] = [
     'Dinheiro',
@@ -105,6 +119,12 @@ export class ContractDetailComponent implements OnInit {
       paymentDate: [new Date().toISOString().split('T')[0], [Validators.required]],
       paymentMethod: ['', [Validators.required]],
       notes: ['']
+    })
+
+    this.contractItemForm = this.fb.group({
+      description: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(255)]],
+      quantity: ['', [Validators.required, Validators.min(0.01)]],
+      unitPrice: ['', [Validators.required, Validators.min(0.01)]]
     })
   }
 
@@ -145,6 +165,8 @@ export class ContractDetailComponent implements OnInit {
         } else {
           this.additionalPayments = this.contract.additionalPayments
         }
+        // Load contract items
+        await this.loadContractItems(id)
       } else {
         this.error = 'Erro ao carregar detalhes do contrato'
       }
@@ -207,6 +229,17 @@ export class ContractDetailComponent implements OnInit {
       style: 'currency',
       currency: 'BRL'
     }).format(numValue)
+  }
+
+  /**
+   * @Function - parseFloat
+   * @description - Parse string to float (exposed to template)
+   * @author - Vitor Hugo
+   * @param - value: string | number - Value to parse
+   * @returns - number - Parsed number
+   */
+  parseFloat(value: string | number): number {
+    return typeof value === 'string' ? parseFloat(value) : value
   }
 
   /**
@@ -557,6 +590,299 @@ export class ContractDetailComponent implements OnInit {
       }
     } catch (err: any) {
       this.error = err.error?.message || err.message || 'Erro ao excluir pagamento adicional'
+    }
+  }
+
+  /**
+   * @Function - loadContractItems
+   * @description - Load contract items
+   * @author - Vitor Hugo
+   * @param - contractId: string - Contract ID
+   * @returns - Promise<void>
+   */
+  async loadContractItems(contractId: string): Promise<void> {
+    try {
+      this.isLoadingItems = true
+      const response = await firstValueFrom(
+        this.contractService.getContractItems(contractId)
+      )
+      if (response.success && response.data) {
+        this.contractItems = response.data
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar itens do contrato:', err)
+    } finally {
+      this.isLoadingItems = false
+    }
+  }
+
+  /**
+   * @Function - handleAddContractItem
+   * @description - Open modal to add contract item
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleAddContractItem(): void {
+    this.isItemEditMode = false
+    this.itemToEdit = null
+    this.contractItemForm.reset({
+      description: '',
+      quantity: '',
+      unitPrice: ''
+    })
+    this.showItemModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleEditContractItem
+   * @description - Open modal to edit contract item
+   * @author - Vitor Hugo
+   * @param - item: ContractItem - Item to edit
+   * @returns - void
+   */
+  handleEditContractItem(item: ContractItem): void {
+    this.isItemEditMode = true
+    this.itemToEdit = item
+    this.contractItemForm.patchValue({
+      description: item.description,
+      quantity: typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity,
+      unitPrice: typeof item.unitPrice === 'string' ? parseFloat(item.unitPrice) : item.unitPrice
+    })
+    this.showItemModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleCloseItemModal
+   * @description - Close contract item modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCloseItemModal(): void {
+    this.showItemModal = false
+    this.isItemEditMode = false
+    this.itemToEdit = null
+    this.contractItemForm.reset()
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleSubmitContractItem
+   * @description - Submit contract item form
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleSubmitContractItem(): Promise<void> {
+    if (this.contractItemForm.invalid || !this.contractId) {
+      Object.keys(this.contractItemForm.controls).forEach(key => {
+        this.contractItemForm.controls[key].markAsTouched()
+      })
+      return
+    }
+
+    try {
+      this.isSubmittingItem = true
+      this.error = ''
+      const formValue = this.contractItemForm.value
+
+      if (this.isItemEditMode && this.itemToEdit) {
+        const response = await firstValueFrom(
+          this.contractService.updateContractItem(
+            this.contractId,
+            this.itemToEdit.id,
+            {
+              description: formValue.description,
+              quantity: parseFloat(formValue.quantity),
+              unitPrice: parseFloat(formValue.unitPrice)
+            }
+          )
+        )
+        if (response.success) {
+          await this.loadContractItems(this.contractId)
+          this.handleCloseItemModal()
+        } else {
+          this.error = response.message || 'Erro ao atualizar item do contrato'
+        }
+      } else {
+        const response = await firstValueFrom(
+          this.contractService.addContractItem(this.contractId, {
+            description: formValue.description,
+            quantity: parseFloat(formValue.quantity),
+            unitPrice: parseFloat(formValue.unitPrice)
+          })
+        )
+        if (response.success) {
+          await this.loadContractItems(this.contractId)
+          this.handleCloseItemModal()
+        } else {
+          this.error = response.message || 'Erro ao adicionar item ao contrato'
+        }
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = this.isItemEditMode ? 'Erro ao atualizar item do contrato' : 'Erro ao adicionar item ao contrato'
+      }
+    } finally {
+      this.isSubmittingItem = false
+    }
+  }
+
+  /**
+   * @Function - handleDeleteContractItem
+   * @description - Delete contract item
+   * @author - Vitor Hugo
+   * @param - item: ContractItem - Item to delete
+   * @returns - Promise<void>
+   */
+  async handleDeleteContractItem(item: ContractItem): Promise<void> {
+    if (!confirm(`Tem certeza que deseja excluir o item "${item.description}"?`)) {
+      return
+    }
+
+    if (!this.contractId) return
+
+    try {
+      const response = await firstValueFrom(
+        this.contractService.deleteContractItem(this.contractId, item.id)
+      )
+      if (response.success) {
+        await this.loadContractItems(this.contractId)
+      } else {
+        this.error = response.message || 'Erro ao excluir item do contrato'
+      }
+    } catch (err: any) {
+      this.error = err.error?.message || err.message || 'Erro ao excluir item do contrato'
+    }
+  }
+
+  /**
+   * @Function - hasItemFormError
+   * @description - Check if item form field has error
+   * @author - Vitor Hugo
+   * @param - fieldName: string - Field name
+   * @returns - boolean - True if has error
+   */
+  hasItemFormError(fieldName: string): boolean {
+    const field = this.contractItemForm.get(fieldName)
+    return !!(field?.invalid && field.touched)
+  }
+
+  /**
+   * @Function - getItemFormFieldError
+   * @description - Get error message for item form field
+   * @author - Vitor Hugo
+   * @param - fieldName: string - Field name
+   * @returns - string - Error message
+   */
+  getItemFormFieldError(fieldName: string): string {
+    const field = this.contractItemForm.get(fieldName)
+    if (field?.hasError('required') && field.touched) {
+      return 'Campo obrigatório'
+    }
+    if (field?.hasError('min') && field.touched) {
+      return 'Valor deve ser maior que zero'
+    }
+    if (field?.hasError('minlength') && field.touched) {
+      return 'Descrição deve ter pelo menos 1 caractere'
+    }
+    if (field?.hasError('maxlength') && field.touched) {
+      return 'Descrição deve ter no máximo 255 caracteres'
+    }
+    return ''
+  }
+
+  /**
+   * @Function - getTotalItemsAmount
+   * @description - Calculate total amount of contract items
+   * @author - Vitor Hugo
+   * @returns - number - Total amount
+   */
+  getTotalItemsAmount(): number {
+    return this.contractItems.reduce((sum, item) => {
+      const total = typeof item.totalPrice === 'string' ? parseFloat(item.totalPrice) : item.totalPrice
+      return sum + (total || 0)
+    }, 0)
+  }
+
+  /**
+   * @Function - isContractClosed
+   * @description - Check if contract is closed
+   * @author - Vitor Hugo
+   * @returns - boolean - True if contract is closed
+   */
+  isContractClosed(): boolean {
+    return !!this.contract?.closedAt
+  }
+
+  /**
+   * @Function - handleCloseContract
+   * @description - Close contract
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleCloseContract(): Promise<void> {
+    if (!this.contractId) return
+
+    if (!confirm('Tem certeza que deseja fechar este contrato? Esta ação não pode ser desfeita.')) {
+      return
+    }
+
+    try {
+      this.isClosingContract = true
+      this.error = ''
+      const response = await firstValueFrom(
+        this.contractService.closeContract(this.contractId)
+      )
+      if (response.success) {
+        await this.loadContractDetails(this.contractId)
+      } else {
+        this.error = response.message || 'Erro ao fechar contrato'
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = 'Erro ao fechar contrato'
+      }
+    } finally {
+      this.isClosingContract = false
+    }
+  }
+
+  /**
+   * @Function - handleExportPDF
+   * @description - Export installments PDF
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleExportPDF(): Promise<void> {
+    if (!this.contractId) return
+
+    try {
+      const blob = await firstValueFrom(
+        this.contractService.exportInstallmentsPDF(this.contractId)
+      )
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `parcelas-${this.contractId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (err: any) {
+      this.error = err.error?.message || err.message || 'Erro ao exportar PDF'
     }
   }
 }

@@ -14,10 +14,22 @@
       </div>
     </div>
     @if (!isLoading && contract) {
-      <button appButton variant="outline" (click)="handleEdit()">
-        <lucide-icon [img]="EditIcon" class="h-4 w-4 mr-2"></lucide-icon>
-        Editar Contrato
-      </button>
+      <div class="flex items-center gap-2">
+        @if (!isContractClosed()) {
+          <button appButton variant="outline" (click)="handleCloseContract()" [disabled]="isClosingContract">
+            <lucide-icon [img]="LockIcon" class="h-4 w-4 mr-2"></lucide-icon>
+            {{ isClosingContract ? 'Fechando...' : 'Fechar Contrato' }}
+          </button>
+        }
+        <button appButton variant="outline" (click)="handleExportPDF()">
+          <lucide-icon [img]="DownloadIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          Exportar PDF
+        </button>
+        <button appButton variant="outline" (click)="handleEdit()">
+          <lucide-icon [img]="EditIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          Editar Contrato
+        </button>
+      </div>
     }
   </div>
 
@@ -151,6 +163,16 @@
             <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.createdAt) }}</span>
           </div>
 
+          @if (contract.closedAt) {
+            <div class="flex justify-between items-start pt-3 border-t">
+              <span class="text-sm font-medium text-gray-600">Data de Fechamento:</span>
+              <div class="flex items-center gap-2">
+                <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-600"></lucide-icon>
+                <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.closedAt) }}</span>
+              </div>
+            </div>
+          }
+
           @if (getOverdueInstallmentsCount() > 0) {
             <div class="pt-3 border-t">
               <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -212,6 +234,93 @@
           </div>
         }
       </div>
+    </div>
+
+    <!-- Contract Items List -->
+    <div class="bg-white rounded-lg border p-6 space-y-4">
+      <div class="flex items-center justify-between pb-4 border-b">
+        <div class="flex items-center gap-2">
+          <lucide-icon [img]="FileTextIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+          <h2 class="text-lg font-semibold">Itens do Contrato</h2>
+        </div>
+        @if (!isContractClosed()) {
+          <button 
+            appButton 
+            variant="outline" 
+            size="sm"
+            (click)="handleAddContractItem()"
+          >
+            <lucide-icon [img]="PlusIcon" class="h-4 w-4 mr-2"></lucide-icon>
+            Adicionar Item
+          </button>
+        }
+      </div>
+
+      @if (isLoadingItems) {
+        <div class="text-center py-4">
+          <p class="text-muted-foreground">Carregando itens do contrato...</p>
+        </div>
+      } @else if (contractItems.length > 0) {
+        <div class="rounded-md border">
+          <app-table>
+            <thead appTableHeader>
+              <tr appTableRow>
+                <th appTableHead>Descrição</th>
+                <th appTableHead>Quantidade</th>
+                <th appTableHead>Valor Unitário</th>
+                <th appTableHead>Total</th>
+                @if (!isContractClosed()) {
+                  <th appTableHead class="text-right">Ações</th>
+                }
+              </tr>
+            </thead>
+            <tbody appTableBody>
+              @for (item of contractItems; track item.id) {
+                <tr appTableRow>
+                  <td appTableCell class="font-medium">{{ item.description }}</td>
+                  <td appTableCell>{{ typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity }}</td>
+                  <td appTableCell>{{ formatCurrency(typeof item.unitPrice === 'string' ? parseFloat(item.unitPrice) : item.unitPrice) }}</td>
+                  <td appTableCell class="font-semibold">{{ formatCurrency(typeof item.totalPrice === 'string' ? parseFloat(item.totalPrice) : item.totalPrice) }}</td>
+                  @if (!isContractClosed()) {
+                    <td appTableCell class="text-right">
+                      <div class="flex items-center justify-end space-x-2">
+                        <button 
+                          appButton 
+                          variant="ghost" 
+                          size="sm"
+                          (click)="handleEditContractItem(item)"
+                          title="Editar"
+                        >
+                          <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+                        </button>
+                        <button 
+                          appButton 
+                          variant="ghost" 
+                          size="sm"
+                          (click)="handleDeleteContractItem(item)"
+                          title="Excluir"
+                        >
+                          <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                        </button>
+                      </div>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </app-table>
+        </div>
+        <div class="pt-4 border-t">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-600">Total dos Itens:</span>
+            <span class="text-lg font-bold text-gray-900">{{ formatCurrency(getTotalItemsAmount()) }}</span>
+          </div>
+        </div>
+      } @else {
+        <div class="text-center py-8">
+          <p class="text-muted-foreground">Nenhum item cadastrado para este contrato.</p>
+        </div>
+      }
     </div>
 
     <!-- Installments List -->
@@ -458,6 +567,123 @@
               [disabled]="isSubmitting || additionalPaymentForm.invalid"
             >
               {{ isSubmitting ? 'Salvando...' : (isEditMode ? 'Atualizar' : 'Criar') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Contract Item Modal -->
+  @if (showItemModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="handleCloseItemModal()">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between pb-4 border-b">
+          <div>
+            <h2 class="text-xl font-semibold">
+              {{ isItemEditMode ? 'Editar Item do Contrato' : 'Novo Item do Contrato' }}
+            </h2>
+            <p class="text-sm text-muted-foreground mt-1">
+              {{ contract?.client?.name }} - {{ contract?.event?.name }}
+            </p>
+          </div>
+          <button 
+            appButton 
+            variant="ghost" 
+            size="sm"
+            (click)="handleCloseItemModal()"
+          >
+            <lucide-icon [img]="XIcon" class="h-4 w-4"></lucide-icon>
+          </button>
+        </div>
+
+        @if (error) {
+          <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            {{ error }}
+          </div>
+        }
+
+        <form [formGroup]="contractItemForm" (ngSubmit)="handleSubmitContractItem()" class="space-y-4">
+          <!-- Description -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="itemDescription">Descrição *</label>
+            <input
+              type="text"
+              id="itemDescription"
+              formControlName="description"
+              placeholder="Ex: Buffet completo para 100 pessoas"
+              maxlength="255"
+              [class]="'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasItemFormError('description') ? 'border-red-500' : '')"
+            />
+            @if (hasItemFormError('description')) {
+              <p class="text-sm text-red-500">{{ getItemFormFieldError('description') }}</p>
+            }
+          </div>
+
+          <!-- Quantity -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="itemQuantity">Quantidade *</label>
+            <input
+              type="number"
+              id="itemQuantity"
+              formControlName="quantity"
+              step="0.01"
+              min="0.01"
+              placeholder="1.00"
+              [class]="'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasItemFormError('quantity') ? 'border-red-500' : '')"
+            />
+            @if (hasItemFormError('quantity')) {
+              <p class="text-sm text-red-500">{{ getItemFormFieldError('quantity') }}</p>
+            }
+          </div>
+
+          <!-- Unit Price -->
+          <div class="space-y-2">
+            <label appLabel htmlFor="itemUnitPrice">Valor Unitário *</label>
+            <input
+              type="number"
+              id="itemUnitPrice"
+              formControlName="unitPrice"
+              step="0.01"
+              min="0.01"
+              placeholder="0.00"
+              [class]="'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasItemFormError('unitPrice') ? 'border-red-500' : '')"
+            />
+            @if (hasItemFormError('unitPrice')) {
+              <p class="text-sm text-red-500">{{ getItemFormFieldError('unitPrice') }}</p>
+            }
+          </div>
+
+          <!-- Calculated Total -->
+          @if (contractItemForm.valid && contractItemForm.value.quantity && contractItemForm.value.unitPrice) {
+            <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-600">Total:</span>
+                <span class="text-lg font-bold text-gray-900">
+                  {{ formatCurrency((parseFloat(contractItemForm.value.quantity) || 0) * (parseFloat(contractItemForm.value.unitPrice) || 0)) }}
+                </span>
+              </div>
+            </div>
+          }
+
+          <!-- Action Buttons -->
+          <div class="flex items-center justify-end space-x-2 pt-4 border-t">
+            <button 
+              appButton 
+              type="button" 
+              variant="outline" 
+              (click)="handleCloseItemModal()"
+              [disabled]="isSubmittingItem"
+            >
+              Cancelar
+            </button>
+            <button 
+              appButton 
+              type="submit" 
+              variant="default"
+              [disabled]="isSubmittingItem || contractItemForm.invalid"
+            >
+              {{ isSubmittingItem ? 'Salvando...' : (isItemEditMode ? 'Atualizar' : 'Criar') }}
             </button>
           </div>
         </form>

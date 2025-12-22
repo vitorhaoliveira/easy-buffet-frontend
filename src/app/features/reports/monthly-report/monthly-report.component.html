@@ -348,6 +348,82 @@
         </div>
       </div>
 
+      <!-- Contracts Section -->
+      <div *ngIf="reportData.contracts">
+        <div class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300 print:page-break-before">
+          <div class="flex items-center gap-2 mb-4">
+            <lucide-icon [img]="FileTextIcon" [size]="24" class="text-emerald-600"></lucide-icon>
+            <h2 class="text-xl font-bold text-gray-900">Contratos</h2>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- Closed Contracts Card -->
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 print:border print:border-blue-200">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-blue-800">Contratos Fechados no Mês</span>
+                <lucide-icon [img]="LockIcon" [size]="20" class="text-blue-600"></lucide-icon>
+              </div>
+              <p class="text-2xl font-bold text-blue-900">
+                {{ reportData.contracts.closedInMonth }}
+              </p>
+            </div>
+
+            <!-- Open Contracts Card -->
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 print:border print:border-gray-200">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-800">Contratos Abertos</span>
+                <lucide-icon [img]="FileTextIcon" [size]="20" class="text-gray-600"></lucide-icon>
+              </div>
+              <p class="text-2xl font-bold text-gray-900">
+                {{ reportData.contracts.open }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Events in Month -->
+          <div *ngIf="reportData.contracts.withEventsInMonth && reportData.contracts.withEventsInMonth.length > 0" class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800">Eventos Realizados no Mês</h3>
+            <div class="rounded-md border">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Evento</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Cliente</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Data do Evento</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Data de Fechamento</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <tr *ngFor="let contract of reportData.contracts.withEventsInMonth">
+                      <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ contract.eventName }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                        {{ contract.clientName }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                        {{ formatDate(contract.eventDate) }}
+                      </td>
+                      <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                        <div *ngIf="contract.closedAt" class="flex items-center gap-2">
+                          <lucide-icon [img]="LockIcon" [size]="16" class="text-gray-500"></lucide-icon>
+                          <span>{{ formatDate(contract.closedAt) }}</span>
+                        </div>
+                        <span *ngIf="!contract.closedAt" class="text-gray-400">Não fechado</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!reportData.contracts.withEventsInMonth || reportData.contracts.withEventsInMonth.length === 0" class="text-center py-8">
+            <p class="text-muted-foreground">Nenhum evento realizado neste mês.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Footer (visible on print) -->
       <div class="hidden print:block mt-8 pt-4 border-t border-gray-300 text-center text-sm text-gray-600">
         <p>Relatório gerado em {{ currentDate | date: 'dd/MM/yyyy HH:mm' }}</p>

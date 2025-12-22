@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, DollarSign, TrendingUp, TrendingDown, PieChart, Calendar, AlertCircle, CheckCircle, Clock, FileText, Printer, Download } from 'lucide-angular'
+import { LucideAngularModule, DollarSign, TrendingUp, TrendingDown, PieChart, Calendar, AlertCircle, CheckCircle, Clock, FileText, Printer, Download, Lock } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ReportService } from '@core/services/report.service'
@@ -30,6 +30,7 @@ export class MonthlyReportComponent implements OnInit {
   readonly FileTextIcon = FileText
   readonly PrinterIcon = Printer
   readonly DownloadIcon = Download
+  readonly LockIcon = Lock
 
   reportData: MonthlyReport | null = null
   isLoading = false
@@ -227,6 +228,18 @@ export class MonthlyReportComponent implements OnInit {
    */
   getProfitIcon(profit: number): typeof TrendingUp | typeof TrendingDown {
     return profit >= 0 ? TrendingUp : TrendingDown
+  }
+
+  /**
+   * @Function - formatDate
+   * @description - Format date string to Brazilian format
+   * @author - Vitor Hugo
+   * @param - dateString: string - ISO date string
+   * @returns - string - Formatted date
+   */
+  formatDate(dateString: string): string {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('pt-BR')
   }
 }
 

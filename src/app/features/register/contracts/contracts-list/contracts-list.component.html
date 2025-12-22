@@ -30,6 +30,15 @@
       <option value="Assinado">Assinado</option>
       <option value="Cancelado">Cancelado</option>
     </select>
+    <select
+      [(ngModel)]="filterPaymentStatus"
+      (ngModelChange)="onPaymentStatusChange()"
+      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <option value="all">Todos os pagamentos</option>
+      <option value="received">Recebidos</option>
+      <option value="pending">A receber</option>
+    </select>
   </div>
 
   <!-- Error Message -->
@@ -70,6 +79,9 @@
                 <div class="flex items-center space-x-2">
                   <lucide-icon [img]="FileTextIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
                   <span>{{ getEventName(contract.eventId) }}</span>
+                  @if (isContractClosed(contract)) {
+                    <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-500" title="Contrato fechado"></lucide-icon>
+                  }
                 </div>
               </td>
               <td appTableCell>
@@ -85,9 +97,16 @@
                 </div>
               </td>
               <td appTableCell>
-                <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(contract.status || 'Pendente')">
-                  {{ contract.status || 'Pendente' }}
-                </span>
+                <div class="flex items-center gap-2">
+                  <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(contract.status || 'Pendente')">
+                    {{ contract.status || 'Pendente' }}
+                  </span>
+                  @if (contract.paymentStatus) {
+                    <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + (contract.paymentStatus === 'received' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800')">
+                      {{ contract.paymentStatus === 'received' ? 'Recebido' : 'A receber' }}
+                    </span>
+                  }
+                </div>
               </td>
               <td appTableCell>
                 <div class="flex items-center space-x-2">

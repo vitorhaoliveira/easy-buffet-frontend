@@ -208,6 +208,7 @@ export interface Contract {
   notes?: string
   status: 'Pendente' | 'Assinado' | 'Cancelado'
   signedAt?: string
+  closedAt?: string | null // Data de fechamento do contrato
   createdAt: string
   updatedAt?: string
   deletedAt?: string | null
@@ -215,6 +216,7 @@ export interface Contract {
   remainingBalance?: number | string
   paidInstallments?: number | string
   additionalPaymentsTotal?: number | string
+  paymentStatus?: 'received' | 'pending' // Status calculado (apenas na listagem)
   event?: {
     id: string
     name: string
@@ -231,6 +233,32 @@ export interface Contract {
   } | null
   installments?: Installment[]
   additionalPayments?: AdditionalPayment[]
+  contractItems?: ContractItem[] // Itens do contrato (quando incluído)
+}
+
+// Contract Item Types
+export interface ContractItem {
+  id: string
+  contractId: string
+  organizationId: string
+  description: string // Máximo 255 caracteres
+  quantity: number | string // Decimal(10, 2)
+  unitPrice: number | string // Decimal(10, 2)
+  totalPrice: number | string // Calculado automaticamente (quantity * unitPrice)
+  createdAt: string // ISO 8601
+  updatedAt: string // ISO 8601
+}
+
+export interface CreateContractItemRequest {
+  description: string
+  quantity: number
+  unitPrice: number
+}
+
+export interface UpdateContractItemRequest {
+  description?: string
+  quantity?: number
+  unitPrice?: number
 }
 
 // Payment Method Types
@@ -664,6 +692,17 @@ export interface MonthlyReport {
     totalCount: number
     additionalPaymentsTotal?: number
     additionalPaymentsCount?: number
+  }
+  contracts?: {
+    closedInMonth: number // Quantidade de contratos fechados no mês
+    open: number // Quantidade de contratos abertos (não fechados)
+    withEventsInMonth: Array<{
+      id: string
+      eventName: string
+      clientName: string
+      eventDate: string // Data de realização do evento
+      closedAt: string | null // Data de fechamento (se fechado)
+    }>
   }
 }
 

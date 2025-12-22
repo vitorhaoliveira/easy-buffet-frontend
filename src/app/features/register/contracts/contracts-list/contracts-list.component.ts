@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye, FileText, Calendar, DollarSign, User } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Eye, FileText, Calendar, DollarSign, User, Lock } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -51,12 +51,14 @@ export class ContractsListComponent implements OnInit {
   readonly CalendarIcon = Calendar
   readonly DollarSignIcon = DollarSign
   readonly UserIcon = User
+  readonly LockIcon = Lock
 
   contracts: Contract[] = []
   events: Event[] = []
   clients: Client[] = []
   searchTerm: string = ''
   filterStatus: string = 'todos'
+  filterPaymentStatus: 'received' | 'pending' | 'all' = 'all'
   isLoading: boolean = true
   error: string = ''
   showDeleteModal: boolean = false
@@ -79,7 +81,7 @@ export class ContractsListComponent implements OnInit {
       this.error = ''
 
       const [contractsResponse, eventsResponse, clientsResponse] = await Promise.all([
-        firstValueFrom(this.contractService.getContracts()),
+        firstValueFrom(this.contractService.getContracts(this.filterPaymentStatus !== 'all' ? this.filterPaymentStatus : undefined)),
         firstValueFrom(this.eventService.getEvents()),
         firstValueFrom(this.clientService.getClients())
       ])
@@ -224,6 +226,27 @@ export class ContractsListComponent implements OnInit {
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  /**
+   * @Function - onPaymentStatusChange
+   * @description - Reload contracts when payment status filter changes
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async onPaymentStatusChange(): Promise<void> {
+    await this.loadData()
+  }
+
+  /**
+   * @Function - isContractClosed
+   * @description - Check if contract is closed
+   * @author - Vitor Hugo
+   * @param - contract: Contract - Contract to check
+   * @returns - boolean - True if contract is closed
+   */
+  isContractClosed(contract: Contract): boolean {
+    return !!contract.closedAt
   }
 }
 

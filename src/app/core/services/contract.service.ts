@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { Observable } from 'rxjs'
 import { environment } from '@environments/environment'
 import type {
@@ -9,6 +9,9 @@ import type {
   UpdateContractRequest,
   CreateContractResponse,
   Installment,
+  ContractItem,
+  CreateContractItemRequest,
+  UpdateContractItemRequest,
 } from '@shared/models/api.types'
 
 @Injectable({
@@ -19,8 +22,12 @@ export class ContractService {
 
   constructor(private http: HttpClient) {}
 
-  getContracts(): Observable<ApiResponse<Contract[]>> {
-    return this.http.get<ApiResponse<Contract[]>>(`${this.apiUrl}/contracts`)
+  getContracts(paymentStatus?: 'received' | 'pending' | 'all'): Observable<ApiResponse<Contract[]>> {
+    let params = new HttpParams()
+    if (paymentStatus) {
+      params = params.set('paymentStatus', paymentStatus)
+    }
+    return this.http.get<ApiResponse<Contract[]>>(`${this.apiUrl}/contracts`, { params })
   }
 
   getContractById(id: string): Observable<ApiResponse<Contract>> {
@@ -45,6 +52,35 @@ export class ContractService {
 
   deleteContract(id: string): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/contracts/${id}`)
+  }
+
+  // Contract Items Methods
+  getContractItems(contractId: string): Observable<ApiResponse<ContractItem[]>> {
+    return this.http.get<ApiResponse<ContractItem[]>>(`${this.apiUrl}/contracts/${contractId}/items`)
+  }
+
+  addContractItem(contractId: string, itemData: CreateContractItemRequest): Observable<ApiResponse<ContractItem>> {
+    return this.http.post<ApiResponse<ContractItem>>(`${this.apiUrl}/contracts/${contractId}/items`, itemData)
+  }
+
+  updateContractItem(contractId: string, itemId: string, itemData: UpdateContractItemRequest): Observable<ApiResponse<ContractItem>> {
+    return this.http.put<ApiResponse<ContractItem>>(`${this.apiUrl}/contracts/${contractId}/items/${itemId}`, itemData)
+  }
+
+  deleteContractItem(contractId: string, itemId: string): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/contracts/${contractId}/items/${itemId}`)
+  }
+
+  // Close Contract
+  closeContract(contractId: string): Observable<ApiResponse<Contract>> {
+    return this.http.post<ApiResponse<Contract>>(`${this.apiUrl}/contracts/${contractId}/close`, {})
+  }
+
+  // Export Installments PDF
+  exportInstallmentsPDF(contractId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/contracts/${contractId}/installments/export`, {
+      responseType: 'blob'
+    })
   }
 }
 
