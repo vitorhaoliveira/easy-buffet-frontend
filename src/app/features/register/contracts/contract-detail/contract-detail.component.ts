@@ -699,7 +699,7 @@ export class ContractDetailComponent implements OnInit {
           )
         )
         if (response.success) {
-          await this.loadContractItems(this.contractId)
+          await this.loadContractDetails(this.contractId)
           this.handleCloseItemModal()
         } else {
           this.error = response.message || 'Erro ao atualizar item do contrato'
@@ -713,7 +713,7 @@ export class ContractDetailComponent implements OnInit {
           })
         )
         if (response.success) {
-          await this.loadContractItems(this.contractId)
+          await this.loadContractDetails(this.contractId)
           this.handleCloseItemModal()
         } else {
           this.error = response.message || 'Erro ao adicionar item ao contrato'
@@ -753,7 +753,7 @@ export class ContractDetailComponent implements OnInit {
         this.contractService.deleteContractItem(this.contractId, item.id)
       )
       if (response.success) {
-        await this.loadContractItems(this.contractId)
+        await this.loadContractDetails(this.contractId)
       } else {
         this.error = response.message || 'Erro ao excluir item do contrato'
       }
