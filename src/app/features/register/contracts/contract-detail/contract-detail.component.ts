@@ -101,6 +101,9 @@ export class ContractDetailComponent implements OnInit {
   // Close Contract
   isClosingContract: boolean = false
 
+  // Export PDF
+  isExportingPDF: boolean = false
+
   paymentMethods: PaymentMethod[] = [
     'Dinheiro',
     'PIX',
@@ -897,22 +900,42 @@ export class ContractDetailComponent implements OnInit {
    * @returns - Promise<void>
    */
   async handleExportPDF(): Promise<void> {
-    if (!this.contractId) return
+    if (!this.contractId || !this.contract) return
 
     try {
+      this.isExportingPDF = true
+      this.error = ''
       const blob = await firstValueFrom(
         this.contractService.exportInstallmentsPDF(this.contractId)
       )
+      
+      // Generate filename with contract info
+      const clientName = this.contract.client?.name || 'cliente'
+      const eventName = this.contract.event?.name || 'evento'
+      const sanitizedClientName = clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+      const sanitizedEventName = eventName.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+      const filename = `parcelas_${sanitizedClientName}_${sanitizedEventName}_${this.contractId}.pdf`
+      
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `parcelas-${this.contractId}.pdf`
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (err: any) {
-      this.error = err.error?.message || err.message || 'Erro ao exportar PDF'
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = 'Erro ao exportar PDF das parcelas'
+      }
+    } finally {
+      this.isExportingPDF = false
     }
   }
 }

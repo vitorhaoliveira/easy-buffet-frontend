@@ -21,9 +21,9 @@
             {{ isClosingContract ? 'Fechando...' : 'Fechar Contrato' }}
           </button>
         }
-        <button appButton variant="outline" (click)="handleExportPDF()">
+        <button appButton variant="outline" (click)="handleExportPDF()" [disabled]="isExportingPDF">
           <lucide-icon [img]="DownloadIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          Exportar PDF
+          {{ isExportingPDF ? 'Exportando...' : 'Exportar PDF' }}
         </button>
         <button appButton variant="outline" (click)="handleEdit()">
           <lucide-icon [img]="EditIcon" class="h-4 w-4 mr-2"></lucide-icon>
