@@ -10,7 +10,8 @@ import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { ContractService } from '@core/services/contract.service'
 import { EventService } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
-import type { Event, Client, CreateContractRequest, UpdateContractRequest } from '@shared/models/api.types'
+import { SellerService } from '@core/services/seller.service'
+import type { Event, Client, Seller, CreateContractRequest, UpdateContractRequest } from '@shared/models/api.types'
 
 @Component({
   selector: 'app-contract-form',
@@ -33,6 +34,7 @@ export class ContractFormComponent implements OnInit {
   contractForm!: FormGroup
   events: Event[] = []
   clients: Client[] = []
+  sellers: Seller[] = []
   isEditing: boolean = false
   contractId: string | null = null
   isLoading: boolean = false
@@ -45,12 +47,14 @@ export class ContractFormComponent implements OnInit {
     private contractService: ContractService,
     private eventService: EventService,
     private clientService: ClientService,
+    private sellerService: SellerService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     this.contractForm = this.fb.group({
       eventId: ['', [Validators.required]],
       clientId: ['', [Validators.required]],
+      sellerId: [''],
       totalAmount: ['', [Validators.required, Validators.min(0)]],
       installmentCount: ['', [Validators.required, Validators.min(1)]],
       firstDueDate: ['', [Validators.required]],
@@ -75,11 +79,18 @@ export class ContractFormComponent implements OnInit {
     this.isLoadingData = false
   }
 
+  /**
+   * @Function - loadData
+   * @description - Loads events, clients and sellers data for the form
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
   async loadData(): Promise<void> {
     try {
-      const [eventsResponse, clientsResponse] = await Promise.all([
+      const [eventsResponse, clientsResponse, sellersResponse] = await Promise.all([
         firstValueFrom(this.eventService.getEvents()),
-        firstValueFrom(this.clientService.getClients())
+        firstValueFrom(this.clientService.getClients()),
+        firstValueFrom(this.sellerService.getSellers())
       ])
 
       if (eventsResponse.success && eventsResponse.data) {
@@ -89,11 +100,24 @@ export class ContractFormComponent implements OnInit {
       if (clientsResponse.success && clientsResponse.data) {
         this.clients = clientsResponse.data as Client[]
       }
+
+      if (sellersResponse.success && sellersResponse.data) {
+        this.sellers = Array.isArray(sellersResponse.data) 
+          ? sellersResponse.data 
+          : (sellersResponse.data as any).data || []
+      }
     } catch (err: any) {
       this.errorMessage = err.message || 'Erro ao carregar dados'
     }
   }
 
+  /**
+   * @Function - loadContract
+   * @description - Loads contract data for editing
+   * @author - Vitor Hugo
+   * @param - id: string - Contract ID
+   * @returns - Promise<void>
+   */
   async loadContract(id: string): Promise<void> {
     try {
       const response = await firstValueFrom(this.contractService.getContractById(id))
@@ -104,6 +128,7 @@ export class ContractFormComponent implements OnInit {
         this.contractForm.patchValue({
           eventId: contract.eventId,
           clientId: contract.clientId,
+          sellerId: contract.sellerId || '',
           totalAmount: contract.totalAmount,
           installmentCount: contract.installmentCount,
           firstDueDate: contract.firstDueDate.split('T')[0],
@@ -140,7 +165,8 @@ export class ContractFormComponent implements OnInit {
       if (this.isEditing && this.contractId) {
         const updateData: UpdateContractRequest = {
           status: formValue.status,
-          ...(formValue.status === 'Assinado' && formValue.signedAt && { signedAt: formValue.signedAt })
+          ...(formValue.status === 'Assinado' && formValue.signedAt && { signedAt: formValue.signedAt }),
+          ...(formValue.sellerId ? { sellerId: formValue.sellerId } : { sellerId: null })
         }
         
         const response = await firstValueFrom(
@@ -161,7 +187,8 @@ export class ContractFormComponent implements OnInit {
           firstDueDate: formValue.firstDueDate,
           periodicity: formValue.periodicity,
           commissionPercentage: parseFloat(formValue.commissionPercentage),
-          notes: formValue.notes || undefined
+          notes: formValue.notes || undefined,
+          ...(formValue.sellerId ? { sellerId: formValue.sellerId } : {})
         }
         
         const response = await firstValueFrom(

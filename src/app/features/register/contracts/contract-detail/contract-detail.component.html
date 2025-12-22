@@ -229,6 +229,29 @@
             </div>
           </div>
         }
+
+        <!-- Seller Information -->
+        @if (contract.seller) {
+          <div class="bg-white rounded-lg border p-6 space-y-4">
+            <div class="flex items-center gap-2 pb-4 border-b">
+              <lucide-icon [img]="UserIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+              <h2 class="text-lg font-semibold">Informações do Vendedor(a)</h2>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex justify-between items-start">
+                <span class="text-sm font-medium text-gray-600">Nome:</span>
+                <span class="text-sm font-semibold text-gray-900">{{ contract.seller.name }}</span>
+              </div>
+              @if (contract.seller.email) {
+                <div class="flex justify-between items-start">
+                  <span class="text-sm font-medium text-gray-600">E-mail:</span>
+                  <span class="text-sm font-semibold text-gray-900">{{ contract.seller.email }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
     </div>
 
