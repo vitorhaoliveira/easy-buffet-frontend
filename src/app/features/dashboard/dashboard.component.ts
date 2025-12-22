@@ -28,6 +28,7 @@ export class DashboardComponent implements OnInit {
   stats: DashboardStats | null = null
   upcomingInstallments: DashboardInstallment[] = []
   upcomingEvents: DashboardEvent[] = []
+  allEventsForCalendar: DashboardEvent[] = []
   units: Unit[] = []
   isLoading = true
   error = ''
@@ -128,7 +129,17 @@ export class DashboardComponent implements OnInit {
         const eventMap = new Map<string, DashboardEvent>()
         allEvents.forEach(event => eventMap.set(event.id, event))
         upcomingEventsList.forEach(event => eventMap.set(event.id, event))
-        this.upcomingEvents = Array.from(eventMap.values())
+        
+        // Store all events for calendar (including past events)
+        this.allEventsForCalendar = Array.from(eventMap.values())
+        
+        // Filter to show only future events in the list
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        this.upcomingEvents = this.allEventsForCalendar.filter(event => {
+          const eventDate = parseDateIgnoringTimezone(event.eventDate)
+          return eventDate >= today
+        })
       } else {
         // Fallback to upcoming events only if all events request fails
         this.upcomingEvents = upcomingEventsList
@@ -182,14 +193,16 @@ export class DashboardComponent implements OnInit {
     }))
 
     // Mock events
-    this.upcomingEvents = [{
+    const mockEvent = {
       id: 'mock-event-1',
       clientName: 'Vitor Hugo Alves de Oliveira',
       eventName: 'Casamento Maria e Vitor',
       eventDate: new Date(2025, 10, 18).toISOString(),
       status: 'Pendente',
       daysUntilEvent: 26
-    }]
+    }
+    this.upcomingEvents = [mockEvent]
+    this.allEventsForCalendar = [mockEvent]
   }
 
   /**
@@ -223,8 +236,8 @@ export class DashboardComponent implements OnInit {
       const date = new Date(year, month, day)
       const isToday = date.toDateString() === today.toDateString()
       
-      // Filter events for this day
-      const dayEvents = this.upcomingEvents.filter(event => {
+      // Filter events for this day (use all events for calendar, not just upcoming)
+      const dayEvents = this.allEventsForCalendar.filter(event => {
         return isSameDayAsDate(event.eventDate, date)
       })
       
