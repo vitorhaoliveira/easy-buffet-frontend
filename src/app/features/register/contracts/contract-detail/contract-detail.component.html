@@ -21,10 +21,6 @@
             {{ isClosingContract ? 'Fechando...' : 'Fechar Contrato' }}
           </button>
         }
-        <button appButton variant="outline" (click)="handleExportPDF()" [disabled]="isExportingPDF">
-          <lucide-icon [img]="DownloadIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          {{ isExportingPDF ? 'Exportando...' : 'Exportar PDF' }}
-        </button>
         <button appButton variant="outline" (click)="handleEdit()">
           <lucide-icon [img]="EditIcon" class="h-4 w-4 mr-2"></lucide-icon>
           Editar Contrato
@@ -326,9 +322,15 @@
     <!-- Installments List -->
     @if (contract.installments && contract.installments.length > 0) {
       <div class="bg-white rounded-lg border p-6 space-y-4">
-        <div class="flex items-center gap-2 pb-4 border-b">
-          <lucide-icon [img]="CreditCardIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
-          <h2 class="text-lg font-semibold">Parcelas do Contrato</h2>
+        <div class="flex items-center justify-between pb-4 border-b">
+          <div class="flex items-center gap-2">
+            <lucide-icon [img]="CreditCardIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+            <h2 class="text-lg font-semibold">Parcelas do Contrato</h2>
+          </div>
+          <button appButton variant="outline" size="sm" (click)="handleExportPDF()" [disabled]="isExportingPDF">
+            <lucide-icon [img]="DownloadIcon" class="h-4 w-4 mr-2"></lucide-icon>
+            {{ isExportingPDF ? 'Exportando...' : 'Exportar' }}
+          </button>
         </div>
 
         <div class="rounded-md border">
