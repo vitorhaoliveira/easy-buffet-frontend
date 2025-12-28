@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpResponse } from '@angular/common/http'
 import { Observable } from 'rxjs'
 import { environment } from '@environments/environment'
 import type {
@@ -17,6 +17,13 @@ export class ReportService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * @Function - getMonthlyReport
+   * @description - Get monthly report data from API
+   * @author - Vitor Hugo
+   * @param - params: { month?: string; year?: string } - Query parameters
+   * @returns - Observable<ApiResponse<MonthlyReport>>
+   */
   getMonthlyReport(params?: {
     month?: string;
     year?: string;
@@ -27,6 +34,32 @@ export class ReportService {
     )
   }
 
+  /**
+   * @Function - downloadMonthlyReportPDF
+   * @description - Download monthly report as PDF from backend API
+   * @author - Vitor Hugo
+   * @param - month: number - Month number (1-12)
+   * @param - year: number - Year
+   * @returns - Observable<HttpResponse<Blob>> - PDF file as blob with response headers
+   */
+  downloadMonthlyReportPDF(month: number, year: number): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/reports/monthly/pdf`, {
+      params: {
+        month: month.toString(),
+        year: year.toString()
+      },
+      responseType: 'blob',
+      observe: 'response'
+    })
+  }
+
+  /**
+   * @Function - getInstallmentsReport
+   * @description - Get installments report data from API
+   * @author - Vitor Hugo
+   * @param - params: { month?: string; year?: string; status?: string } - Query parameters
+   * @returns - Observable<ApiResponse<InstallmentsReport>>
+   */
   getInstallmentsReport(params?: {
     month?: string;
     year?: string;
@@ -38,6 +71,13 @@ export class ReportService {
     )
   }
 
+  /**
+   * @Function - getCostsReport
+   * @description - Get costs report data from API
+   * @author - Vitor Hugo
+   * @param - params: { month?: string; year?: string; category?: string } - Query parameters
+   * @returns - Observable<ApiResponse<CostsReport>>
+   */
   getCostsReport(params?: {
     month?: string;
     year?: string;

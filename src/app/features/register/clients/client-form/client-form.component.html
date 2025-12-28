@@ -79,6 +79,23 @@
         }
       </div>
 
+      <!-- CPF -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="cpf">CPF</label>
+        <input
+          type="text"
+          id="cpf"
+          formControlName="cpf"
+          appCpfMask
+          placeholder="000.000.000-00"
+          maxlength="14"
+          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('cpf') ? 'border-red-500' : '')"
+        />
+        @if (hasError('cpf')) {
+          <p class="text-sm text-red-500">{{ getFieldError('cpf') }}</p>
+        }
+      </div>
+
       <!-- Endereço -->
       <div class="space-y-2 md:col-span-2">
         <label appLabel htmlFor="address">Endereço</label>

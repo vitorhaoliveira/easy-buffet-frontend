@@ -144,15 +144,6 @@
             <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.firstDueDate) }}</span>
           </div>
 
-          <div class="flex justify-between items-start">
-            <span class="text-sm font-medium text-gray-600">Comissão:</span>
-            <div class="text-right">
-              <span class="text-sm font-semibold text-gray-900">
-                {{ contract.commissionPercentage }}% ({{ formatCurrency(contract.commissionAmount) }})
-              </span>
-              <p class="text-xs text-amber-600 mt-1">Valor fixo da criação</p>
-            </div>
-          </div>
 
           <div class="flex justify-between items-start">
             <span class="text-sm font-medium text-gray-600">Data de Criação:</span>
@@ -255,12 +246,27 @@
       </div>
     </div>
 
+    <!-- Commission Card -->
+    <div class="mt-6">
+      <app-contract-commission-card
+        [commission]="commission"
+        [isLoading]="isLoadingCommission"
+        (onEdit)="handleEditCommission()"
+        (onPay)="handlePayCommission()"
+        (onUnpay)="handleConfirmUnpayCommission()"
+        (onRemove)="handleConfirmDeleteCommission()"
+      ></app-contract-commission-card>
+    </div>
+
     <!-- Contract Items List -->
     <div class="bg-white rounded-lg border p-6 space-y-4">
       <div class="flex items-center justify-between pb-4 border-b">
         <div class="flex items-center gap-2">
           <lucide-icon [img]="FileTextIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
           <h2 class="text-lg font-semibold">Itens do Contrato</h2>
+          @if (contractItems.length > 0) {
+            <span class="text-sm text-muted-foreground">({{ contractItems.length }} {{ contractItems.length === 1 ? 'item' : 'itens' }})</span>
+          }
         </div>
         @if (!isContractClosed()) {
           <button 
@@ -628,7 +634,16 @@
           </div>
         }
 
-        <form [formGroup]="contractItemForm" (ngSubmit)="handleSubmitContractItem()" class="space-y-4">
+        @if (showAddAnotherOption) {
+          <div class="w-full p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+            <div class="flex items-center gap-2">
+              <lucide-icon [img]="CheckCircle2Icon" class="h-4 w-4"></lucide-icon>
+              <span>Item adicionado com sucesso! Você pode adicionar outro item abaixo.</span>
+            </div>
+          </div>
+        }
+
+        <form [formGroup]="contractItemForm" (ngSubmit)="handleSubmitContractItem(false)" class="space-y-4">
           <!-- Description -->
           <div class="space-y-2">
             <label appLabel htmlFor="itemDescription">Descrição *</label>
@@ -700,15 +715,27 @@
               (click)="handleCloseItemModal()"
               [disabled]="isSubmittingItem"
             >
-              Cancelar
+              {{ showAddAnotherOption ? 'Fechar' : 'Cancelar' }}
             </button>
+            @if (!isItemEditMode) {
+              <button 
+                appButton 
+                type="button" 
+                variant="outline"
+                (click)="handleSubmitContractItem(true)"
+                [disabled]="isSubmittingItem || contractItemForm.invalid"
+              >
+                <lucide-icon [img]="PlusIcon" class="h-4 w-4 mr-2"></lucide-icon>
+                {{ isSubmittingItem ? 'Salvando...' : 'Salvar e Adicionar Outro' }}
+              </button>
+            }
             <button 
               appButton 
               type="submit" 
               variant="default"
               [disabled]="isSubmittingItem || contractItemForm.invalid"
             >
-              {{ isSubmittingItem ? 'Salvando...' : (isItemEditMode ? 'Atualizar' : 'Criar') }}
+              {{ isSubmittingItem ? 'Salvando...' : (isItemEditMode ? 'Atualizar' : 'Salvar') }}
             </button>
           </div>
         </form>
@@ -727,6 +754,41 @@
     cancelText="Cancelar"
     variant="danger"
     [loading]="isDeletingItem"
+  ></app-confirmation-modal>
+
+  <!-- Commission Form Modal -->
+  <app-contract-commission-form
+    [isOpen]="showCommissionModal"
+    [contractTotalAmount]="contract?.totalAmount || 0"
+    [currentCommission]="commission"
+    [sellers]="sellers"
+    [isLoading]="isSubmittingCommission"
+    (onClose)="handleCloseCommissionModal()"
+    (onSubmit)="handleSubmitCommission($event)"
+  ></app-contract-commission-form>
+
+  <!-- Delete Commission Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeleteCommissionModal"
+    (onClose)="handleCancelDeleteCommission()"
+    (onConfirm)="handleRemoveCommission()"
+    title="Remover Comissão"
+    message="Tem certeza que deseja remover a comissão deste contrato? Esta ação não pode ser desfeita."
+    confirmText="Remover"
+    cancelText="Cancelar"
+    variant="danger"
+  ></app-confirmation-modal>
+
+  <!-- Unpay Commission Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showUnpayCommissionModal"
+    (onClose)="handleCancelUnpayCommission()"
+    (onConfirm)="handleUnpayCommission()"
+    title="Reverter Pagamento da Comissão"
+    message="Tem certeza que deseja reverter o pagamento desta comissão?"
+    confirmText="Reverter"
+    cancelText="Cancelar"
+    variant="warning"
   ></app-confirmation-modal>
 </div>
 

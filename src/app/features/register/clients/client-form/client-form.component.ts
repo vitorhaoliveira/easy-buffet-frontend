@@ -8,7 +8,8 @@ import { firstValueFrom } from 'rxjs'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { PhoneMaskDirective } from '@shared/directives/phone-mask.directive'
-import { phoneValidator } from '@shared/validators'
+import { CpfMaskDirective } from '@shared/directives/cpf-mask.directive'
+import { phoneValidator, cpfValidator } from '@shared/validators'
 import { ClientService } from '@core/services/client.service'
 import type { CreateClientRequest, UpdateClientRequest } from '@shared/models/api.types'
 
@@ -21,7 +22,8 @@ import type { CreateClientRequest, UpdateClientRequest } from '@shared/models/ap
     LucideAngularModule,
     ButtonComponent,
     LabelComponent,
-    PhoneMaskDirective
+    PhoneMaskDirective,
+    CpfMaskDirective
   ],
   templateUrl: './client-form.component.html'
 })
@@ -47,6 +49,7 @@ export class ClientFormComponent implements OnInit {
       name: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, phoneValidator()]],
+      cpf: ['', [cpfValidator()]],
       address: ['']
     })
   }
@@ -70,6 +73,7 @@ export class ClientFormComponent implements OnInit {
           name: client.name,
           email: client.email || '',
           phone: client.phone || '',
+          cpf: client.cpf || '',
           address: client.address || ''
         })
       }
@@ -99,6 +103,7 @@ export class ClientFormComponent implements OnInit {
           name: formValue.name,
           email: formValue.email || undefined,
           phone: formValue.phone || undefined,
+          cpf: formValue.cpf || undefined,
           address: formValue.address || undefined
         }
         
@@ -116,6 +121,7 @@ export class ClientFormComponent implements OnInit {
           name: formValue.name,
           email: formValue.email || undefined,
           phone: formValue.phone || undefined,
+          cpf: formValue.cpf || undefined,
           address: formValue.address || undefined
         }
         
@@ -146,7 +152,8 @@ export class ClientFormComponent implements OnInit {
       const fieldLabels: Record<string, string> = {
         name: 'Nome',
         email: 'Email',
-        phone: 'Telefone'
+        phone: 'Telefone',
+        cpf: 'CPF'
       }
       return `${fieldLabels[fieldName] || 'Campo'} é obrigatório`
     }
@@ -155,6 +162,9 @@ export class ClientFormComponent implements OnInit {
     }
     if (field?.hasError('invalidPhone') && field.touched) {
       return 'Telefone inválido. Use o formato (XX) XXXXX-XXXX'
+    }
+    if (field?.hasError('invalidCpf') && field.touched) {
+      return 'CPF inválido. Use o formato 000.000.000-00'
     }
     return ''
   }

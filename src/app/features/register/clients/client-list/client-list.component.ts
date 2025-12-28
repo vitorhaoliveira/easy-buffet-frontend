@@ -86,10 +86,12 @@ export class ClientListComponent implements OnInit {
     }
     
     const searchLower = this.searchTerm.toLowerCase()
+    const searchDigits = this.searchTerm.replace(/\D/g, '')
     return this.clientes.filter(cliente =>
       cliente.name.toLowerCase().includes(searchLower) ||
       (cliente.email && cliente.email.toLowerCase().includes(searchLower)) ||
-      (cliente.phone && cliente.phone.includes(searchLower))
+      (cliente.phone && cliente.phone.includes(searchLower)) ||
+      (cliente.cpf && (cliente.cpf.toLowerCase().includes(searchLower) || cliente.cpf.replace(/\D/g, '').includes(searchDigits)))
     )
   }
 

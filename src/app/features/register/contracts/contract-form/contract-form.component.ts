@@ -40,7 +40,6 @@ export class ContractFormComponent implements OnInit {
   isLoading: boolean = false
   isLoadingData: boolean = true
   errorMessage: string = ''
-  fixedCommissionAmount: number = 0 // Valor fixo da comissão quando em edição
 
   constructor(
     private fb: FormBuilder,
@@ -59,7 +58,6 @@ export class ContractFormComponent implements OnInit {
       installmentCount: ['', [Validators.required, Validators.min(1)]],
       firstDueDate: ['', [Validators.required]],
       periodicity: ['Mensal'],
-      commissionPercentage: ['', [Validators.required, Validators.min(0), Validators.max(100)]],
       notes: [''],
       status: ['Pendente'],
       signedAt: ['']
@@ -123,8 +121,6 @@ export class ContractFormComponent implements OnInit {
       const response = await firstValueFrom(this.contractService.getContractById(id))
       if (response.success && response.data) {
         const contract = response.data
-        // Armazena o valor fixo da comissão
-        this.fixedCommissionAmount = contract.commissionAmount || 0
         this.contractForm.patchValue({
           eventId: contract.eventId,
           clientId: contract.clientId,
@@ -133,15 +129,10 @@ export class ContractFormComponent implements OnInit {
           installmentCount: contract.installmentCount,
           firstDueDate: contract.firstDueDate.split('T')[0],
           periodicity: contract.periodicity,
-          commissionPercentage: contract.commissionPercentage,
           notes: contract.notes || '',
           status: contract.status,
           signedAt: contract.signedAt || ''
         })
-        // Desabilita o campo de comissão no modo edição
-        if (this.isEditing) {
-          this.contractForm.get('commissionPercentage')?.disable()
-        }
       }
     } catch (error: any) {
       this.errorMessage = error.message || 'Erro ao carregar contrato'
@@ -186,7 +177,6 @@ export class ContractFormComponent implements OnInit {
           installmentCount: parseInt(formValue.installmentCount),
           firstDueDate: formValue.firstDueDate,
           periodicity: formValue.periodicity,
-          commissionPercentage: parseFloat(formValue.commissionPercentage),
           notes: formValue.notes || undefined,
           ...(formValue.sellerId ? { sellerId: formValue.sellerId } : {})
         }
@@ -237,16 +227,6 @@ export class ContractFormComponent implements OnInit {
     return (total && count) ? parseFloat(total) / parseInt(count) : 0
   }
 
-  get commissionAmount(): number {
-    // Se estiver editando, retorna o valor fixo da comissão
-    if (this.isEditing && this.fixedCommissionAmount > 0) {
-      return this.fixedCommissionAmount
-    }
-    // Caso contrário, calcula baseado no formulário (criação)
-    const total = this.contractForm.get('totalAmount')?.value
-    const percentage = this.contractForm.get('commissionPercentage')?.value
-    return (total && percentage) ? parseFloat(total) * parseFloat(percentage) / 100 : 0
-  }
 
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('pt-BR', {

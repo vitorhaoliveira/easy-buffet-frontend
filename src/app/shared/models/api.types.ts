@@ -87,6 +87,7 @@ export interface Client {
   name: string
   email?: string
   phone?: string
+  cpf?: string
   address?: string
   createdAt: string
   updatedAt?: string
@@ -438,6 +439,7 @@ export interface CreateClientRequest {
   name: string
   email?: string
   phone?: string
+  cpf?: string
   address?: string
 }
 
@@ -445,6 +447,7 @@ export interface UpdateClientRequest {
   name?: string
   email?: string
   phone?: string
+  cpf?: string
   address?: string
 }
 
@@ -515,7 +518,6 @@ export interface CreateContractRequest {
   installmentCount: number
   firstDueDate: string
   periodicity: 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual'
-  commissionPercentage: number
   sellerId?: string | null
   notes?: string
 }
@@ -847,5 +849,39 @@ export interface PaginatedResponse<T> {
   data: T[]
   pagination: PaginationInfo
   message?: string
+}
+
+// Commission Types
+export type CommissionType = 'fixed' | 'percentage'
+
+export interface SetCommissionRequest {
+  type: CommissionType
+  value: number
+  sellerId?: string | null
+  notes?: string
+}
+
+export interface MarkCommissionPaidRequest {
+  paidAmount?: number
+}
+
+export interface CommissionDetails {
+  contractId: string
+  totalAmount: number
+  hasCommission: boolean
+  type: CommissionType | null
+  baseAmount: number | null
+  percentage: number
+  amount: number
+  isPaid: boolean
+  paidAt: string | null
+  paidAmount: number | null
+  notes: string | null
+  seller: {
+    id: string
+    name: string
+    email: string
+    phone: string
+  } | null
 }
 

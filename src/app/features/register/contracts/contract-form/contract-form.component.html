@@ -150,37 +150,6 @@
               </select>
             </div>
 
-            <!-- Percentual de Comissão -->
-            <div class="space-y-2">
-              <label appLabel htmlFor="commissionPercentage">
-                Percentual de Comissão (%) *
-                @if (isEditing) {
-                  <span class="text-xs text-muted-foreground ml-2" title="Comissão fixada na criação do contrato e não pode ser alterada">
-                    (Somente leitura)
-                  </span>
-                }
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                id="commissionPercentage"
-                formControlName="commissionPercentage"
-                placeholder="0.00"
-                [disabled]="isEditing"
-                [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('commissionPercentage') ? 'border-red-500' : '')"
-              />
-              @if (isEditing) {
-                <p class="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">
-                  ℹ️ A comissão foi fixada na criação do contrato e não pode ser alterada. O valor da comissão permanece baseado no valor inicial do contrato.
-                </p>
-              }
-              @if (hasError('commissionPercentage')) {
-                <p class="text-sm text-red-500">{{ getFieldError('commissionPercentage') }}</p>
-              }
-            </div>
-
             <!-- Observações -->
             <div class="space-y-2 md:col-span-2">
               <label appLabel htmlFor="notes">Observações</label>
@@ -254,26 +223,14 @@
               {{ installmentAmount > 0 ? formatCurrency(installmentAmount) : 'R$ 0,00' }}
             </p>
           </div>
-          <div>
-            <span class="font-medium text-blue-900">Comissão Total:</span>
-            <p class="text-lg font-bold text-blue-700">
-              {{ commissionAmount > 0 ? formatCurrency(commissionAmount) : 'R$ 0,00' }}
-            </p>
-            @if (isEditing) {
-              <p class="text-xs text-amber-600 mt-1">Valor fixo da criação</p>
-            }
-          </div>
         </div>
         
         <div class="pt-2 border-t border-blue-200">
           <p class="text-sm text-blue-800 mb-2">
             <strong>Valor Total:</strong> {{ contractForm.get('totalAmount')?.value ? formatCurrency(contractForm.get('totalAmount')?.value) : 'R$ 0,00' }}
           </p>
-          <p class="text-sm text-blue-800 mb-2">
-            <strong>Parcelas:</strong> {{ contractForm.get('installmentCount')?.value || '0' }} x {{ contractForm.get('periodicity')?.value }}
-          </p>
           <p class="text-sm text-blue-800">
-            <strong>Comissão:</strong> {{ contractForm.get('commissionPercentage')?.value || '0' }}%
+            <strong>Parcelas:</strong> {{ contractForm.get('installmentCount')?.value || '0' }} x {{ contractForm.get('periodicity')?.value }}
           </p>
         </div>
       </div>

@@ -17,7 +17,7 @@
   <div class="flex items-center space-x-2">
     <div class="flex-1">
       <app-search-bar
-        placeholder="Buscar por nome, email ou telefone..."
+        placeholder="Buscar por nome, email, telefone ou CPF..."
         [(ngModel)]="searchTerm"
       ></app-search-bar>
     </div>
@@ -46,6 +46,7 @@
           <th appTableHead>Nome</th>
           <th appTableHead>Email</th>
           <th appTableHead>Telefone</th>
+          <th appTableHead>CPF</th>
           <th appTableHead>Data Cadastro</th>
           <th appTableHead class="text-right">Ações</th>
         </tr>
@@ -56,6 +57,7 @@
             <td appTableCell class="font-medium">{{ cliente.name }}</td>
           <td appTableCell>{{ cliente.email || '-' }}</td>
           <td appTableCell>{{ cliente.phone || '-' }}</td>
+          <td appTableCell>{{ cliente.cpf || '-' }}</td>
           <td appTableCell>{{ formatDate(cliente.createdAt) }}</td>
           <td appTableCell class="text-right">
             <div class="flex items-center justify-end space-x-2">

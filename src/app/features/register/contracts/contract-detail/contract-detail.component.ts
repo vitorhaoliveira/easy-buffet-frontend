@@ -18,7 +18,11 @@ import {
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 import { ContractService } from '@core/services/contract.service'
 import { AdditionalPaymentService } from '@core/services/additional-payment.service'
-import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem } from '@shared/models/api.types'
+import { CommissionService } from '@core/services/commission.service'
+import { SellerService } from '@core/services/seller.service'
+import { ContractCommissionCardComponent } from '../contract-commission-card/contract-commission-card.component'
+import { ContractCommissionFormComponent } from '../contract-commission-form/contract-commission-form.component'
+import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem, CommissionDetails, Seller } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface ContractWithDetails extends Contract {
@@ -51,7 +55,9 @@ interface ContractWithDetails extends Contract {
     TableRowComponent,
     TableHeadComponent,
     TableCellComponent,
-    ConfirmationModalComponent
+    ConfirmationModalComponent,
+    ContractCommissionCardComponent,
+    ContractCommissionFormComponent
   ],
   templateUrl: './contract-detail.component.html'
 })
@@ -90,6 +96,7 @@ export class ContractDetailComponent implements OnInit {
   showDeleteItemModal: boolean = false
   itemToDelete: ContractItem | null = null
   isDeletingItem: boolean = false
+  showAddAnotherOption: boolean = false
 
   // Additional Payment Modal
   showAdditionalPaymentModal: boolean = false
@@ -103,6 +110,16 @@ export class ContractDetailComponent implements OnInit {
 
   // Export PDF
   isExportingPDF: boolean = false
+
+  // Commission
+  commission: CommissionDetails | null = null
+  isLoadingCommission: boolean = false
+  showCommissionModal: boolean = false
+  isSubmittingCommission: boolean = false
+  sellers: Seller[] = []
+  isLoadingSellers: boolean = false
+  showDeleteCommissionModal: boolean = false
+  showUnpayCommissionModal: boolean = false
 
   paymentMethods: PaymentMethod[] = [
     'Dinheiro',
@@ -118,6 +135,8 @@ export class ContractDetailComponent implements OnInit {
   constructor(
     private contractService: ContractService,
     private additionalPaymentService: AdditionalPaymentService,
+    private commissionService: CommissionService,
+    private sellerService: SellerService,
     private router: Router,
     private route: ActivatedRoute,
     private fb: FormBuilder
@@ -175,6 +194,10 @@ export class ContractDetailComponent implements OnInit {
         }
         // Load contract items
         await this.loadContractItems(id)
+        // Load commission
+        await this.loadCommission(id)
+        // Load sellers for commission form
+        await this.loadSellers()
       } else {
         this.error = 'Erro ao carregar detalhes do contrato'
       }
@@ -633,6 +656,7 @@ export class ContractDetailComponent implements OnInit {
   handleAddContractItem(): void {
     this.isItemEditMode = false
     this.itemToEdit = null
+    this.showAddAnotherOption = false
     this.contractItemForm.reset({
       description: '',
       quantity: '',
@@ -652,6 +676,7 @@ export class ContractDetailComponent implements OnInit {
   handleEditContractItem(item: ContractItem): void {
     this.isItemEditMode = true
     this.itemToEdit = item
+    this.showAddAnotherOption = false
     this.contractItemForm.patchValue({
       description: item.description,
       quantity: typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity,
@@ -671,6 +696,7 @@ export class ContractDetailComponent implements OnInit {
     this.showItemModal = false
     this.isItemEditMode = false
     this.itemToEdit = null
+    this.showAddAnotherOption = false
     this.contractItemForm.reset()
     this.error = ''
   }
@@ -679,9 +705,10 @@ export class ContractDetailComponent implements OnInit {
    * @Function - handleSubmitContractItem
    * @description - Submit contract item form
    * @author - Vitor Hugo
+   * @param - addAnother: boolean - If true, keep modal open to add another item
    * @returns - Promise<void>
    */
-  async handleSubmitContractItem(): Promise<void> {
+  async handleSubmitContractItem(addAnother: boolean = false): Promise<void> {
     if (this.contractItemForm.invalid || !this.contractId) {
       Object.keys(this.contractItemForm.controls).forEach(key => {
         this.contractItemForm.controls[key].markAsTouched()
@@ -722,7 +749,24 @@ export class ContractDetailComponent implements OnInit {
         )
         if (response.success) {
           await this.loadContractDetails(this.contractId)
-          this.handleCloseItemModal()
+          if (addAnother) {
+            // Reset form to add another item
+            this.contractItemForm.reset({
+              description: '',
+              quantity: '',
+              unitPrice: ''
+            })
+            this.showAddAnotherOption = true
+            // Focus on description field
+            setTimeout(() => {
+              const descInput = document.getElementById('itemDescription')
+              if (descInput) {
+                descInput.focus()
+              }
+            }, 100)
+          } else {
+            this.handleCloseItemModal()
+          }
         } else {
           this.error = response.message || 'Erro ao adicionar item ao contrato'
         }
@@ -937,6 +981,255 @@ export class ContractDetailComponent implements OnInit {
     } finally {
       this.isExportingPDF = false
     }
+  }
+
+  /**
+   * @Function - loadCommission
+   * @description - Load commission details for the contract
+   * @author - Vitor Hugo
+   * @param - contractId: string - Contract ID
+   * @returns - Promise<void>
+   */
+  async loadCommission(contractId: string): Promise<void> {
+    try {
+      this.isLoadingCommission = true
+      const response = await firstValueFrom(
+        this.commissionService.getCommission(contractId)
+      )
+      if (response.success && response.data) {
+        this.commission = response.data
+      }
+    } catch (err: any) {
+      // Commission might not exist yet, which is fine
+      console.error('Erro ao carregar comissão:', err)
+      this.commission = null
+    } finally {
+      this.isLoadingCommission = false
+    }
+  }
+
+  /**
+   * @Function - loadSellers
+   * @description - Load sellers list for commission form
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async loadSellers(): Promise<void> {
+    try {
+      this.isLoadingSellers = true
+      const response = await firstValueFrom(this.sellerService.getSellers())
+      if (response.success && response.data) {
+        this.sellers = Array.isArray(response.data)
+          ? response.data
+          : (response.data as any).data || []
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar vendedoras:', err)
+    } finally {
+      this.isLoadingSellers = false
+    }
+  }
+
+  /**
+   * @Function - handleEditCommission
+   * @description - Open commission form modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleEditCommission(): void {
+    this.showCommissionModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleCloseCommissionModal
+   * @description - Close commission form modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCloseCommissionModal(): void {
+    this.showCommissionModal = false
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleSubmitCommission
+   * @description - Submit commission form
+   * @author - Vitor Hugo
+   * @param - data: { type, value, sellerId, notes } - Commission data
+   * @returns - Promise<void>
+   */
+  async handleSubmitCommission(data: {
+    type: 'fixed' | 'percentage'
+    value: number
+    sellerId: string | null
+    notes: string
+  }): Promise<void> {
+    if (!this.contractId) return
+
+    try {
+      this.isSubmittingCommission = true
+      this.error = ''
+      const response = await firstValueFrom(
+        this.commissionService.setCommission(this.contractId, data)
+      )
+      if (response.success) {
+        await this.loadCommission(this.contractId)
+        this.handleCloseCommissionModal()
+      } else {
+        this.error = response.message || 'Erro ao salvar comissão'
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = 'Erro ao salvar comissão'
+      }
+    } finally {
+      this.isSubmittingCommission = false
+    }
+  }
+
+  /**
+   * @Function - handlePayCommission
+   * @description - Mark commission as paid
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handlePayCommission(): Promise<void> {
+    if (!this.contractId) return
+
+    try {
+      this.error = ''
+      const response = await firstValueFrom(
+        this.commissionService.markAsPaid(this.contractId)
+      )
+      if (response.success) {
+        await this.loadCommission(this.contractId)
+      } else {
+        this.error = response.message || 'Erro ao marcar comissão como paga'
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = 'Erro ao marcar comissão como paga'
+      }
+    }
+  }
+
+  /**
+   * @Function - handleUnpayCommission
+   * @description - Revert commission payment
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleUnpayCommission(): Promise<void> {
+    if (!this.contractId) return
+
+    try {
+      this.error = ''
+      const response = await firstValueFrom(
+        this.commissionService.markAsUnpaid(this.contractId)
+      )
+      if (response.success) {
+        await this.loadCommission(this.contractId)
+        this.showUnpayCommissionModal = false
+      } else {
+        this.error = response.message || 'Erro ao reverter pagamento da comissão'
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = 'Erro ao reverter pagamento da comissão'
+      }
+    }
+  }
+
+  /**
+   * @Function - handleRemoveCommission
+   * @description - Remove commission from contract
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleRemoveCommission(): Promise<void> {
+    if (!this.contractId) return
+
+    try {
+      this.error = ''
+      const response = await firstValueFrom(
+        this.commissionService.removeCommission(this.contractId)
+      )
+      if (response.success) {
+        await this.loadCommission(this.contractId)
+        this.showDeleteCommissionModal = false
+      } else {
+        this.error = response.message || 'Erro ao remover comissão'
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else if (err.message) {
+        this.error = err.message
+      } else {
+        this.error = 'Erro ao remover comissão'
+      }
+    }
+  }
+
+  /**
+   * @Function - handleConfirmUnpayCommission
+   * @description - Confirm and revert commission payment
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleConfirmUnpayCommission(): void {
+    this.showUnpayCommissionModal = true
+  }
+
+  /**
+   * @Function - handleCancelUnpayCommission
+   * @description - Cancel unpay commission action
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCancelUnpayCommission(): void {
+    this.showUnpayCommissionModal = false
+  }
+
+  /**
+   * @Function - handleConfirmDeleteCommission
+   * @description - Confirm and delete commission
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleConfirmDeleteCommission(): void {
+    this.showDeleteCommissionModal = true
+  }
+
+  /**
+   * @Function - handleCancelDeleteCommission
+   * @description - Cancel delete commission action
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCancelDeleteCommission(): void {
+    this.showDeleteCommissionModal = false
   }
 }
 
