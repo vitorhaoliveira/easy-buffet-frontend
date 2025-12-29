@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
-import { Observable, catchError, map } from 'rxjs'
+import { Observable, catchError, map, of } from 'rxjs'
 import { environment } from '@environments/environment'
 import type {
   ApiResponse,
@@ -94,6 +94,22 @@ export class AuthService {
       `${this.apiUrl}/auth/me`
     ).pipe(
       catchError(this.handleError)
+    )
+  }
+
+  /**
+   * @Function - wakeUpServer
+   * @description - Pings the server to wake it up from cold start
+   * @author - EasyBuffet Team
+   * @returns - Observable<boolean> - True if server is awake
+   */
+  wakeUpServer(): Observable<boolean> {
+    return this.http.get(`${this.apiUrl}/health`, { responseType: 'text' }).pipe(
+      map(() => true),
+      catchError(() => {
+        // Even if it fails, we tried to wake up the server
+        return of(true)
+      })
     )
   }
 
