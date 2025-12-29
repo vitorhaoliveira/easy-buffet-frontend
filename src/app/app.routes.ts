@@ -173,6 +173,32 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
+      // Checklist Templates routes
+      {
+        path: 'cadastros/checklists/templates',
+        loadComponent: () => import('./features/checklists/templates/template-list/template-list.component').then(m => m.TemplateListComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/checklists/templates/novo',
+        loadComponent: () => import('./features/checklists/templates/template-form/template-form.component').then(m => m.TemplateFormComponent),
+        data: { module: 'cadastros', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/checklists/templates/editar/:id',
+        loadComponent: () => import('./features/checklists/templates/template-form/template-form.component').then(m => m.TemplateFormComponent),
+        data: { module: 'cadastros', action: 'edit' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/eventos/:eventId/checklist',
+        loadComponent: () => import('./features/checklists/event-checklist-page/event-checklist-page.component').then(m => m.EventChecklistPageComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      
       // Financial routes
       {
         path: 'financeiro',

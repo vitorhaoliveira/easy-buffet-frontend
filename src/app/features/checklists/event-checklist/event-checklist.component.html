@@ -1,0 +1,289 @@
+<div class="bg-white rounded-lg shadow-sm border border-gray-200">
+  <!-- Header -->
+  <div class="p-4 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-900">Checklist do Evento</h3>
+      
+      <!-- Progress -->
+      <div *ngIf="checklist" class="flex items-center gap-3">
+        <div class="text-sm text-gray-600">
+          {{ checklist.completedItems }}/{{ checklist.totalItems }} concluídos
+        </div>
+        <div class="w-32 bg-gray-200 rounded-full h-2">
+          <div 
+            class="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+            [style.width.%]="checklist.completionPercentage"
+          ></div>
+        </div>
+        <span class="text-sm font-medium text-indigo-600">
+          {{ checklist.completionPercentage }}%
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex justify-center py-8">
+    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="p-4 bg-red-50 text-red-700 text-sm">
+    {{ error }}
+  </div>
+
+  <!-- Template Selector (when no checklist exists) -->
+  <div *ngIf="!isLoading && showTemplateSelector" class="p-6">
+    <div class="text-center mb-6">
+      <lucide-icon [img]="CheckCircle2Icon" class="w-12 h-12 text-gray-400 mx-auto mb-3"></lucide-icon>
+      <h4 class="text-lg font-medium text-gray-900 mb-2">Criar Checklist para este Evento</h4>
+      <p class="text-gray-500 text-sm">Escolha um template ou crie um checklist vazio</p>
+    </div>
+
+    <div *ngIf="templates.length > 0" class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Selecionar Template</label>
+      <select 
+        [(ngModel)]="selectedTemplateId"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="">Selecione um template...</option>
+        <option *ngFor="let template of templates" [value]="template.id">
+          {{ template.name }} ({{ template.eventType }}) - {{ template.items.length }} itens
+        </option>
+      </select>
+    </div>
+
+    <div class="flex gap-3 justify-center">
+      <app-button 
+        *ngIf="selectedTemplateId"
+        variant="default" 
+        (click)="createFromTemplate()"
+      >
+        Criar a partir do Template
+      </app-button>
+      <app-button 
+        variant="outline" 
+        (click)="createEmptyChecklist()"
+      >
+        Criar Checklist Vazio
+      </app-button>
+    </div>
+  </div>
+
+  <!-- Checklist Content -->
+  <div *ngIf="!isLoading && checklist && !showTemplateSelector">
+    <!-- Phases -->
+    <div *ngFor="let phase of phases" class="border-b border-gray-100 last:border-b-0">
+      <!-- Phase Header -->
+      <button 
+        (click)="togglePhase(phase)"
+        class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+      >
+        <div class="flex items-center gap-3">
+          <lucide-icon 
+            [img]="expandedPhases[phase] ? ChevronDownIcon : ChevronUpIcon" 
+            class="w-5 h-5 text-gray-400"
+          ></lucide-icon>
+          <span class="font-medium text-gray-900">{{ phaseLabels[phase] }}</span>
+          <span class="text-sm text-gray-500">
+            ({{ getCompletedByPhase(phase) }}/{{ getItemsByPhase(phase).length }})
+          </span>
+        </div>
+        <div 
+          class="w-16 bg-gray-200 rounded-full h-1.5"
+          *ngIf="getItemsByPhase(phase).length > 0"
+        >
+          <div 
+            class="bg-green-500 h-1.5 rounded-full transition-all"
+            [style.width.%]="getPhaseProgress(phase)"
+          ></div>
+        </div>
+      </button>
+
+      <!-- Phase Items -->
+      <div *ngIf="expandedPhases[phase]" class="px-4 pb-4">
+        <!-- Items List -->
+        <div class="space-y-2">
+          <div 
+            *ngFor="let item of getItemsByPhase(phase)"
+            class="flex items-start gap-3 p-3 rounded-lg border transition-all"
+            [ngClass]="{
+              'bg-green-50 border-green-200': item.isCompleted,
+              'bg-white border-gray-200 hover:border-gray-300': !item.isCompleted && !isOverdue(item),
+              'border-red-300 bg-red-50': isOverdue(item)
+            }"
+          >
+            <!-- Checkbox -->
+            <button 
+              (click)="toggleItem(item)"
+              class="flex-shrink-0 w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center transition-colors"
+              [ngClass]="{
+                'bg-green-500 border-green-500': item.isCompleted,
+                'border-gray-300 hover:border-indigo-500': !item.isCompleted
+              }"
+            >
+              <lucide-icon 
+                *ngIf="item.isCompleted" 
+                [img]="CheckIcon" 
+                class="w-3 h-3 text-white"
+              ></lucide-icon>
+            </button>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span 
+                  class="font-medium"
+                  [ngClass]="item.isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'"
+                >
+                  {{ item.title }}
+                </span>
+                <span 
+                  class="text-xs px-2 py-0.5 rounded-full"
+                  [ngClass]="getPriorityColor(item.priority)"
+                >
+                  {{ priorityLabels[item.priority] }}
+                </span>
+                <span 
+                  *ngIf="item.responsibleRole"
+                  class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700"
+                >
+                  {{ item.responsibleRole }}
+                </span>
+                <span 
+                  *ngIf="isOverdue(item)"
+                  class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 flex items-center gap-1"
+                >
+                  <lucide-icon [img]="AlertCircleIcon" class="w-3 h-3"></lucide-icon>
+                  Atrasado
+                </span>
+              </div>
+              
+              <p *ngIf="item.description" class="text-sm text-gray-500 mt-1">
+                {{ item.description }}
+              </p>
+
+              <!-- Completion info -->
+              <div *ngIf="item.isCompleted && item.completedBy" class="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                <lucide-icon [img]="UserIcon" class="w-3 h-3"></lucide-icon>
+                Concluído por {{ item.completedBy.name }}
+              </div>
+            </div>
+
+            <!-- Delete -->
+            <button 
+              (click)="handleDeleteClick(item)"
+              class="flex-shrink-0 p-1 text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <lucide-icon [img]="Trash2Icon" class="w-4 h-4"></lucide-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty state for phase -->
+        <div 
+          *ngIf="getItemsByPhase(phase).length === 0"
+          class="text-center py-4 text-gray-500 text-sm"
+        >
+          Nenhum item nesta fase
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Item Section -->
+    <div class="p-4 border-t border-gray-200">
+      <button 
+        *ngIf="!showAddItemForm"
+        (click)="showAddItemForm = true"
+        class="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 transition-colors"
+      >
+        <lucide-icon [img]="PlusIcon" class="w-4 h-4"></lucide-icon>
+        Adicionar Item
+      </button>
+
+      <!-- Add Item Form -->
+      <div *ngIf="showAddItemForm" class="space-y-3 bg-gray-50 rounded-lg p-4">
+        <div>
+          <input 
+            type="text"
+            [(ngModel)]="newItem.title"
+            placeholder="Título do item *"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        
+        <div>
+          <textarea 
+            [(ngModel)]="newItem.description"
+            placeholder="Descrição (opcional)"
+            rows="2"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Fase</label>
+            <select 
+              [(ngModel)]="newItem.phase"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              <option *ngFor="let phase of phases" [value]="phase">
+                {{ phaseLabels[phase] }}
+              </option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Prioridade</label>
+            <select 
+              [(ngModel)]="newItem.priority"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="low">Baixa</option>
+              <option value="medium">Média</option>
+              <option value="high">Alta</option>
+              <option value="critical">Crítica</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Setor</label>
+            <select 
+              [(ngModel)]="newItem.responsibleRole"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">Nenhum</option>
+              <option *ngFor="let role of responsibleRoles" [value]="role">
+                {{ role }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex gap-2 justify-end">
+          <app-button variant="outline" size="sm" (click)="showAddItemForm = false">
+            Cancelar
+          </app-button>
+          <app-button variant="default" size="sm" (click)="addItem()">
+            Adicionar
+          </app-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<app-confirmation-modal
+  [isOpen]="showDeleteModal"
+  (onClose)="handleCancelDelete()"
+  (onConfirm)="handleConfirmDelete()"
+  title="Excluir Item do Checklist"
+  [message]="'Tem certeza que deseja excluir o item &quot;' + (itemToDelete?.title || '') + '&quot;? Esta ação não pode ser desfeita.'"
+  confirmText="Excluir"
+  cancelText="Cancelar"
+  variant="danger"
+  [loading]="isDeleting"
+></app-confirmation-modal>
+

@@ -113,14 +113,21 @@
               </td>
               <td appTableCell class="text-right">
                 <div class="flex items-center justify-end space-x-2">
-                  <button appButton variant="ghost" size="sm">
-                    <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+                  <button 
+                    appButton 
+                    variant="ghost" 
+                    size="sm"
+                    [routerLink]="['/cadastros/eventos', event.id, 'checklist']"
+                    title="Checklist do evento"
+                  >
+                    <lucide-icon [img]="ClipboardCheckIcon" class="h-4 w-4"></lucide-icon>
                   </button>
                   <button 
                     appButton 
                     variant="ghost" 
                     size="sm" 
                     [routerLink]="['/cadastros/eventos/editar', event.id]"
+                    title="Editar evento"
                   >
                     <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
                   </button>
@@ -129,6 +136,7 @@
                     variant="ghost"
                     size="sm"
                     (click)="handleDeleteClick(event)"
+                    title="Excluir evento"
                   >
                     <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
                   </button>

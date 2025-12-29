@@ -97,7 +97,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         { title: 'Unidades', url: '/cadastros/unidades' },
         { title: 'Usuários', url: '/cadastros/usuarios' },
         { title: 'Vendedor(a)s', url: '/cadastros/vendedoras' },
-        { title: 'Contratos', url: '/cadastros/contratos' }
+        { title: 'Contratos', url: '/cadastros/contratos' },
+        { title: 'Checklists', url: '/cadastros/checklists/templates' }
       ]
     },
     {

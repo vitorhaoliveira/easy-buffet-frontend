@@ -1,0 +1,87 @@
+<div class="w-full">
+  <!-- Header -->
+  <div class="flex items-center gap-4 mb-6">
+    <button 
+      (click)="goBack()"
+      class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+    >
+      <lucide-icon [img]="ArrowLeftIcon" class="w-5 h-5 text-gray-600"></lucide-icon>
+    </button>
+    <div class="flex-1">
+      <h1 class="text-2xl font-bold text-gray-900">Checklist do Evento</h1>
+      <p class="text-gray-600 mt-1">Gerencie as tarefas deste evento</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+    {{ error }}
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading && event" class="space-y-6">
+    <!-- Event Info Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">{{ event.name }}</h2>
+          <p *ngIf="event.client" class="text-gray-600 mt-1">
+            Cliente: {{ event.client.name }}
+          </p>
+        </div>
+        <span 
+          class="px-3 py-1 text-sm rounded-full"
+          [ngClass]="getStatusColor(event.status)"
+        >
+          {{ event.status }}
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
+        <!-- Date -->
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <lucide-icon [img]="CalendarIcon" class="w-4 h-4"></lucide-icon>
+          <span>{{ formatDate(event.eventDate) }}</span>
+        </div>
+
+        <!-- Time -->
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <lucide-icon [img]="ClockIcon" class="w-4 h-4"></lucide-icon>
+          <span>{{ formatTime(event.eventTime) }}</span>
+        </div>
+
+        <!-- Location -->
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <lucide-icon [img]="MapPinIcon" class="w-4 h-4"></lucide-icon>
+          <span class="truncate">{{ event.location || 'Não informado' }}</span>
+        </div>
+
+        <!-- Guests -->
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <lucide-icon [img]="UsersIcon" class="w-4 h-4"></lucide-icon>
+          <span>{{ event.guestCount }} convidados</span>
+        </div>
+      </div>
+
+      <!-- Package -->
+      <div *ngIf="event.package" class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100 text-sm">
+        <lucide-icon [img]="PackageIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
+        <span class="text-gray-600">Pacote:</span>
+        <span class="font-medium text-gray-900">{{ event.package.name }}</span>
+      </div>
+    </div>
+
+    <!-- Checklist Component -->
+    <app-event-checklist
+      [eventId]="eventId"
+      [eventDate]="event.eventDate"
+      (checklistUpdated)="onChecklistUpdated($event)"
+    ></app-event-checklist>
+  </div>
+</div>
+

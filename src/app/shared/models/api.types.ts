@@ -885,3 +885,171 @@ export interface CommissionDetails {
   } | null
 }
 
+// ===========================================
+// CHECKLIST TYPES
+// ===========================================
+
+export type ChecklistPhase = 'pre-event' | 'event-day' | 'post-event'
+
+export type ChecklistItemPriority = 'low' | 'medium' | 'high' | 'critical'
+
+/**
+ * Checklist Template - Reusable template for events
+ */
+export interface ChecklistTemplate {
+  id: string
+  organizationId: string
+  name: string
+  eventType: string
+  description?: string
+  isActive: boolean
+  items: ChecklistTemplateItem[]
+  createdAt: string
+  updatedAt?: string
+  deletedAt?: string | null
+  _count?: {
+    events?: number
+  }
+}
+
+export interface ChecklistTemplateItem {
+  id: string
+  templateId: string
+  title: string
+  description?: string
+  phase: ChecklistPhase
+  daysBeforeEvent?: number
+  priority: ChecklistItemPriority
+  responsibleRole?: string
+  sortOrder: number
+  createdAt: string
+  updatedAt?: string
+}
+
+/**
+ * Event Checklist - Instance of template applied to an event
+ */
+export interface EventChecklist {
+  id: string
+  eventId: string
+  templateId?: string | null
+  organizationId: string
+  status: 'not_started' | 'in_progress' | 'completed'
+  completedItems: number
+  totalItems: number
+  completionPercentage: number
+  items: EventChecklistItem[]
+  event?: {
+    id: string
+    name: string
+    eventDate: string
+    client?: {
+      name: string
+    }
+  }
+  template?: {
+    id: string
+    name: string
+  }
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface EventChecklistItem {
+  id: string
+  eventChecklistId: string
+  title: string
+  description?: string
+  phase: ChecklistPhase
+  scheduledDate?: string
+  priority: ChecklistItemPriority
+  responsibleRole?: string
+  assignedToId?: string | null
+  assignedTo?: {
+    id: string
+    name: string
+  }
+  isCompleted: boolean
+  completedAt?: string | null
+  completedById?: string | null
+  completedBy?: {
+    id: string
+    name: string
+  }
+  notes?: string
+  sortOrder: number
+  createdAt: string
+  updatedAt?: string
+}
+
+// Checklist Request Types
+export interface CreateChecklistTemplateRequest {
+  name: string
+  eventType: string
+  description?: string
+  isActive?: boolean
+  items?: CreateChecklistTemplateItemRequest[]
+}
+
+export interface CreateChecklistTemplateItemRequest {
+  title: string
+  description?: string
+  phase: ChecklistPhase
+  daysBeforeEvent?: number
+  priority: ChecklistItemPriority
+  responsibleRole?: string
+  sortOrder?: number
+}
+
+export interface UpdateChecklistTemplateRequest {
+  name?: string
+  eventType?: string
+  description?: string
+  isActive?: boolean
+}
+
+export interface UpdateChecklistTemplateItemRequest {
+  title?: string
+  description?: string
+  phase?: ChecklistPhase
+  daysBeforeEvent?: number
+  priority?: ChecklistItemPriority
+  responsibleRole?: string
+  sortOrder?: number
+}
+
+export interface CreateEventChecklistRequest {
+  eventId: string
+  templateId?: string
+  items?: CreateEventChecklistItemRequest[]
+}
+
+export interface CreateEventChecklistItemRequest {
+  title: string
+  description?: string
+  phase: ChecklistPhase
+  scheduledDate?: string
+  priority: ChecklistItemPriority
+  responsibleRole?: string
+  assignedToId?: string
+  sortOrder?: number
+}
+
+export interface UpdateEventChecklistItemRequest {
+  title?: string
+  description?: string
+  phase?: ChecklistPhase
+  scheduledDate?: string
+  priority?: ChecklistItemPriority
+  responsibleRole?: string
+  assignedToId?: string | null
+  isCompleted?: boolean
+  notes?: string
+  sortOrder?: number
+}
+
+export interface ToggleChecklistItemRequest {
+  isCompleted: boolean
+  notes?: string
+}
+
