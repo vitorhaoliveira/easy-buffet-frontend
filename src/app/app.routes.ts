@@ -173,6 +173,32 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
+      // Quotes routes
+      {
+        path: 'cadastros/orcamentos',
+        loadComponent: () => import('./features/register/quotes/quote-list/quote-list.component').then(m => m.QuoteListComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/orcamentos/novo',
+        loadComponent: () => import('./features/register/quotes/quote-form/quote-form.component').then(m => m.QuoteFormComponent),
+        data: { module: 'cadastros', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/orcamentos/visualizar/:id',
+        loadComponent: () => import('./features/register/quotes/quote-preview/quote-preview.component').then(m => m.QuotePreviewComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/orcamentos/editar/:id',
+        loadComponent: () => import('./features/register/quotes/quote-form/quote-form.component').then(m => m.QuoteFormComponent),
+        data: { module: 'cadastros', action: 'edit' },
+        canActivate: [permissionGuard]
+      },
+      
       // Checklist Templates routes
       {
         path: 'cadastros/checklists/templates',

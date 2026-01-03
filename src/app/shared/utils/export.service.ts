@@ -1,7 +1,16 @@
 import { Injectable } from '@angular/core'
 import * as XLSX from 'xlsx'
 import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
+
+// Import and extend jsPDF with autoTable
+import jsPDFAutoTable from 'jspdf-autotable'
+
+// Extend jsPDF type to include autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: typeof jsPDFAutoTable
+  }
+}
 
 /**
  * Interface for Excel sheet data
@@ -78,96 +87,101 @@ export class ExportService {
    * @returns - void
    */
   exportToPDF(options: PDFExportOptions): void {
-    const doc = new jsPDF({
-      orientation: options.orientation || 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    })
-
-    const pageWidth = doc.internal.pageSize.getWidth()
-    let currentY = 20
-
-    // Add title
-    doc.setFontSize(18)
-    doc.setFont('helvetica', 'bold')
-    doc.text(options.title, pageWidth / 2, currentY, { align: 'center' })
-    currentY += 10
-
-    // Add subtitle if provided
-    if (options.subtitle) {
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'normal')
-      doc.text(options.subtitle, pageWidth / 2, currentY, { align: 'center' })
-      currentY += 10
-    }
-
-    currentY += 5
-
-    // Add each table
-    options.tables.forEach((table, index) => {
-      // Add table title if provided
-      if (table.title) {
-        doc.setFontSize(14)
-        doc.setFont('helvetica', 'bold')
-        doc.text(table.title, 14, currentY)
-        currentY += 8
-      }
-
-      // Generate table using autoTable
-      autoTable(doc, {
-        startY: currentY,
-        head: [table.headers],
-        body: table.rows,
-        theme: 'striped',
-        headStyles: {
-          fillColor: [16, 185, 129], // Emerald-500
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'left'
-        },
-        bodyStyles: {
-          textColor: [55, 65, 81], // Gray-700
-          halign: 'left'
-        },
-        alternateRowStyles: {
-          fillColor: [249, 250, 251] // Gray-50
-        },
-        margin: { left: 14, right: 14 },
-        tableWidth: 'auto'
+    try {
+      const doc = new jsPDF({
+        orientation: options.orientation || 'portrait',
+        unit: 'mm',
+        format: 'a4'
       })
 
-      // Get the final Y position after the table
-      currentY = (doc as any).lastAutoTable.finalY + 15
+      const pageWidth = doc.internal.pageSize.getWidth()
+      let currentY = 20
 
-      // Add page break if needed and not the last table
-      if (index < options.tables.length - 1 && currentY > 250) {
-        doc.addPage()
-        currentY = 20
+      // Add title
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text(options.title, pageWidth / 2, currentY, { align: 'center' })
+      currentY += 10
+
+      // Add subtitle if provided
+      if (options.subtitle) {
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'normal')
+        doc.text(options.subtitle, pageWidth / 2, currentY, { align: 'center' })
+        currentY += 10
       }
-    })
 
-    // Add footer with generation date
-    const pageCount = doc.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i)
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(128, 128, 128)
+      currentY += 5
 
-      const footerText = `Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`
-      doc.text(footerText, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+      // Add each table
+      options.tables.forEach((table, index) => {
+        // Add table title if provided
+        if (table.title) {
+          doc.setFontSize(14)
+          doc.setFont('helvetica', 'bold')
+          doc.text(table.title, 14, currentY)
+          currentY += 8
+        }
 
-      // Add page number
-      doc.text(
-        `Página ${i} de ${pageCount}`,
-        pageWidth - 14,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'right' }
-      )
+        // Generate table using autoTable
+        jsPDFAutoTable(doc, {
+          startY: currentY,
+          head: [table.headers],
+          body: table.rows,
+          theme: 'striped',
+          headStyles: {
+            fillColor: [16, 185, 129], // Emerald-500
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            halign: 'left'
+          },
+          bodyStyles: {
+            textColor: [55, 65, 81], // Gray-700
+            halign: 'left'
+          },
+          alternateRowStyles: {
+            fillColor: [249, 250, 251] // Gray-50
+          },
+          margin: { left: 14, right: 14 },
+          tableWidth: 'auto'
+        })
+
+        // Get the final Y position after the table
+        currentY = (doc as any).lastAutoTable.finalY + 15
+
+        // Add page break if needed and not the last table
+        if (index < options.tables.length - 1 && currentY > 250) {
+          doc.addPage()
+          currentY = 20
+        }
+      })
+
+      // Add footer with generation date
+      const pageCount = doc.getNumberOfPages()
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(128, 128, 128)
+
+        const footerText = `Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`
+        doc.text(footerText, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+
+        // Add page number
+        doc.text(
+          `Página ${i} de ${pageCount}`,
+          pageWidth - 14,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'right' }
+        )
+      }
+
+      // Save the PDF
+      doc.save(`${options.filename}.pdf`)
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error)
+      throw new Error(`Erro ao exportar PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
     }
-
-    // Save the PDF
-    doc.save(`${options.filename}.pdf`)
   }
 
   /**

@@ -6,6 +6,16 @@ export interface ApiResponse<T = any> {
   errors: string[] | null
 }
 
+export interface HttpErrorResponse {
+  message: string
+  error?: {
+    error?: {
+      message: string
+    }
+    message?: string
+  }
+}
+
 // User Types
 export interface UserPermissions {
   dashboard: {
@@ -1051,5 +1061,62 @@ export interface UpdateEventChecklistItemRequest {
 export interface ToggleChecklistItemRequest {
   isCompleted: boolean
   notes?: string
+}
+
+// Quote Types
+export interface Quote {
+  id: string
+  clientId: string
+  eventId?: string
+  packageId: string
+  sellerId?: string
+  totalAmount: number
+  items: QuoteItem[]
+  validUntilDate: string
+  status: 'Rascunho' | 'Enviado' | 'Aceito' | 'Rejeitado' | 'Expirado'
+  notes?: string
+  createdAt: string
+  updatedAt?: string
+  sentAt?: string
+  client?: Client
+  event?: Event
+  package?: Package
+}
+
+export interface QuoteItem {
+  id: string
+  quoteId: string
+  description: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+}
+
+export interface CreateQuoteRequest {
+  clientId: string
+  eventId?: string
+  packageId: string
+  sellerId?: string
+  items: CreateQuoteItemRequest[]
+  validUntilDate: string
+  notes?: string
+}
+
+export interface CreateQuoteItemRequest {
+  description: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+}
+
+export interface UpdateQuoteRequest {
+  clientId?: string
+  eventId?: string
+  packageId?: string
+  sellerId?: string
+  items?: CreateQuoteItemRequest[]
+  validUntilDate?: string
+  notes?: string
+  status?: 'Rascunho' | 'Enviado' | 'Aceito' | 'Rejeitado' | 'Expirado'
 }
 
