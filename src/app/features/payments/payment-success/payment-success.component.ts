@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { SubscriptionService } from '@/app/core/services/subscription.service'
 import { AuthStateService } from '@/app/core/services/auth-state.service' 
+import type { User, UserWithData } from '@/app/shared/models/api.types'
 
 @Component({
   selector: 'app-payment-success',
@@ -50,22 +51,17 @@ export class PaymentSuccessComponent implements OnInit {
 
   private async verifyPaymentWithRetry(): Promise<void> {
     this.currentAttempt++
-    console.log(`Tentativa ${this.currentAttempt}/${this.maxAttempts} de verificar assinatura`)
-    
     try {
       // Recarrega os dados do usuário para pegar a subscription atualizada
       const refreshed = await this.authStateService.refreshUser()
       
       if (refreshed) {
-        const user = this.authStateService.user
+        const user = this.authStateService.user as User | UserWithData | undefined
         
-        if (user?.subscription) {
-          const subscription = user.subscription
-          console.log('Status da assinatura do usuário:', subscription)
-          
+        const subscription = (user as User)?.subscription || (user as UserWithData)?.data?.subscription
+        
+        if (subscription?.status) {
           if (subscription.status === 'trialing' || subscription.status === 'active') {
-            console.log('Assinatura ativa encontrada! Redirecionando para dashboard...')
-            
             // Recarrega a subscription no serviço
             this.subscriptionService.reloadSubscription()
             
@@ -74,31 +70,53 @@ export class PaymentSuccessComponent implements OnInit {
               this.router.navigate(['/dashboard'])
             }, 500)
             return
+          } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
+            // Status que indica problema definitivo
+            this.router.navigate(['/payment-failed'], {
+              queryParams: { 
+                reason: `Assinatura com status: ${subscription.status}. Por favor, tente novamente ou contate o suporte.`
+              }
+            })
+            return
+          } else {
+            console.warn('⚠️ Status inesperado:', subscription.status)
           }
+        } else {
+          console.warn('⚠️ Subscription não encontrada ou sem status. User:', user)
         }
+      } else {
+        console.warn('⚠️ Refresh do usuário falhou')
       }
       
       // Se não encontrou subscription ativa, tenta novamente
       if (this.currentAttempt < this.maxAttempts) {
-        console.log('Assinatura ainda não ativa, tentando novamente em 3 segundos...')
         setTimeout(() => {
           this.verifyPaymentWithRetry()
         }, 3000)
       } else {
-        console.error('Número máximo de tentativas atingido. Assinatura não encontrada.')
-        this.router.navigate(['/payment-failed'])
+        console.error('❌ Número máximo de tentativas atingido. Assinatura não encontrada.')
+        this.router.navigate(['/payment-failed'], {
+          queryParams: { 
+            reason: 'Não foi possível confirmar sua assinatura. O webhook pode estar demorando para processar.',
+            attempts: this.maxAttempts
+          }
+        })
       }
     } catch (err) {
-      console.error('Erro ao verificar assinatura:', err)
+      console.error('❌ Erro ao verificar assinatura:', err)
       
       if (this.currentAttempt < this.maxAttempts) {
-        console.log('Erro na verificação, tentando novamente em 3 segundos...')
         setTimeout(() => {
           this.verifyPaymentWithRetry()
         }, 3000)
       } else {
-        console.error('Número máximo de tentativas atingido após erro.')
-        this.router.navigate(['/payment-failed'])
+        console.error('❌ Número máximo de tentativas atingido após erro.')
+        this.router.navigate(['/payment-failed'], {
+          queryParams: { 
+            reason: 'Erro ao verificar o status da assinatura. Por favor, contate o suporte.',
+            error: 'verification_error'
+          }
+        })
       }
     }
   }

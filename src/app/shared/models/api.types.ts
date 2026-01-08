@@ -73,6 +73,10 @@ export interface User {
   updatedAt?: string
 }
 
+export interface UserWithData {
+  data: User
+}
+
 export interface Organization {
   id: string
   name: string
