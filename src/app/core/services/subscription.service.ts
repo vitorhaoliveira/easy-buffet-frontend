@@ -120,12 +120,15 @@ export class SubscriptionService {
    * Abre o portal de gerenciamento de assinatura do Stripe
    */
   openPortal(): void {
+    console.log('🌐 SubscriptionService: Chamando openPortal...')
     this.paymentService.openPortal().subscribe({
       next: (response) => {
+        console.log('✅ Portal URL recebida:', response.data.url)
         window.location.href = response.data.url
       },
       error: (error) => {
-        console.error('Erro ao abrir portal:', error)
+        console.error('❌ Erro ao abrir portal:', error)
+        alert('Erro ao abrir portal de pagamento. Por favor, tente novamente.')
       },
     })
   }

@@ -100,7 +100,21 @@ export class PaymentRequiredComponent implements OnInit {
   buttonText = 'Começar Trial Gratuito'
 
   ngOnInit(): void {
-    this.checkSubscriptionStatus()
+    // Forçar atualização dos dados do usuário antes de verificar
+    this.refreshUserData()
+  }
+
+  private async refreshUserData(): Promise<void> {
+    try {
+      // Atualizar dados do usuário do backend
+      await this.authStateService.refreshUser()
+      // Depois verificar o status
+      this.checkSubscriptionStatus()
+    } catch (error) {
+      console.error('Erro ao atualizar dados do usuário:', error)
+      // Mesmo com erro, tenta mostrar os dados que tem
+      this.checkSubscriptionStatus()
+    }
   }
 
   private checkSubscriptionStatus(): void {
@@ -163,15 +177,10 @@ export class PaymentRequiredComponent implements OnInit {
   }
 
   goToPlans(): void {
-    // Redirecionar para checkout se não tiver subscription
-    // ou para página de billing se já tiver (para gerenciar)
-    if (!this.subscriptionStatus || this.subscriptionStatus === 'trialing') {
-      this.router.navigate(['/checkout'])
-    }
+    this.router.navigate(['/checkout'])
   }
 
   logout(): void {
     this.authStateService.logout()
-    this.router.navigate(['/entrar'])
   }
 }

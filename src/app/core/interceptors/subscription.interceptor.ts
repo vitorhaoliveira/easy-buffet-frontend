@@ -22,15 +22,19 @@ export const subscriptionInterceptor: HttpInterceptorFn = (req, next) => {
         const errorMessage = error.error?.message || 
           'Sua assinatura expirou ou está inativa. Por favor, renove para continuar.'
         
-        toastService.error(errorMessage)
-        
-        // Redirecionar para página de payment-required
-        router.navigate(['/payment-required'], {
-          queryParams: {
-            reason: error.error?.code || 'SUBSCRIPTION_REQUIRED',
-            message: errorMessage
-          }
-        })
+        // Não mostrar toast se já estiver na página de payment-required
+        const currentUrl = router.url
+        if (!currentUrl.includes('/payment-required') && !currentUrl.includes('/checkout')) {
+          toastService.error(errorMessage)
+          
+          // Redirecionar para página de payment-required apenas se não estiver em rotas de pagamento
+          router.navigate(['/payment-required'], {
+            queryParams: {
+              reason: error.error?.code || 'SUBSCRIPTION_REQUIRED',
+              message: errorMessage
+            }
+          })
+        }
       }
 
       return throwError(() => error)

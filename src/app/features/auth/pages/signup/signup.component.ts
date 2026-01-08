@@ -59,12 +59,12 @@ export class SignupComponent {
       )
       
       if (success) {
-        this.router.navigate(['/'])
+        this.router.navigate(['/checkout'])
       } else {
         this.error = 'Erro ao criar conta. Tente novamente.'
       }
-    } catch (err: any) {
-      this.error = err.message || 'Erro ao criar conta. Tente novamente.'
+    } catch (err: unknown) {
+      this.error = (err as Error).message || 'Erro ao criar conta. Tente novamente.'
     } finally {
       this.isLoading = false
     }
