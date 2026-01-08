@@ -163,7 +163,14 @@ export class PaymentRequiredComponent implements OnInit {
   }
 
   goToPlans(): void {
-    this.router.navigate(['/configuracoes/assinatura'])
+    // Redirecionar para checkout se não tiver subscription
+    // ou para página de billing se já tiver (para gerenciar)
+    if (!this.subscriptionStatus || this.subscriptionStatus === 'trialing') {
+      this.router.navigate(['/checkout'])
+    } else {
+      // Para status canceled, past_due, etc - abrir portal do Stripe
+      this.subscriptionService.openPortal()
+    }
   }
 
   logout(): void {
