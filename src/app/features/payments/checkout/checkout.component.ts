@@ -11,6 +11,17 @@ import { AuthStateService } from '@/app/core/services/auth-state.service'
   template: `
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
       <div class="max-w-md w-full bg-white rounded-xl shadow-xl p-6 sm:p-8">
+        <!-- Botão Voltar -->
+        <button
+          (click)="goBack()"
+          class="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Voltar
+        </button>
+
         <div class="text-center mb-8">
           <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Começar Trial Gratuito</h1>
           <p class="text-sm sm:text-base text-gray-600">
@@ -122,5 +133,9 @@ export class CheckoutComponent implements OnInit {
         alert(errorMessage)
       },
     })
+  }
+
+  goBack(): void {
+    this.router.navigate(['/entrar'])
   }
 }

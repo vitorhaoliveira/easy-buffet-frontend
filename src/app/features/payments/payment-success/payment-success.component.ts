@@ -2,8 +2,7 @@ import { Component, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { SubscriptionService } from '@/app/core/services/subscription.service'
-import { AuthStateService } from '@/app/core/services/auth-state.service' 
-import type { User, UserWithData } from '@/app/shared/models/api.types'
+import { AuthStateService } from '@/app/core/services/auth-state.service'
 
 @Component({
   selector: 'app-payment-success',
@@ -56,11 +55,15 @@ export class PaymentSuccessComponent implements OnInit {
       const refreshed = await this.authStateService.refreshUser()
       
       if (refreshed) {
-        const user = this.authStateService.user as User | UserWithData | undefined
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawUser = this.authStateService.user as any
         
-        const subscription = (user as User)?.subscription || (user as UserWithData)?.data?.subscription
+        // Extrair o user correto da estrutura (pode vir como {success, data} ou direto)
+        const userData = rawUser?.data || rawUser
+        const subscription = userData?.subscription
         
         if (subscription?.status) {
+          console.log('✅ Status:', subscription.status)
           if (subscription.status === 'trialing' || subscription.status === 'active') {
             // Recarrega a subscription no serviço
             this.subscriptionService.reloadSubscription()
@@ -82,7 +85,7 @@ export class PaymentSuccessComponent implements OnInit {
             console.warn('⚠️ Status inesperado:', subscription.status)
           }
         } else {
-          console.warn('⚠️ Subscription não encontrada ou sem status. User:', user)
+          console.warn('⚠️ Subscription não encontrada ou sem status. User:', userData)
         }
       } else {
         console.warn('⚠️ Refresh do usuário falhou')
