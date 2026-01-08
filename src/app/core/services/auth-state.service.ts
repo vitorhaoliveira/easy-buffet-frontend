@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'
-import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs'
+import { BehaviorSubject, firstValueFrom } from 'rxjs'
 import { Router } from '@angular/router'
 import { AuthService } from './auth.service'
 import { StorageService } from './storage.service'
@@ -307,7 +307,7 @@ export class AuthStateService {
       this.storageService.setUser(updatedUser)
       
       return true
-    } catch (error) {
+    } catch (error: any) {
       return false
     }
   }
@@ -322,8 +322,10 @@ export class AuthStateService {
     try {
       const response = await firstValueFrom(this.authService.getMe())
       
-      if (response.success && response.data?.user) {
-        const user = response.data.user
+      
+      if (response.success && response.data) {
+        // O response.data JÁ É o user (não tem response.data.user)
+        const user = response.data as unknown as User
         
         this.userSubject.next(user)
         this.storageService.setUser(user)
@@ -341,12 +343,14 @@ export class AuthStateService {
           this.storageService.setOrganization(organization)
         }
         
+        console.log('✅ refreshUser concluído com sucesso')
         return true
       }
       
+      console.warn('⚠️ response.success é false ou data está vazio')
       return false
     } catch (error) {
-      console.error('Erro ao recarregar dados do usuário:', error)
+      console.error('❌ Erro ao recarregar dados do usuário:', error)
       return false
     }
   }
