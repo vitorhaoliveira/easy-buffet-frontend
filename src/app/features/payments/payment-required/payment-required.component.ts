@@ -167,9 +167,6 @@ export class PaymentRequiredComponent implements OnInit {
     // ou para página de billing se já tiver (para gerenciar)
     if (!this.subscriptionStatus || this.subscriptionStatus === 'trialing') {
       this.router.navigate(['/checkout'])
-    } else {
-      // Para status canceled, past_due, etc - abrir portal do Stripe
-      this.subscriptionService.openPortal()
     }
   }
 
