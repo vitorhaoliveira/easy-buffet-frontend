@@ -8,6 +8,9 @@ import { firstValueFrom } from 'rxjs'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { 
   TableComponent, 
   TableHeaderComponent, 
@@ -31,12 +34,15 @@ import { formatDateBR } from '@shared/utils/date.utils'
     ButtonComponent,
     SearchBarComponent,
     ConfirmationModalComponent,
+    MobileCardComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
     TableRowComponent,
     TableHeadComponent,
-    TableCellComponent
+    TableCellComponent,
+    SkeletonComponent,
+    EmptyStateComponent
   ],
   templateUrl: './package-list.component.html'
 })

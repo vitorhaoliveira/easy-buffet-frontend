@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs'
 
 import { ReportService } from '@core/services/report.service'
 import { ExportService } from '@shared/utils/export.service'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import type { MonthlyReport } from '@shared/models/api.types'
 
 @Component({
@@ -14,7 +15,8 @@ import type { MonthlyReport } from '@shared/models/api.types'
   imports: [
     CommonModule,
     FormsModule,
-    LucideAngularModule
+    LucideAngularModule,
+    SkeletonComponent
   ],
   templateUrl: './monthly-report.component.html'
 })

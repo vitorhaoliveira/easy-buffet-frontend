@@ -16,6 +16,9 @@ import {
   TableCellComponent
 } from '@shared/components/ui/table/table.component'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
+import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
 import type { DashboardStats, DashboardInstallment, MonthlyEvolution } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -33,7 +36,10 @@ import { formatDateBR } from '@shared/utils/date.utils'
     TableRowComponent,
     TableHeadComponent,
     TableCellComponent,
-    ButtonComponent
+    ButtonComponent,
+    SkeletonComponent,
+    EmptyStateComponent,
+    MobileCardComponent
   ],
   templateUrl: './financial-dashboard.component.html'
 })

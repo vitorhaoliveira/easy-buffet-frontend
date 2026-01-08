@@ -5,6 +5,7 @@ import { LucideAngularModule, ArrowLeft, Calendar, MapPin, Users, Package, Clock
 import { firstValueFrom } from 'rxjs'
 
 import { EventChecklistComponent } from '../event-checklist/event-checklist.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EventService } from '@core/services/event.service'
 import type { Event, EventChecklist } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
@@ -15,7 +16,8 @@ import { formatDateBR } from '@shared/utils/date.utils'
   imports: [
     CommonModule,
     LucideAngularModule,
-    EventChecklistComponent
+    EventChecklistComponent,
+    SkeletonComponent
   ],
   templateUrl: './event-checklist-page.component.html'
 })

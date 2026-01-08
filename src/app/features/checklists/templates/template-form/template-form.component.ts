@@ -5,8 +5,8 @@ import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } fr
 import { LucideAngularModule, ArrowLeft, Save, Plus, Trash2, GripVertical } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
-import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { ChecklistService } from '@core/services/checklist.service'
 import type { 
   ChecklistTemplate, 
@@ -23,8 +23,8 @@ import type {
     CommonModule,
     ReactiveFormsModule,
     LucideAngularModule,
-    ButtonComponent,
-    LabelComponent
+    LabelComponent,
+    SkeletonComponent
   ],
   templateUrl: './template-form.component.html'
 })

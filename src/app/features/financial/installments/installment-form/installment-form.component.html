@@ -15,96 +15,78 @@
 
   <!-- Loading State -->
   @if (isLoadingData) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando dados...</p>
-    </div>
+  <div class="text-center py-8">
+    <p class="text-muted-foreground">Carregando dados...</p>
+  </div>
   }
 
   <!-- Error Message -->
   @if (errorMessage) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ errorMessage }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ errorMessage }}
+  </div>
   }
 
   <!-- Formulário -->
   @if (!isLoadingData) {
-    <form [formGroup]="installmentForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+  <form [formGroup]="installmentForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Contract -->
         <div class="space-y-2 md:col-span-2">
           <label appLabel htmlFor="contractId">Contrato *</label>
-          <select
-            id="contractId"
-            formControlName="contractId"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('contractId') ? 'border-red-500' : '')"
-          >
+          <select id="contractId" formControlName="contractId"
+            [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('contractId') ? 'border-red-500' : '')">
             <option value="">Selecione um contrato</option>
             @for (contract of contracts; track contract.id) {
-              <option [value]="contract.id">{{ getContractLabel(contract) }}</option>
+            <option [value]="contract.id">{{ getContractLabel(contract) }}</option>
             }
           </select>
           @if (hasError('contractId')) {
-            <p class="text-sm text-red-500">{{ getFieldError('contractId') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('contractId') }}</p>
           }
         </div>
 
         <!-- Amount -->
         <div class="space-y-2">
           <label appLabel htmlFor="amount">Valor (R$) *</label>
-          <input
-            type="number"
-            id="amount"
-            formControlName="amount"
-            step="0.01"
-            placeholder="0.00"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('amount') ? 'border-red-500' : '')"
-          />
+          <input type="number" id="amount" formControlName="amount" step="0.01" placeholder="0.00"
+            [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('amount') ? 'border-red-500' : '')" />
           @if (hasError('amount')) {
-            <p class="text-sm text-red-500">{{ getFieldError('amount') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('amount') }}</p>
           }
         </div>
 
         <!-- Due Date -->
         <div class="space-y-2">
           <label appLabel htmlFor="dueDate">Data de Vencimento *</label>
-          <input
-            type="date"
-            id="dueDate"
-            formControlName="dueDate"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('dueDate') ? 'border-red-500' : '')"
-          />
+          <input type="date" id="dueDate" formControlName="dueDate"
+            [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('dueDate') ? 'border-red-500' : '')" />
           @if (hasError('dueDate')) {
-            <p class="text-sm text-red-500">{{ getFieldError('dueDate') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('dueDate') }}</p>
           }
         </div>
 
         <!-- Notes -->
         <div class="space-y-2 md:col-span-2">
           <label appLabel htmlFor="notes">Observações</label>
-          <textarea
-            id="notes"
-            formControlName="notes"
-            rows="4"
-            placeholder="Observações sobre a parcela (opcional)"
-            class="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          ></textarea>
+          <textarea id="notes" formControlName="notes" rows="4" placeholder="Observações sobre a parcela (opcional)"
+            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
         </div>
       </div>
+    </div>
 
-      <!-- Botões -->
-      <div class="flex items-center justify-end space-x-2 pt-6 border-t">
-        <button appButton type="button" variant="outline" (click)="handleCancel()">
-          <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          Cancelar
-        </button>
-        <button appButton type="submit" variant="outline" [disabled]="isLoading">
-          <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          {{ isLoading ? 'Salvando...' : 'Salvar' }}
-        </button>
-      </div>
-    </form>
+    <!-- Botões -->
+    <div class="flex items-center justify-end space-x-2 pt-6 border-t">
+      <button appButton type="button" variant="outline" (click)="handleCancel()">
+        <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Cancelar
+      </button>
+      <button appButton type="submit" variant="outline" [disabled]="isLoading">
+        <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        {{ isLoading ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+  </form>
   }
 </div>
-
-

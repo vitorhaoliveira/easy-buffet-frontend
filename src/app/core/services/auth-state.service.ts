@@ -311,5 +311,44 @@ export class AuthStateService {
       return false
     }
   }
+
+  /**
+   * @Function - refreshUser
+   * @description - Recarrega os dados do usuário do backend
+   * @author - EasyBuffet Team
+   * @returns - Promise<boolean> - True if refresh successful
+   */
+  async refreshUser(): Promise<boolean> {
+    try {
+      const response = await firstValueFrom(this.authService.getMe())
+      
+      if (response.success && response.data?.user) {
+        const user = response.data.user
+        
+        this.userSubject.next(user)
+        this.storageService.setUser(user)
+        
+        // Atualiza também a organização se necessário
+        if (user.currentOrganization) {
+          const organization: Organization = {
+            id: user.currentOrganization.id,
+            name: user.currentOrganization.name,
+            role: user.currentOrganization.role,
+            permissions: user.currentOrganization.permissions,
+            createdAt: new Date().toISOString()
+          }
+          this.organizationSubject.next(organization)
+          this.storageService.setOrganization(organization)
+        }
+        
+        return true
+      }
+      
+      return false
+    } catch (error) {
+      console.error('Erro ao recarregar dados do usuário:', error)
+      return false
+    }
+  }
 }
 

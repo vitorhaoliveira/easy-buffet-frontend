@@ -1,127 +1,94 @@
 @if (isOpen) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="handleClose()">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
-      <div class="flex items-center justify-between pb-4 border-b">
-        <div>
-          <h2 class="text-xl font-semibold">
-            {{ currentCommission?.hasCommission ? 'Editar Comissão' : 'Adicionar Comissão' }}
-          </h2>
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="handleClose()">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between pb-4 border-b">
+      <div>
+        <h2 class="text-xl font-semibold">
+          {{ currentCommission?.hasCommission ? 'Editar Comissão' : 'Adicionar Comissão' }}
+        </h2>
+      </div>
+      <button appButton variant="ghost" size="sm" (click)="handleClose()" [disabled]="isLoading">
+        <lucide-icon [img]="XIcon" class="h-4 w-4"></lucide-icon>
+      </button>
+    </div>
+
+    <form [formGroup]="commissionForm" (ngSubmit)="handleSubmit()" class="space-y-4">
+      <!-- Type Selection -->
+      <div class="space-y-2">
+        <label appLabel>Tipo de Comissão *</label>
+        <div class="flex gap-4">
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="radio" formControlName="type" value="fixed" class="h-4 w-4 text-primary focus:ring-primary" />
+            <span class="text-sm font-medium">Valor Fixo (R$)</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="radio" formControlName="type" value="percentage"
+              class="h-4 w-4 text-primary focus:ring-primary" />
+            <span class="text-sm font-medium">Percentual (%)</span>
+          </label>
         </div>
-        <button appButton variant="ghost" size="sm" (click)="handleClose()" [disabled]="isLoading">
-          <lucide-icon [img]="XIcon" class="h-4 w-4"></lucide-icon>
-        </button>
       </div>
 
-      <form [formGroup]="commissionForm" (ngSubmit)="handleSubmit()" class="space-y-4">
-        <!-- Type Selection -->
-        <div class="space-y-2">
-          <label appLabel>Tipo de Comissão *</label>
-          <div class="flex gap-4">
-            <label class="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="radio"
-                formControlName="type"
-                value="fixed"
-                class="h-4 w-4 text-primary focus:ring-primary"
-              />
-              <span class="text-sm font-medium">Valor Fixo (R$)</span>
-            </label>
-            <label class="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="radio"
-                formControlName="type"
-                value="percentage"
-                class="h-4 w-4 text-primary focus:ring-primary"
-              />
-              <span class="text-sm font-medium">Percentual (%)</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Value Input -->
-        <div class="space-y-2">
-          <label appLabel [htmlFor]="selectedType === 'fixed' ? 'value' : 'value'">
-            {{ selectedType === 'fixed' ? 'Valor (R$)' : 'Percentual (%)' }} *
-          </label>
-          <input
-            type="number"
-            id="value"
-            formControlName="value"
-            [step]="selectedType === 'fixed' ? '0.01' : '0.1'"
-            [min]="selectedType === 'percentage' ? 0 : 0.01"
-            [max]="selectedType === 'percentage' ? 100 : null"
-            placeholder="{{ selectedType === 'fixed' ? '0.00' : '0.0' }}"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('value') ? 'border-red-500' : '')"
-          />
-          @if (hasError('value')) {
-            <p class="text-sm text-red-500">{{ getFieldError('value') }}</p>
-          }
-        </div>
-
-        <!-- Preview for Percentage -->
-        @if (selectedType === 'percentage' && commissionForm.get('value')?.value) {
-          <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p class="text-sm text-blue-900">
-              <strong>Valor da comissão:</strong> {{ formatCurrency(previewAmount) }}
-            </p>
-            <p class="text-xs text-blue-700 mt-1">
-              Base: {{ formatCurrency(contractTotalAmount) }}
-            </p>
-          </div>
+      <!-- Value Input -->
+      <div class="space-y-2">
+        <label appLabel [htmlFor]="selectedType === 'fixed' ? 'value' : 'value'">
+          {{ selectedType === 'fixed' ? 'Valor (R$)' : 'Percentual (%)' }} *
+        </label>
+        <input type="number" id="value" formControlName="value" [step]="selectedType === 'fixed' ? '0.01' : '0.1'"
+          [min]="selectedType === 'percentage' ? 0 : 0.01" [max]="selectedType === 'percentage' ? 100 : null"
+          placeholder="{{ selectedType === 'fixed' ? '0.00' : '0.0' }}"
+          [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('value') ? 'border-red-500' : '')" />
+        @if (hasError('value')) {
+        <p class="text-sm text-red-500">{{ getFieldError('value') }}</p>
         }
+      </div>
 
-        <!-- Seller Selection -->
-        <div class="space-y-2">
-          <label appLabel htmlFor="sellerId">Vendedor(a)</label>
-          <select
-            id="sellerId"
-            formControlName="sellerId"
-            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          >
-            <option value="">Selecione um vendedor(a)</option>
-            @for (seller of sellers; track seller.id) {
-              <option [value]="seller.id">{{ seller.name }}</option>
-            }
-          </select>
-        </div>
+      <!-- Preview for Percentage -->
+      @if (selectedType === 'percentage' && commissionForm.get('value')?.value) {
+      <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
+        <p class="text-sm text-blue-900">
+          <strong>Valor da comissão:</strong> {{ formatCurrency(previewAmount) }}
+        </p>
+        <p class="text-xs text-blue-700 mt-1">
+          Base: {{ formatCurrency(contractTotalAmount) }}
+        </p>
+      </div>
+      }
 
-        <!-- Notes -->
-        <div class="space-y-2">
-          <label appLabel htmlFor="notes">Observações</label>
-          <textarea
-            id="notes"
-            formControlName="notes"
-            rows="3"
-            maxlength="500"
-            placeholder="Observações sobre a comissão..."
-            class="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
-          ></textarea>
-          <p class="text-xs text-muted-foreground">
-            {{ commissionForm.get('notes')?.value?.length || 0 }}/500 caracteres
-          </p>
-        </div>
+      <!-- Seller Selection -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="sellerId">Vendedor(a)</label>
+        <select id="sellerId" formControlName="sellerId"
+          class="flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+          <option value="">Selecione um vendedor(a)</option>
+          @for (seller of sellers; track seller.id) {
+          <option [value]="seller.id">{{ seller.name }}</option>
+          }
+        </select>
+      </div>
 
-        <!-- Actions -->
-        <div class="flex items-center justify-end space-x-3 pt-4 border-t">
-          <button
-            appButton
-            variant="outline"
-            type="button"
-            (click)="handleClose()"
-            [disabled]="isLoading"
-          >
-            Cancelar
-          </button>
-          <button
-            appButton
-            type="submit"
-            [disabled]="isLoading || commissionForm.invalid"
-          >
-            {{ isLoading ? 'Salvando...' : 'Salvar Comissão' }}
-          </button>
-        </div>
-      </form>
-    </div>
+      <!-- Notes -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="notes">Observações</label>
+        <textarea id="notes" formControlName="notes" rows="3" maxlength="500"
+          placeholder="Observações sobre a comissão..."
+          class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 resize-none"></textarea>
+        <p class="text-xs text-muted-foreground">
+          {{ commissionForm.get('notes')?.value?.length || 0 }}/500 caracteres
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-end space-x-3 pt-4 border-t">
+        <button appButton variant="outline" type="button" (click)="handleClose()" [disabled]="isLoading">
+          Cancelar
+        </button>
+        <button appButton type="submit" [disabled]="isLoading || commissionForm.invalid">
+          {{ isLoading ? 'Salvando...' : 'Salvar Comissão' }}
+        </button>
+      </div>
+    </form>
   </div>
+</div>
 }
-

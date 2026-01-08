@@ -1,397 +1,457 @@
-<div class="space-y-8">
+<div class="space-y-6 sm:space-y-8 p-4 sm:p-6">
   <!-- Header -->
   <div>
-    <h1 class="text-4xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-    <p class="text-lg text-gray-600 mt-1">
+    <h1
+      class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+      Dashboard</h1>
+    <p class="text-sm sm:text-lg text-gray-600 mt-1">
       Visão geral do seu negócio de buffet
     </p>
   </div>
 
   @if (isLoading) {
-    <div class="text-center py-12">
-      <p class="text-gray-500">Carregando dados...</p>
+  <div class="space-y-6 sm:space-y-8">
+    <!-- Skeleton for metrics cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+      @for (i of [1,2,3,4,5]; track i) {
+      <app-skeleton class="h-32 rounded-2xl"></app-skeleton>
+      }
     </div>
+    <!-- Skeleton for calendar -->
+    <app-skeleton class="h-96 rounded-2xl"></app-skeleton>
+    <!-- Skeleton for tables -->
+    <app-skeleton class="h-64 rounded-2xl"></app-skeleton>
+  </div>
   }
 
   @if (!isLoading) {
-    <!-- Metric Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
-      <!-- Parcelas (7 dias) -->
-      <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-4 lg:p-6 shadow-sm">
-        <div class="flex items-start justify-between">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-xs lg:text-sm font-medium text-yellow-800 truncate">Parcelas (7 dias)</h3>
-            <p class="mt-2 text-2xl lg:text-4xl font-bold text-yellow-900">{{ stats?.upcomingInstallments7Days || 0 }}</p>
-          </div>
-          <div class="bg-yellow-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
-            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-yellow-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
+  <!-- Metric Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+    <!-- Parcelas (7 dias) -->
+    <div
+      class="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+      <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-xs lg:text-sm font-medium text-primary-800 truncate">Parcelas (7 dias)</h3>
+          <p class="mt-2 text-2xl lg:text-4xl font-bold text-primary-900">{{ stats?.upcomingInstallments7Days || 0 }}
+          </p>
         </div>
-      </div>
-
-      <!-- Parcelas (30 dias) -->
-      <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-4 lg:p-6 shadow-sm">
-        <div class="flex items-start justify-between">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-xs lg:text-sm font-medium text-blue-800 truncate">Parcelas (30 dias)</h3>
-            <p class="mt-2 text-2xl lg:text-4xl font-bold text-blue-900">{{ stats?.upcomingInstallments30Days || 0 }}</p>
-          </div>
-          <div class="bg-blue-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
-            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Atrasadas -->
-      <div class="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl p-4 lg:p-6 shadow-sm">
-        <div class="flex items-start justify-between">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-xs lg:text-sm font-medium text-red-800 truncate">Atrasadas</h3>
-            <p class="mt-2 text-2xl lg:text-4xl font-bold text-red-900">{{ stats?.overdueInstallments || 0 }}</p>
-          </div>
-          <div class="bg-red-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
-            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-red-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Receita do Mês -->
-      <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-2xl p-4 lg:p-6 shadow-sm">
-        <div class="flex items-start justify-between">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-xs lg:text-sm font-medium text-green-800 truncate">Receita do Mês</h3>
-            <p class="mt-2 text-xl lg:text-3xl font-bold text-green-900">{{ formatCurrency(stats?.monthlyRevenue || 0) }}</p>
-          </div>
-          <div class="bg-green-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
-            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-green-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Eventos (30 dias) -->
-      <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-4 lg:p-6 shadow-sm">
-        <div class="flex items-start justify-between">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-xs lg:text-sm font-medium text-purple-800 truncate">Eventos (30 dias)</h3>
-            <p class="mt-2 text-2xl lg:text-4xl font-bold text-purple-900">{{ stats?.upcomingEvents || 0 }}</p>
-          </div>
-          <div class="bg-purple-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
-            <svg class="w-5 h-5 lg:w-6 lg:h-6 text-purple-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-          </div>
+        <div class="bg-primary-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
+          <svg class="w-5 h-5 lg:w-6 lg:h-6 text-primary-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
       </div>
     </div>
 
-    <!-- Calendar Section -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-2">
-          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    <!-- Parcelas (30 dias) -->
+    <div
+      class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+      <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-xs lg:text-sm font-medium text-blue-800 truncate">Parcelas (30 dias)</h3>
+          <p class="mt-2 text-2xl lg:text-4xl font-bold text-blue-900">{{ stats?.upcomingInstallments30Days || 0 }}
+          </p>
+        </div>
+        <div class="bg-blue-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
+          <svg class="w-5 h-5 lg:w-6 lg:h-6 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <h2 class="text-2xl font-bold text-gray-900">Calendário de Eventos</h2>
         </div>
       </div>
+    </div>
 
-      <div class="mb-6 flex items-center justify-between">
-        <h3 class="text-xl font-semibold text-gray-900">{{ getCurrentMonthYear() }}</h3>
-        <div class="flex gap-2">
-          <button (click)="previousMonth()" class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
-          <button (click)="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </button>
+    <!-- Atrasadas -->
+    <div
+      class="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+      <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-xs lg:text-sm font-medium text-red-800 truncate">Atrasadas</h3>
+          <p class="mt-2 text-2xl lg:text-4xl font-bold text-red-900">{{ stats?.overdueInstallments || 0 }}</p>
+        </div>
+        <div class="bg-red-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
+          <svg class="w-5 h-5 lg:w-6 lg:h-6 text-red-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
         </div>
       </div>
+    </div>
 
-      <!-- Calendar Grid -->
-      <div class="grid grid-cols-7 gap-2">
-        <!-- Week day headers -->
-        @for (day of weekDays; track day) {
-          <div class="text-center font-semibold text-gray-700 py-2">{{ day }}</div>
-        }
+    <!-- Receita do Mês -->
+    <div
+      class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+      <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-xs lg:text-sm font-medium text-green-800 truncate">Receita do Mês</h3>
+          <p class="mt-2 text-xl lg:text-3xl font-bold text-green-900">{{ formatCurrency(stats?.monthlyRevenue || 0) }}
+          </p>
+        </div>
+        <div class="bg-green-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
+          <svg class="w-5 h-5 lg:w-6 lg:h-6 text-green-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
 
-        <!-- Calendar days -->
-        @for (calendarDay of calendarDays; track $index) {
-          <div 
-            [class]="'min-h-24 p-2 rounded-lg border transition-colors ' + 
-                     (calendarDay.isCurrentMonth ? 'border-gray-200 bg-white hover:bg-gray-50' : 'border-transparent bg-gray-50') + 
-                     (calendarDay.isToday ? ' ring-2 ring-blue-500' : '')">
+    <!-- Eventos (30 dias) -->
+    <div
+      class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+      <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-xs lg:text-sm font-medium text-purple-800 truncate">Eventos (30 dias)</h3>
+          <p class="mt-2 text-2xl lg:text-4xl font-bold text-purple-900">{{ stats?.upcomingEvents || 0 }}</p>
+        </div>
+        <div class="bg-purple-200 p-2 lg:p-3 rounded-full flex-shrink-0 ml-2">
+          <svg class="w-5 h-5 lg:w-6 lg:h-6 text-purple-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar Section -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2">
+        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h2 class="text-2xl font-bold text-gray-900">Calendário de Eventos</h2>
+      </div>
+    </div>
+
+    <div class="mb-6 flex items-center justify-between">
+      <h3 class="text-xl font-semibold text-gray-900">{{ getCurrentMonthYear() }}</h3>
+      <div class="flex gap-2">
+        <button (click)="previousMonth()"
+          class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button (click)="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="relative">
+      <!-- Scroll indicator for mobile -->
+      <div class="sm:hidden text-xs text-gray-500 text-center mb-2 flex items-center justify-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+        </svg>
+        <span>Deslize para ver mais dias</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </div>
+      <div class="overflow-x-auto sm:overflow-x-visible -mx-2 px-2 sm:mx-0 sm:px-0">
+        <div class="grid grid-cols-7 gap-2 min-w-[640px] sm:min-w-0">
+          <!-- Week day headers -->
+          @for (day of weekDays; track day) {
+          <div class="text-center font-semibold text-gray-700 py-2 text-xs sm:text-sm">{{ day }}</div>
+          }
+
+          <!-- Calendar days -->
+          @for (calendarDay of calendarDays; track $index) {
+          <div [class]="'min-h-20 sm:min-h-24 p-1 sm:p-2 rounded-lg border transition-colors ' + 
+                         (calendarDay.isCurrentMonth ? 'border-gray-200 bg-white hover:bg-gray-50' : 'border-transparent bg-gray-50') + 
+                         (calendarDay.isToday ? ' ring-2 ring-primary-500' : '')">
             @if (calendarDay.date > 0) {
-              <div class="text-sm font-semibold mb-1" [class.text-gray-900]="calendarDay.isCurrentMonth" [class.text-gray-400]="!calendarDay.isCurrentMonth">
-                {{ calendarDay.date }}
+            <div class="text-xs sm:text-sm font-semibold mb-1" [class.text-gray-900]="calendarDay.isCurrentMonth"
+              [class.text-gray-400]="!calendarDay.isCurrentMonth">
+              {{ calendarDay.date }}
+            </div>
+            @if (calendarDay.events.length > 0) {
+            <div class="space-y-1">
+              @for (event of calendarDay.events; track event.id) {
+              <div [style]="getEventColor(event)" [class]="getEventColorClasses(event)" (click)="onEventClick(event)"
+                class="cursor-pointer hover:opacity-80 transition-all duration-200 hover:scale-105 text-[0.65rem] sm:text-xs"
+                [title]="event.eventName">
+                <span class="line-clamp-2">{{ event.eventName }}</span>
               </div>
-              @if (calendarDay.events.length > 0) {
-                <div class="space-y-1">
-                  @for (event of calendarDay.events; track event.id) {
-                    <div 
-                      [style]="getEventColor(event)"
-                      [class]="getEventColorClasses(event)"
-                      (click)="onEventClick(event)"
-                      class="cursor-pointer hover:opacity-80 transition-opacity"
-                      [title]="event.eventName"
-                    >
-                      {{ event.eventName }}
-                    </div>
-                  }
-                </div>
               }
+            </div>
+            }
             }
           </div>
-        }
-      </div>
-
-      <!-- Calendar Legend - Units -->
-      @if (units.length > 0) {
-        <div class="mt-6 flex items-center justify-center gap-6 flex-wrap">
-          @for (unit of units; track unit.id) {
-            <div class="flex items-center gap-2">
-              <div 
-                class="w-4 h-4 rounded border-2 border-white shadow-sm"
-                [style.backgroundColor]="getUnitColor(unit.color)"
-              ></div>
-              <span class="text-sm text-gray-700">
-                {{ unit.name }}
-                @if (unit.code) {
-                  <span class="text-gray-500">({{ unit.code }})</span>
-                }
-              </span>
-            </div>
           }
         </div>
-      } @else {
-        <!-- Fallback to status legend if no units -->
-        <div class="mt-6 flex items-center justify-center gap-6">
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded bg-green-100 border border-green-200"></div>
-            <span class="text-sm text-gray-700">Confirmado</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded bg-blue-100 border border-blue-200"></div>
-            <span class="text-sm text-gray-700">Preparação</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded bg-yellow-100 border border-yellow-200"></div>
-            <span class="text-sm text-gray-700">Pendente</span>
-          </div>
+      </div>
+    </div>
+
+    <!-- Calendar Legend - Units -->
+    @if (units.length > 0) {
+    <div class="mt-6 flex items-center justify-center gap-3 sm:gap-6 flex-wrap px-2">
+      @for (unit of units; track unit.id) {
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="w-3 h-3 sm:w-4 sm:h-4 rounded border-2 border-white shadow-sm flex-shrink-0"
+          [style.backgroundColor]="getUnitColor(unit.color)"></div>
+        <span class="text-xs sm:text-sm text-gray-700">
+          {{ unit.name }}
+          @if (unit.code) {
+          <span class="text-gray-500">({{ unit.code }})</span>
+          }
+        </span>
+      </div>
+      }
+    </div>
+    } @else {
+    <!-- Fallback to status legend if no units -->
+    <div class="mt-6 flex items-center justify-center gap-6">
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 rounded bg-green-100 border border-green-200"></div>
+        <span class="text-sm text-gray-700">Confirmado</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 rounded bg-blue-100 border border-blue-200"></div>
+        <span class="text-sm text-gray-700">Preparação</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 rounded bg-yellow-100 border border-yellow-200"></div>
+        <span class="text-sm text-gray-700">Pendente</span>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Installments and Events Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+    <!-- Próximas Parcelas -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 w-full">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h2 class="text-lg sm:text-xl font-bold text-gray-900">Próximas Parcelas</h2>
         </div>
+        <select [(ngModel)]="installmentsLimit" (change)="onInstallmentsLimitChange($event)"
+          class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[44px] touch-manipulation">
+          <option [value]="5">5</option>
+          <option [value]="10">10</option>
+          <option [value]="15">15</option>
+          <option [value]="20">20</option>
+        </select>
+      </div>
+
+      @if (upcomingInstallments.length > 0) {
+      <!-- Mobile scroll hint -->
+      <div class="sm:hidden text-xs text-gray-500 mb-2 flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+        </svg>
+        <span>Deslize para ver mais</span>
+      </div>
+      <div class="overflow-x-auto -mx-4 sm:mx-0">
+        <table class="w-full min-w-[640px]">
+          <thead class="border-b border-gray-200">
+            <tr class="text-left">
+              <th class="pb-3 text-sm font-semibold text-gray-700">Cliente</th>
+              <th class="pb-3 text-sm font-semibold text-gray-700">Evento</th>
+              <th class="pb-3 text-sm font-semibold text-gray-700">Valor</th>
+              <th class="pb-3 text-sm font-semibold text-gray-700">Vencimento</th>
+              <th class="pb-3 text-sm font-semibold text-gray-700">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (installment of upcomingInstallments; track installment.id) {
+            <tr class="hover:bg-gray-50">
+              <td class="py-4 text-sm text-gray-900">
+                {{ installment.clientName || 'N/A' }}
+              </td>
+              <td class="py-4 text-sm text-gray-900">
+                {{ installment.eventName || 'N/A' }}
+              </td>
+              <td class="py-4 text-sm font-semibold text-gray-900">
+                {{ formatCurrency(installment.amount) }}
+              </td>
+              <td class="py-4 text-sm text-gray-600">
+                {{ formatDate(installment.dueDate) }}
+                <div class="text-xs text-gray-500 mt-1">
+                  Em {{ getDaysUntil(installment.dueDate, installment.daysUntilDue) }} dias
+                </div>
+              </td>
+              <td class="py-4">
+                <span
+                  [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(translateStatus(installment.status))">
+                  {{ translateStatus(installment.status) }}
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } @else {
+      <app-empty-state title="Nenhuma parcela próxima" message="As parcelas com vencimento próximo aparecerão aqui">
+      </app-empty-state>
       }
     </div>
 
-    <!-- Installments and Events Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
-      <!-- Próximas Parcelas -->
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-6 w-[60%]">
-          <div class="flex items-center gap-2">
-            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <h2 class="text-xl font-bold text-gray-900">Próximas Parcelas</h2>
-          </div>
-          <select 
-            [(ngModel)]="installmentsLimit"
-            (change)="onInstallmentsLimitChange($event)"
-            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option [value]="5">5</option>
-            <option [value]="10">10</option>
-            <option [value]="15">15</option>
-            <option [value]="20">20</option>
-          </select>
-        </div>
-
-        @if (upcomingInstallments.length > 0) {
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead class="border-b border-gray-200">
-                <tr class="text-left">
-                  <th class="pb-3 text-sm font-semibold text-gray-700">Cliente</th>
-                  <th class="pb-3 text-sm font-semibold text-gray-700">Evento</th>
-                  <th class="pb-3 text-sm font-semibold text-gray-700">Valor</th>
-                  <th class="pb-3 text-sm font-semibold text-gray-700">Vencimento</th>
-                  <th class="pb-3 text-sm font-semibold text-gray-700">Status</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                @for (installment of upcomingInstallments; track installment.id) {
-                  <tr class="hover:bg-gray-50">
-                    <td class="py-4 text-sm text-gray-900">
-                      {{ installment.clientName || 'N/A' }}
-                    </td>
-                    <td class="py-4 text-sm text-gray-900">
-                      {{ installment.eventName || 'N/A' }}
-                    </td>
-                    <td class="py-4 text-sm font-semibold text-gray-900">
-                      {{ formatCurrency(installment.amount) }}
-                    </td>
-                    <td class="py-4 text-sm text-gray-600">
-                      {{ formatDate(installment.dueDate) }}
-                      <div class="text-xs text-gray-500 mt-1">
-                        Em {{ getDaysUntil(installment.dueDate, installment.daysUntilDue) }} dias
-                      </div>
-                    </td>
-                    <td class="py-4">
-                      <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(translateStatus(installment.status))">
-                        {{ translateStatus(installment.status) }}
-                      </span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        } @else {
-          <p class="text-center text-gray-500 py-8">Nenhuma parcela próxima</p>
-        }
+    <!-- Eventos Próximos -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
+      <div class="flex items-center gap-2 mb-6">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h2 class="text-lg sm:text-xl font-bold text-gray-900">Eventos Próximos</h2>
       </div>
 
-      <!-- Eventos Próximos -->
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-        <div class="flex items-center gap-2 mb-6">
-          <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-          <h2 class="text-xl font-bold text-gray-900">Eventos Próximos</h2>
-        </div>
-
-        @if (upcomingEvents.length > 0) {
-          <div class="space-y-4">
-            @for (event of upcomingEvents; track event.id) {
-              <div class="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <h3 class="font-semibold text-gray-900 text-lg">{{ event.eventName }}</h3>
-                    <p class="text-sm text-gray-600 mt-1">
-                      <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                      </svg>
-                      Cliente: {{ event.clientName }}
-                    </p>
-                    <div class="flex items-center gap-4 mt-3 text-sm text-gray-600">
-                      <div class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <span>{{ formatDate(event.eventDate) }}</span>
-                      </div>
-                      <div class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>Em {{ getDaysUntilEvent(event) }} dias</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="flex flex-col items-end gap-2">
-                    <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(event.status)">
-                      {{ event.status }}
-                    </span>
-                    <a [routerLink]="['/cadastros/eventos']" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                      </svg>
-                    </a>
-                  </div>
+      @if (upcomingEvents.length > 0) {
+      <div class="space-y-4">
+        @for (event of upcomingEvents; track event.id) {
+        <div
+          class="border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-primary-200">
+          <div class="flex flex-col sm:flex-row items-start justify-between gap-3">
+            <div class="flex-1 w-full sm:w-auto">
+              <h3 class="font-semibold text-gray-900 text-base sm:text-lg">{{ event.eventName }}</h3>
+              <p class="text-xs sm:text-sm text-gray-600 mt-1">
+                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Cliente: {{ event.clientName }}
+              </p>
+              <div class="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-gray-600">
+                <div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>{{ formatDate(event.eventDate) }}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Em {{ getDaysUntilEvent(event) }} dias</span>
                 </div>
               </div>
-            }
+            </div>
+            <div class="flex sm:flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
+              <span
+                [class]="'px-3 py-1 rounded-full text-xs font-medium flex-1 sm:flex-none text-center ' + getStatusColor(event.status)">
+                {{ event.status }}
+              </span>
+              <a [routerLink]="['/cadastros/eventos']"
+                class="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105 touch-manipulation">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </a>
+            </div>
           </div>
-        } @else {
-          <p class="text-center text-gray-500 py-8">Nenhum evento próximo</p>
+        </div>
         }
       </div>
+      } @else {
+      <app-empty-state title="Nenhum evento próximo"
+        message="Os eventos agendados para os próximos dias aparecerão aqui">
+      </app-empty-state>
+      }
     </div>
+  </div>
 
-    <!-- Quick Actions -->
-    <div>
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">Ações Rápidas</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Novo Contrato -->
-        <a routerLink="/cadastros/contratos/novo" class="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer group">
-          <div class="flex items-start gap-4">
-            <div class="bg-blue-100 p-3 rounded-full group-hover:bg-blue-200 transition-colors">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-900">Novo Contrato</h3>
-              <p class="text-sm text-gray-600 mt-1">Criar contrato</p>
-            </div>
+  <!-- Quick Actions -->
+  <div>
+    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Ações Rápidas</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <!-- Novo Contrato -->
+      <a routerLink="/cadastros/contratos/novo"
+        class="bg-white border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-primary-300 transition-all duration-300 hover:scale-105 cursor-pointer group min-h-[88px] touch-manipulation">
+        <div class="flex items-start gap-3 sm:gap-4">
+          <div
+            class="bg-gradient-to-br from-primary-100 to-primary-200 p-2.5 sm:p-3 rounded-full group-hover:from-primary-200 group-hover:to-primary-300 transition-all duration-300 flex-shrink-0">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
           </div>
-        </a>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Novo Contrato</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Criar contrato</p>
+          </div>
+        </div>
+      </a>
 
-        <!-- Nova Parcela -->
-        <a routerLink="/financeiro/parcelas/nova" class="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-green-300 transition-all cursor-pointer group">
-          <div class="flex items-start gap-4">
-            <div class="bg-green-100 p-3 rounded-full group-hover:bg-green-200 transition-colors">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-900">Nova Parcela</h3>
-              <p class="text-sm text-gray-600 mt-1">Registrar pagamento</p>
-            </div>
+      <!-- Nova Parcela -->
+      <a routerLink="/financeiro/parcelas/nova"
+        class="bg-white border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-green-300 transition-all duration-300 hover:scale-105 cursor-pointer group min-h-[88px] touch-manipulation">
+        <div class="flex items-start gap-3 sm:gap-4">
+          <div
+            class="bg-green-100 p-2.5 sm:p-3 rounded-full group-hover:bg-green-200 transition-all duration-300 flex-shrink-0">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
-        </a>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Nova Parcela</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Registrar pagamento</p>
+          </div>
+        </div>
+      </a>
 
-        <!-- Novo Evento -->
-        <a routerLink="/cadastros/eventos/novo" class="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-purple-300 transition-all cursor-pointer group">
-          <div class="flex items-start gap-4">
-            <div class="bg-purple-100 p-3 rounded-full group-hover:bg-purple-200 transition-colors">
-              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-900">Novo Evento</h3>
-              <p class="text-sm text-gray-600 mt-1">Agendar evento</p>
-            </div>
+      <!-- Novo Evento -->
+      <a routerLink="/cadastros/eventos/novo"
+        class="bg-white border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-purple-300 transition-all duration-300 hover:scale-105 cursor-pointer group min-h-[88px] touch-manipulation">
+        <div class="flex items-start gap-3 sm:gap-4">
+          <div
+            class="bg-purple-100 p-2.5 sm:p-3 rounded-full group-hover:bg-purple-200 transition-all duration-300 flex-shrink-0">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </div>
-        </a>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Novo Evento</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Agendar evento</p>
+          </div>
+        </div>
+      </a>
 
-        <!-- Ver Relatórios -->
-        <a routerLink="/relatorios/mensal" class="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-orange-300 transition-all cursor-pointer group">
-          <div class="flex items-start gap-4">
-            <div class="bg-orange-100 p-3 rounded-full group-hover:bg-orange-200 transition-colors">
-              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-semibold text-gray-900">Ver Relatórios</h3>
-              <p class="text-sm text-gray-600 mt-1">Análise financeira</p>
-            </div>
+      <!-- Ver Relatórios -->
+      <a routerLink="/relatorios/mensal"
+        class="bg-white border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-orange-300 transition-all duration-300 hover:scale-105 cursor-pointer group min-h-[88px] touch-manipulation">
+        <div class="flex items-start gap-3 sm:gap-4">
+          <div
+            class="bg-orange-100 p-2.5 sm:p-3 rounded-full group-hover:bg-orange-200 transition-all duration-300 flex-shrink-0">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
           </div>
-        </a>
-      </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Ver Relatórios</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Análise financeira</p>
+          </div>
+        </div>
+      </a>
     </div>
+  </div>
   }
 
   <!-- Event Detail Modal -->
-  <app-event-detail-modal
-    [isOpen]="showEventModal"
-    [event]="selectedEvent"
-    [isLoading]="isLoadingEventDetails"
-    [error]="eventDetailsError"
-    (onClose)="closeEventModal()"
-    (onEdit)="onEditEvent()"
-  ></app-event-detail-modal>
+  <app-event-detail-modal [isOpen]="showEventModal" [event]="selectedEvent" [isLoading]="isLoadingEventDetails"
+    [error]="eventDetailsError" (onClose)="closeEventModal()" (onEdit)="onEditEvent()"></app-event-detail-modal>
 </div>

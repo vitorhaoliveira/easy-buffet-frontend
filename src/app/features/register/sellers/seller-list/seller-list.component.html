@@ -1,45 +1,58 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Vendedor(a)s</h1>
-      <p class="text-muted-foreground">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Vendedor(a)s</h1>
+      <p class="text-sm sm:text-base text-muted-foreground mt-1">
         Gerencie os dados dos seus vendedor(a)s
       </p>
     </div>
-    <button appButton variant="outline" routerLink="/cadastros/vendedoras/novo">
+    <button appButton
+      class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]"
+      routerLink="/cadastros/vendedoras/novo">
       <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
       Novo(a) Vendedor(a)
     </button>
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center space-x-2">
-    <div class="flex-1">
-      <app-search-bar
-        placeholder="Buscar por nome, email ou telefone..."
-        [(ngModel)]="searchTerm"
-      ></app-search-bar>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <div class="flex-1 w-full">
+        <app-search-bar placeholder="Buscar por nome, email ou telefone..." [(ngModel)]="searchTerm"></app-search-bar>
+      </div>
     </div>
   </div>
 
   <!-- Error Message -->
   @if (error) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ error }}
-    </div>
+  <div class="w-full p-3 sm:p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+    {{ error }}
+  </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons -->
   @if (isLoading) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando vendedor(a)s...</p>
+  <div class="space-y-3">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="p-4 bg-white rounded-lg border shadow-sm">
+      <div class="flex items-center gap-4">
+        <app-skeleton [width]="'48px'" [height]="'48px'" [shape]="'circle'"></app-skeleton>
+        <div class="flex-1 space-y-2">
+          <app-skeleton [width]="'60%'" [height]="'20px'"></app-skeleton>
+          <app-skeleton [width]="'40%'" [height]="'16px'"></app-skeleton>
+        </div>
+      </div>
     </div>
+    }
+  </div>
   }
 
-  <!-- Tabela -->
-  @if (!isLoading) {
-    <div class="rounded-md border">
+  <!-- Desktop Table (hidden on mobile) -->
+  @if (!isLoading && filteredSellers.length > 0) {
+  <div class="hidden lg:block rounded-xl border shadow-sm overflow-hidden bg-white">
     <app-table>
       <thead appTableHeader>
         <tr appTableRow>
@@ -52,60 +65,85 @@
       </thead>
       <tbody appTableBody>
         @for (seller of filteredSellers; track seller.id) {
-          <tr appTableRow>
-            <td appTableCell class="font-medium">{{ seller.name }}</td>
-            <td appTableCell>{{ seller.email }}</td>
-            <td appTableCell>{{ seller.phone }}</td>
-            <td appTableCell>{{ formatDate(seller.createdAt) }}</td>
-            <td appTableCell class="text-right">
-              <div class="flex items-center justify-end space-x-2">
-                <button appButton variant="ghost" size="sm">
-                  <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
-                </button>
-                <button 
-                  appButton 
-                  variant="ghost" 
-                  size="sm" 
-                  [routerLink]="['/cadastros/vendedoras/editar', seller.id]"
-                >
-                  <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
-                </button>
-                <button
-                  appButton
-                  variant="ghost"
-                  size="sm"
-                  (click)="handleDeleteClick(seller)"
-                >
-                  <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
-                </button>
-              </div>
-            </td>
-          </tr>
+        <tr appTableRow>
+          <td appTableCell class="font-medium">{{ seller.name }}</td>
+          <td appTableCell>{{ seller.email }}</td>
+          <td appTableCell>{{ seller.phone }}</td>
+          <td appTableCell>{{ formatDate(seller.createdAt) }}</td>
+          <td appTableCell class="text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/vendedoras/editar', seller.id]"
+                class="transform hover:scale-110 transition-transform">
+                <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(seller)"
+                class="transform hover:scale-110 transition-transform text-red-600 hover:text-red-700">
+                <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
         }
       </tbody>
     </app-table>
-    </div>
+  </div>
+
+  <!-- Mobile Cards (visible on mobile only) -->
+  <div class="lg:hidden">
+    @for (seller of filteredSellers; track seller.id) {
+    <app-mobile-card class="mb-4">
+      <div class="flex items-start gap-3">
+        <div
+          class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white">
+          <lucide-icon [img]="UserCircle2Icon" class="h-6 w-6"></lucide-icon>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-gray-900 truncate">{{ seller.name }}</h3>
+          <p class="text-sm text-gray-600 truncate">{{ seller.email }}</p>
+
+          <div class="mt-2 space-y-1 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Telefone:</span>
+              <span>{{ seller.phone }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Cadastro:</span>
+              <span>{{ formatDate(seller.createdAt) }}</span>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mt-3">
+            <button appButton size="sm"
+              class="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white min-h-[44px]"
+              [routerLink]="['/cadastros/vendedoras/editar', seller.id]">
+              <lucide-icon [img]="EditIcon" class="mr-2 h-4 w-4"></lucide-icon>
+              Editar
+            </button>
+            <button appButton variant="outline" size="sm"
+              class="min-h-[44px] text-red-600 border-red-300 hover:bg-red-50" (click)="handleDeleteClick(seller)">
+              <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </app-mobile-card>
+    }
+  </div>
   }
 
   <!-- Empty State -->
   @if (!isLoading && filteredSellers.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">
-        {{ searchTerm ? 'Nenhum(a) vendedor(a) encontrado(a).' : 'Nenhum(a) vendedor(a) cadastrado(a).' }}
-      </p>
-    </div>
+  <app-empty-state [icon]="UserCircle2Icon"
+    [title]="searchTerm ? 'Nenhum(a) vendedor(a) encontrado(a)' : 'Nenhum(a) vendedor(a) cadastrado(a)'"
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece cadastrando seu primeiro(a) vendedor(a) no sistema.'"
+    [actionLabel]="searchTerm ? '' : 'Novo(a) Vendedor(a)'" [actionIcon]="PlusIcon"
+    (action)="router.navigate(['/cadastros/vendedoras/novo'])"></app-empty-state>
   }
 
   <!-- Confirmation Modal -->
-  <app-confirmation-modal
-    [isOpen]="showDeleteModal"
-    (onClose)="handleCancelDelete()"
-    (onConfirm)="handleConfirmDelete()"
-    title="Excluir Vendedor(a)"
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Excluir Vendedor(a)"
     [message]="'Tem certeza que deseja excluir o(a) vendedor(a) &quot;' + (sellerToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
-    confirmText="Excluir"
-    cancelText="Cancelar"
-    variant="danger"
-    [loading]="isDeleting"></app-confirmation-modal>
+    confirmText="Excluir" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
 </div>
-

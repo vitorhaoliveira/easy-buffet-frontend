@@ -6,6 +6,7 @@ import { LucideAngularModule, ArrowLeft, Save, Plus, Trash2 } from 'lucide-angul
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { QuoteService } from '@core/services/quote.service'
 import { ClientService } from '@core/services/client.service'
 import { PackageService } from '@core/services/package.service'
@@ -25,7 +26,8 @@ import type {
     CommonModule,
     ReactiveFormsModule,
     LucideAngularModule,
-    ButtonComponent
+    ButtonComponent,
+    SkeletonComponent
   ],
   templateUrl: './quote-form.component.html'
 })

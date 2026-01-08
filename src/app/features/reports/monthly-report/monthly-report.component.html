@@ -1,24 +1,22 @@
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-gray-50 p-4 sm:p-6">
   <div>
     <!-- Header -->
     <div class="mb-6 print:mb-4">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900 print:text-2xl">Relatório Mensal</h1>
+          <h1
+            class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent print:text-gray-900">
+            Relatório Mensal</h1>
           <p class="text-gray-600 mt-1">Visão completa das finanças do mês</p>
         </div>
-        <div class="flex gap-2 print:hidden">
-          <button
-            (click)="exportToPDF()"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto print:hidden">
+          <button (click)="exportToPDF()"
+            class="min-h-[44px] px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2">
             <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
             <span>PDF</span>
           </button>
-          <button
-            (click)="exportToExcel()"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-          >
+          <button (click)="exportToExcel()"
+            class="min-h-[44px] px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
             <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
             <span>Excel</span>
           </button>
@@ -26,26 +24,20 @@
       </div>
 
       <!-- Filters -->
-      <div class="bg-white rounded-lg shadow-sm p-4 print:hidden">
-        <div class="flex items-center gap-4">
+      <div class="bg-white rounded-xl shadow-sm p-4 print:hidden">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div class="flex items-center gap-2">
             <lucide-icon [img]="CalendarIcon" [size]="20" class="text-gray-500"></lucide-icon>
             <label class="text-sm font-medium text-gray-700">Período:</label>
           </div>
-          <select
-            [(ngModel)]="selectedMonth"
-            (ngModelChange)="loadReport()"
-            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          >
+          <select [(ngModel)]="selectedMonth" (ngModelChange)="loadReport()"
+            class="flex-1 sm:flex-none min-h-[44px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
             <option *ngFor="let month of months" [value]="month.value">
               {{ month.label }}
             </option>
           </select>
-          <select
-            [(ngModel)]="selectedYear"
-            (ngModelChange)="loadReport()"
-            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          >
+          <select [(ngModel)]="selectedYear" (ngModelChange)="loadReport()"
+            class="flex-1 sm:flex-none min-h-[44px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
             <option *ngFor="let year of years" [value]="year">
               {{ year }}
             </option>
@@ -55,9 +47,10 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="bg-white rounded-lg shadow-sm p-12 text-center">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-      <p class="mt-4 text-gray-600">Carregando relatório...</p>
+    <div *ngIf="isLoading" class="bg-white rounded-xl shadow-sm p-4">
+      <app-skeleton class="h-32 mb-4"></app-skeleton>
+      <app-skeleton class="h-48 mb-4"></app-skeleton>
+      <app-skeleton class="h-64"></app-skeleton>
     </div>
 
     <!-- Error State -->
@@ -79,14 +72,14 @@
       </div>
 
       <!-- Summary Section -->
-      <div class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300">
+      <div class="bg-white rounded-xl shadow-sm p-6 print:shadow-none print:border print:border-gray-300">
         <div class="flex items-center gap-2 mb-4">
-          <lucide-icon [img]="FileTextIcon" [size]="24" class="text-emerald-600"></lucide-icon>
+          <lucide-icon [img]="FileTextIcon" [size]="24" class="text-primary-600"></lucide-icon>
           <h2 class="text-xl font-bold text-gray-900">Resumo Financeiro</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Revenue Card -->
-          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 print:border print:border-green-200">
+          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 print:border print:border-green-200">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium text-green-800">Receita</span>
               <lucide-icon [img]="TrendingUpIcon" [size]="20" class="text-green-600"></lucide-icon>
@@ -97,13 +90,15 @@
             <p class="text-xs text-green-700 mt-1">
               {{ reportData.summary.paidInstallments }} de {{ reportData.summary.totalInstallments }} parcelas pagas
             </p>
-            <p *ngIf="reportData.kpis.additionalPaymentsTotal !== undefined && reportData.kpis.additionalPaymentsTotal > 0" class="text-xs text-green-600 mt-1">
-              + {{ reportData.kpis.additionalPaymentsCount || 0 }} pagamento(s) adicional(is): {{ formatCurrency(reportData.kpis.additionalPaymentsTotal) }}
+            <p *ngIf="reportData.kpis.additionalPaymentsTotal !== undefined && reportData.kpis.additionalPaymentsTotal > 0"
+              class="text-xs text-green-600 mt-1">
+              + {{ reportData.kpis.additionalPaymentsCount || 0 }} pagamento(s) adicional(is): {{
+              formatCurrency(reportData.kpis.additionalPaymentsTotal) }}
             </p>
           </div>
 
           <!-- Expenses Card -->
-          <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 print:border print:border-red-200">
+          <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 print:border print:border-red-200">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium text-red-800">Despesas</span>
               <lucide-icon [img]="TrendingDownIcon" [size]="20" class="text-red-600"></lucide-icon>
@@ -114,7 +109,7 @@
           </div>
 
           <!-- Commissions Card -->
-          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 print:border print:border-blue-200">
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 print:border print:border-blue-200">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium text-blue-800">Comissões</span>
               <lucide-icon [img]="PieChartIcon" [size]="20" class="text-blue-600"></lucide-icon>
@@ -128,14 +123,12 @@
           </div>
 
           <!-- Net Profit Card -->
-          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 print:border print:border-purple-200">
+          <div
+            class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 print:border print:border-purple-200">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium text-purple-800">Lucro Líquido</span>
-              <lucide-icon
-                [img]="getProfitIcon(reportData.summary.netProfit)"
-                [size]="20"
-                [ngClass]="getProfitColor(reportData.summary.netProfit)"
-              ></lucide-icon>
+              <lucide-icon [img]="getProfitIcon(reportData.summary.netProfit)" [size]="20"
+                [ngClass]="getProfitColor(reportData.summary.netProfit)"></lucide-icon>
             </div>
             <p class="text-2xl font-bold" [ngClass]="getProfitColor(reportData.summary.netProfit)">
               {{ formatCurrency(reportData.summary.netProfit) }}
@@ -145,9 +138,10 @@
       </div>
 
       <!-- KPIs Section -->
-      <div class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300 print:page-break-before">
+      <div
+        class="bg-white rounded-xl shadow-sm p-6 print:shadow-none print:border print:border-gray-300 print:page-break-before">
         <div class="flex items-center gap-2 mb-4">
-          <lucide-icon [img]="PieChartIcon" [size]="24" class="text-emerald-600"></lucide-icon>
+          <lucide-icon [img]="PieChartIcon" [size]="24" class="text-primary-600"></lucide-icon>
           <h2 class="text-xl font-bold text-gray-900">Indicadores de Performance (KPIs)</h2>
         </div>
 
@@ -155,7 +149,7 @@
           <!-- Revenue Breakdown -->
           <div class="space-y-4">
             <h3 class="text-lg font-semibold text-gray-800">Distribuição de Receita</h3>
-            
+
             <div class="space-y-3">
               <!-- Realized Revenue -->
               <div>
@@ -169,15 +163,15 @@
                   </span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    class="bg-green-600 h-2 rounded-full transition-all"
+                  <div class="bg-green-600 h-2 rounded-full transition-all"
                     [style.width.%]="Math.min((reportData.kpis.realizedRevenue / reportData.kpis.expectedRevenue) * 100, 100)"
-                    [style.max-width]="'100%'"
-                  ></div>
+                    [style.max-width]="'100%'"></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">
                   {{ reportData.kpis.paidCount }} parcelas pagas
-                  <span *ngIf="reportData.kpis.additionalPaymentsCount !== undefined && reportData.kpis.additionalPaymentsCount > 0" class="text-green-600 font-medium">
+                  <span
+                    *ngIf="reportData.kpis.additionalPaymentsCount !== undefined && reportData.kpis.additionalPaymentsCount > 0"
+                    class="text-green-600 font-medium">
                     + {{ reportData.kpis.additionalPaymentsCount }} pagamento(s) adicional(is)
                   </span>
                 </p>
@@ -195,11 +189,9 @@
                   </span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    class="bg-yellow-500 h-2 rounded-full transition-all"
+                  <div class="bg-yellow-500 h-2 rounded-full transition-all"
                     [style.width.%]="Math.min((reportData.kpis.pendingRevenue / reportData.kpis.expectedRevenue) * 100, 100)"
-                    [style.max-width]="'100%'"
-                  ></div>
+                    [style.max-width]="'100%'"></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">
                   {{ reportData.kpis.pendingCount }} parcelas pendentes
@@ -218,11 +210,9 @@
                   </span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    class="bg-red-600 h-2 rounded-full transition-all"
+                  <div class="bg-red-600 h-2 rounded-full transition-all"
                     [style.width.%]="Math.min((reportData.kpis.overdueRevenue / reportData.kpis.expectedRevenue) * 100, 100)"
-                    [style.max-width]="'100%'"
-                  ></div>
+                    [style.max-width]="'100%'"></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">
                   {{ reportData.kpis.overdueCount }} parcelas em atraso
@@ -247,30 +237,23 @@
           <!-- Performance Metrics -->
           <div class="space-y-4">
             <h3 class="text-lg font-semibold text-gray-800">Métricas de Performance</h3>
-            
+
             <div class="space-y-4">
               <!-- Realization Rate -->
               <div class="bg-gray-50 rounded-lg p-4 print:border print:border-gray-200">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-medium text-gray-700">Taxa de Realização</span>
-                  <span
-                    class="text-2xl font-bold"
-                    [ngClass]="getRealizationRateColor(reportData.kpis.realizationRate)"
-                  >
+                  <span class="text-2xl font-bold" [ngClass]="getRealizationRateColor(reportData.kpis.realizationRate)">
                     {{ formatPercentage(reportData.kpis.realizationRate) }}
                   </span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    class="h-3 rounded-full transition-all"
-                    [ngClass]="{
+                  <div class="h-3 rounded-full transition-all" [ngClass]="{
                       'bg-green-600': reportData.kpis.realizationRate >= 80,
                       'bg-yellow-500': reportData.kpis.realizationRate >= 60 && reportData.kpis.realizationRate < 80,
                       'bg-red-600': reportData.kpis.realizationRate < 60
-                    }"
-                    [style.width.%]="Math.min(reportData.kpis.realizationRate, 100)"
-                    [style.max-width]="'100%'"
-                  ></div>
+                    }" [style.width.%]="Math.min(reportData.kpis.realizationRate, 100)" [style.max-width]="'100%'">
+                  </div>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">
                   Percentual de receita realizada sobre a esperada
@@ -281,24 +264,16 @@
               <div class="bg-gray-50 rounded-lg p-4 print:border print:border-gray-200">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-medium text-gray-700">Taxa de Atraso</span>
-                  <span
-                    class="text-2xl font-bold"
-                    [ngClass]="getOverdueRateColor(reportData.kpis.overdueRate)"
-                  >
+                  <span class="text-2xl font-bold" [ngClass]="getOverdueRateColor(reportData.kpis.overdueRate)">
                     {{ formatPercentage(reportData.kpis.overdueRate) }}
                   </span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    class="h-3 rounded-full transition-all"
-                    [ngClass]="{
+                  <div class="h-3 rounded-full transition-all" [ngClass]="{
                       'bg-green-600': reportData.kpis.overdueRate <= 5,
                       'bg-yellow-500': reportData.kpis.overdueRate > 5 && reportData.kpis.overdueRate <= 15,
                       'bg-red-600': reportData.kpis.overdueRate > 15
-                    }"
-                    [style.width.%]="Math.min(reportData.kpis.overdueRate, 100)"
-                    [style.max-width]="'100%'"
-                  ></div>
+                    }" [style.width.%]="Math.min(reportData.kpis.overdueRate, 100)" [style.max-width]="'100%'"></div>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">
                   Percentual de parcelas em atraso sobre o total
@@ -323,15 +298,19 @@
                   <p class="text-xs text-gray-700 font-medium">Total de Parcelas</p>
                   <p class="text-xl font-bold text-gray-900">{{ reportData.kpis.totalCount }}</p>
                 </div>
-                <div *ngIf="reportData.kpis.additionalPaymentsCount !== undefined && reportData.kpis.additionalPaymentsCount > 0" class="bg-emerald-50 rounded-lg p-3 print:border print:border-emerald-200 col-span-2">
+                <div
+                  *ngIf="reportData.kpis.additionalPaymentsCount !== undefined && reportData.kpis.additionalPaymentsCount > 0"
+                  class="bg-emerald-50 rounded-lg p-3 print:border print:border-emerald-200 col-span-2">
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-xs text-emerald-700 font-medium">Pagamentos Adicionais</p>
-                      <p class="text-xl font-bold text-emerald-900">{{ reportData.kpis.additionalPaymentsCount }} pagamento(s)</p>
+                      <p class="text-xl font-bold text-emerald-900">{{ reportData.kpis.additionalPaymentsCount }}
+                        pagamento(s)</p>
                     </div>
                     <div>
                       <p class="text-xs text-emerald-600 font-medium">Total</p>
-                      <p class="text-lg font-bold text-emerald-800">{{ formatCurrency(reportData.kpis.additionalPaymentsTotal || 0) }}</p>
+                      <p class="text-lg font-bold text-emerald-800">{{
+                        formatCurrency(reportData.kpis.additionalPaymentsTotal || 0) }}</p>
                     </div>
                   </div>
                 </div>
@@ -343,7 +322,8 @@
 
       <!-- Contracts Section -->
       <div *ngIf="reportData.contracts">
-        <div class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300 print:page-break-before">
+        <div
+          class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300 print:page-break-before">
           <div class="flex items-center gap-2 mb-4">
             <lucide-icon [img]="FileTextIcon" [size]="24" class="text-emerald-600"></lucide-icon>
             <h2 class="text-xl font-bold text-gray-900">Contratos</h2>
@@ -374,17 +354,22 @@
           </div>
 
           <!-- Events in Month -->
-          <div *ngIf="reportData.contracts.withEventsInMonth && reportData.contracts.withEventsInMonth.length > 0" class="space-y-4">
+          <div *ngIf="reportData.contracts.withEventsInMonth && reportData.contracts.withEventsInMonth.length > 0"
+            class="space-y-4">
             <h3 class="text-lg font-semibold text-gray-800">Eventos Realizados no Mês</h3>
             <div class="rounded-md border">
               <div class="overflow-x-auto">
                 <table class="w-full">
                   <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Evento</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Cliente</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Data do Evento</th>
-                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Data de Fechamento</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Evento
+                      </th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Cliente
+                      </th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Data do
+                        Evento</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Data de
+                        Fechamento</th>
                     </tr>
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-200">
@@ -411,7 +396,8 @@
               </div>
             </div>
           </div>
-          <div *ngIf="!reportData.contracts.withEventsInMonth || reportData.contracts.withEventsInMonth.length === 0" class="text-center py-8">
+          <div *ngIf="!reportData.contracts.withEventsInMonth || reportData.contracts.withEventsInMonth.length === 0"
+            class="text-center py-8">
             <p class="text-muted-foreground">Nenhum evento realizado neste mês.</p>
           </div>
         </div>
@@ -427,44 +413,43 @@
 
 <!-- Print Styles -->
 <style>
-@media print {
-  @page {
-    size: A4;
-    margin: 1cm;
-  }
+  @media print {
+    @page {
+      size: A4;
+      margin: 1cm;
+    }
 
-  body {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
+    body {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
 
-  .print\:hidden {
-    display: none !important;
-  }
+    .print\:hidden {
+      display: none !important;
+    }
 
-  .print\:block {
-    display: block !important;
-  }
+    .print\:block {
+      display: block !important;
+    }
 
-  .print\:page-break-before {
-    page-break-before: always;
-  }
+    .print\:page-break-before {
+      page-break-before: always;
+    }
 
-  .print\:shadow-none {
-    box-shadow: none !important;
-  }
+    .print\:shadow-none {
+      box-shadow: none !important;
+    }
 
-  .print\:border {
-    border-width: 1px !important;
-  }
+    .print\:border {
+      border-width: 1px !important;
+    }
 
-  .print\:mb-4 {
-    margin-bottom: 1rem !important;
-  }
+    .print\:mb-4 {
+      margin-bottom: 1rem !important;
+    }
 
-  .print\:text-2xl {
-    font-size: 1.5rem !important;
+    .print\:text-2xl {
+      font-size: 1.5rem !important;
+    }
   }
-}
 </style>
-

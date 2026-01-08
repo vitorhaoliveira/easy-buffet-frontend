@@ -1,168 +1,224 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Contratos</h1>
-      <p class="text-muted-foreground">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Contratos</h1>
+      <p class="text-sm sm:text-base text-muted-foreground mt-1">
         Gerencie os contratos e parcelamentos dos eventos
       </p>
     </div>
-    <button appButton variant="outline" routerLink="/cadastros/contratos/novo">
+    <button appButton
+      class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]"
+      routerLink="/cadastros/contratos/novo">
       <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
       Novo Contrato
     </button>
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center space-x-2">
-    <div class="flex-1">
-      <app-search-bar
-        placeholder="Buscar por evento ou cliente..."
-        [(ngModel)]="searchTerm"
-      ></app-search-bar>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col gap-2">
+      <div class="flex-1">
+        <app-search-bar placeholder="Buscar por evento ou cliente..." [(ngModel)]="searchTerm"></app-search-bar>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <select [(ngModel)]="filterStatus"
+          class="flex min-h-[44px] w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+          <option value="todos">Todos os status</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Assinado">Assinado</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
+        <select [(ngModel)]="filterPaymentStatus" (ngModelChange)="onPaymentStatusChange()"
+          class="flex min-h-[44px] w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+          <option value="all">Todos os pagamentos</option>
+          <option value="received">Recebidos</option>
+          <option value="pending">A receber</option>
+        </select>
+      </div>
     </div>
-    <select
-      [(ngModel)]="filterStatus"
-      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <option value="todos">Todos os status</option>
-      <option value="Pendente">Pendente</option>
-      <option value="Assinado">Assinado</option>
-      <option value="Cancelado">Cancelado</option>
-    </select>
-    <select
-      [(ngModel)]="filterPaymentStatus"
-      (ngModelChange)="onPaymentStatusChange()"
-      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <option value="all">Todos os pagamentos</option>
-      <option value="received">Recebidos</option>
-      <option value="pending">A receber</option>
-    </select>
   </div>
 
   <!-- Error Message -->
   @if (error) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ error }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ error }}
+  </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons -->
   @if (isLoading) {
-    <div class="flex items-center justify-center h-64">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        <p class="mt-2 text-muted-foreground">Carregando contratos...</p>
-      </div>
-    </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16"></app-skeleton>
+  </div>
   }
 
-  <!-- Tabela -->
-  @if (!isLoading) {
-    <div class="rounded-md border">
-      <app-table>
-        <thead appTableHeader>
-          <tr appTableRow>
-            <th appTableHead>Evento</th>
-            <th appTableHead>Cliente</th>
-            <th appTableHead>Valor Total</th>
-            <th appTableHead>Status</th>
-            <th appTableHead>Data de Criação</th>
-            <th appTableHead class="text-right">Ações</th>
-          </tr>
-        </thead>
-        <tbody appTableBody>
-          @for (contract of filteredContracts; track contract.id) {
-            <tr appTableRow>
-              <td appTableCell class="font-medium">
-                <div class="flex items-center space-x-2">
-                  <lucide-icon [img]="FileTextIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-                  <span>{{ getEventName(contract.eventId) }}</span>
-                  @if (isContractClosed(contract)) {
-                    <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-500" title="Contrato fechado"></lucide-icon>
-                  }
-                </div>
-              </td>
-              <td appTableCell>
-                <div class="flex items-center space-x-2">
-                  <lucide-icon [img]="UserIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-                  <span>{{ getClientName(contract.clientId) }}</span>
-                </div>
-              </td>
-              <td appTableCell class="font-medium">
-                <div class="flex items-center space-x-2">
-                  <lucide-icon [img]="DollarSignIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-                  <span>{{ formatCurrency(contract.totalAmount) }}</span>
-                </div>
-              </td>
-              <td appTableCell>
-                <div class="flex items-center gap-2">
-                  <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(contract.status || 'Pendente')">
-                    {{ contract.status || 'Pendente' }}
-                  </span>
-                  @if (contract.paymentStatus) {
-                    <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + (contract.paymentStatus === 'received' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800')">
-                      {{ contract.paymentStatus === 'received' ? 'Recebido' : 'A receber' }}
-                    </span>
-                  }
-                </div>
-              </td>
-              <td appTableCell>
-                <div class="flex items-center space-x-2">
-                  <lucide-icon [img]="CalendarIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-                  <span>{{ formatDate(contract.createdAt) }}</span>
-                </div>
-              </td>
-              <td appTableCell class="text-right">
-                <div class="flex items-center justify-end space-x-2">
-                  <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/contratos/visualizar', contract.id]">
-                    <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                  <button 
-                    appButton 
-                    variant="ghost" 
-                    size="sm" 
-                    [routerLink]="['/cadastros/contratos/editar', contract.id]"
-                  >
-                    <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                  <button
-                    appButton
-                    variant="ghost"
-                    size="sm"
-                    (click)="handleDeleteClick(contract)"
-                  >
-                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                </div>
-              </td>
-            </tr>
+  <!-- Desktop Table (hidden on mobile) -->
+  @if (!isLoading && filteredContracts.length > 0) {
+  <div class="hidden lg:block rounded-xl border shadow-sm overflow-hidden bg-white">
+    <app-table>
+      <thead appTableHeader>
+        <tr appTableRow>
+          <th appTableHead>Evento</th>
+          <th appTableHead>Cliente</th>
+          <th appTableHead>Valor Total</th>
+          <th appTableHead>Status</th>
+          <th appTableHead>Data de Criação</th>
+          <th appTableHead class="text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody appTableBody>
+        @for (contract of filteredContracts; track contract.id) {
+        <tr appTableRow>
+          <td appTableCell class="font-medium">
+            <div class="flex items-center space-x-2">
+              <lucide-icon [img]="FileTextIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+              <span>{{ getEventName(contract.eventId) }}</span>
+              @if (isContractClosed(contract)) {
+              <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-500" title="Contrato fechado"></lucide-icon>
+              }
+            </div>
+          </td>
+          <td appTableCell>
+            <div class="flex items-center space-x-2">
+              <lucide-icon [img]="UserIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+              <span>{{ getClientName(contract.clientId) }}</span>
+            </div>
+          </td>
+          <td appTableCell class="font-medium">
+            <div class="flex items-center space-x-2">
+              <lucide-icon [img]="DollarSignIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+              <span>{{ formatCurrency(contract.totalAmount) }}</span>
+            </div>
+          </td>
+          <td appTableCell>
+            <div class="flex items-center gap-2">
+              <span
+                [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(contract.status || 'Pendente')">
+                {{ contract.status || 'Pendente' }}
+              </span>
+              @if (contract.paymentStatus) {
+              <span
+                [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + (contract.paymentStatus === 'received' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800')">
+                {{ contract.paymentStatus === 'received' ? 'Recebido' : 'A receber' }}
+              </span>
+              }
+            </div>
+          </td>
+          <td appTableCell>
+            <div class="flex items-center space-x-2">
+              <lucide-icon [img]="CalendarIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+              <span>{{ formatDate(contract.createdAt) }}</span>
+            </div>
+          </td>
+          <td appTableCell class="text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm"
+                [routerLink]="['/cadastros/contratos/visualizar', contract.id]"
+                class="transform hover:scale-110 transition-transform">
+                <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/contratos/editar', contract.id]"
+                class="transform hover:scale-110 transition-transform">
+                <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(contract)"
+                class="transform hover:scale-110 transition-transform text-red-600 hover:text-red-700">
+                <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </app-table>
+  </div>
+
+  <!-- Mobile Cards (visible on mobile only) -->
+  <div class="lg:hidden">
+    @for (contract of filteredContracts; track contract.id) {
+    <app-mobile-card class="mb-4">
+      <div class="space-y-3">
+        <!-- Header com status -->
+        <div class="flex items-start gap-3">
+          <div
+            class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white">
+            <lucide-icon [img]="FileTextIcon" class="h-6 w-6"></lucide-icon>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="font-semibold text-gray-900 truncate">{{ getEventName(contract.eventId) }}</h3>
+              @if (isContractClosed(contract)) {
+              <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-500 flex-shrink-0" title="Fechado"></lucide-icon>
+              }
+            </div>
+            <p class="text-sm text-gray-600 truncate">{{ getClientName(contract.clientId) }}</p>
+            <p class="text-lg font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+              {{ formatCurrency(contract.totalAmount) }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Badges de status -->
+        <div class="flex flex-wrap gap-2">
+          <span
+            [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(contract.status || 'Pendente')">
+            {{ contract.status || 'Pendente' }}
+          </span>
+          @if (contract.paymentStatus) {
+          <span
+            [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + (contract.paymentStatus === 'received' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800')">
+            {{ contract.paymentStatus === 'received' ? 'Recebido' : 'A receber' }}
+          </span>
           }
-        </tbody>
-      </app-table>
-    </div>
+        </div>
+
+        <!-- Info adicional -->
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <lucide-icon [img]="CalendarIcon" class="h-4 w-4"></lucide-icon>
+          <span>{{ formatDate(contract.createdAt) }}</span>
+        </div>
+
+        <!-- Ações -->
+        <div class="grid grid-cols-3 gap-2">
+          <button appButton size="sm"
+            class="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white min-h-[44px]"
+            [routerLink]="['/cadastros/contratos/visualizar', contract.id]">
+            <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+          </button>
+          <button appButton variant="outline" size="sm" class="min-h-[44px]"
+            [routerLink]="['/cadastros/contratos/editar', contract.id]">
+            <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+          </button>
+          <button appButton variant="outline" size="sm" class="min-h-[44px] text-red-600 border-red-300 hover:bg-red-50"
+            (click)="handleDeleteClick(contract)">
+            <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+          </button>
+        </div>
+      </div>
+    </app-mobile-card>
+    }
+  </div>
   }
 
   <!-- Empty State -->
   @if (!isLoading && filteredContracts.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">
-        {{ searchTerm ? 'Nenhum contrato encontrado.' : 'Nenhum contrato cadastrado.' }}
-      </p>
-    </div>
+  <app-empty-state [icon]="FileTextIcon"
+    [title]="searchTerm ? 'Nenhum contrato encontrado' : 'Nenhum contrato cadastrado'"
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece criando seu primeiro contrato para formalizar os eventos.'"
+    [actionLabel]="searchTerm ? '' : 'Novo Contrato'" [actionIcon]="PlusIcon"
+    (action)="router.navigate(['/cadastros/contratos/novo'])"></app-empty-state>
   }
 
   <!-- Confirmation Modal -->
-  <app-confirmation-modal
-    [isOpen]="showDeleteModal"
-    (onClose)="handleCancelDelete()"
-    (onConfirm)="handleConfirmDelete()"
-    title="Excluir Contrato"
-    message="Tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita."
-    confirmText="Excluir"
-    cancelText="Cancelar"
-    variant="danger"
-    [loading]="isDeleting"
-  />
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Excluir Contrato"
+    message="Tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita." confirmText="Excluir"
+    cancelText="Cancelar" variant="danger" [loading]="isDeleting" />
 </div>

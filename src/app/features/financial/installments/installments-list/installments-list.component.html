@@ -1,279 +1,296 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Parcelas</h1>
-      <p class="text-muted-foreground">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Parcelas</h1>
+      <p class="text-sm sm:text-base text-muted-foreground">
         Gerencie as parcelas dos contratos
       </p>
     </div>
-    <button appButton variant="outline" routerLink="/financeiro/parcelas/nova">
-      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+    <button routerLink="/financeiro/parcelas/nova"
+      class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
+      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
       Nova Parcela
     </button>
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center space-x-2">
-    <div class="flex-1">
-      <app-search-bar
-        placeholder="Buscar por cliente, evento ou número..."
-        [(ngModel)]="searchTerm"
-      ></app-search-bar>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <div class="flex-1">
+        <app-search-bar placeholder="Buscar por cliente, evento ou número..." [(ngModel)]="searchTerm"></app-search-bar>
+      </div>
+      <select [(ngModel)]="filterStatus"
+        class="flex min-h-[44px] w-full sm:w-48 items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+        <option value="todos">Todos os status</option>
+        <option value="pending">Pendente</option>
+        <option value="paid">Pago</option>
+        <option value="overdue">Atrasado</option>
+      </select>
     </div>
-    <select
-      [(ngModel)]="filterStatus"
-      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <option value="todos">Todos os status</option>
-      <option value="pending">Pendente</option>
-      <option value="paid">Pago</option>
-      <option value="overdue">Atrasado</option>
-    </select>
   </div>
 
   <!-- Error Message -->
   @if (error) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ error }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ error }}
+  </div>
   }
 
   <!-- Loading State -->
   @if (isLoading) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando parcelas...</p>
-    </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <app-skeleton class="h-24 mb-4"></app-skeleton>
+    <app-skeleton class="h-24 mb-4"></app-skeleton>
+    <app-skeleton class="h-24"></app-skeleton>
+  </div>
   }
 
   <!-- Lista agrupada -->
   @if (!isLoading && groupedInstallments.length > 0) {
-    <div class="space-y-4">
-      @for (group of groupedInstallments; track group.id) {
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-          <button
-            type="button"
-            class="flex w-full flex-wrap items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-muted/50"
-            (click)="toggleGroup(group.id)"
-          >
-            <div class="min-w-[200px]">
-              <p class="text-xs uppercase tracking-wide text-muted-foreground">Cliente</p>
-              <p class="text-lg font-semibold">{{ group.clientName }}</p>
-              <p class="text-sm text-muted-foreground">{{ group.eventName }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-xs uppercase tracking-wide text-muted-foreground">Valor total</p>
-              <p class="text-lg font-semibold">{{ formatCurrency(group.totalAmount) }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-xs uppercase tracking-wide text-muted-foreground">Próximo vencimento</p>
-              <p class="text-base font-medium">
-                {{ group.nextDueDate ? formatDate(group.nextDueDate) : '-' }}
-              </p>
-            </div>
-            <div class="text-right">
-              <p class="text-xs uppercase tracking-wide text-muted-foreground">Parcelas pagas</p>
-              <p class="text-base font-medium">{{ group.paidCount }} / {{ group.totalCount }}</p>
-            </div>
-            <div class="rounded-full bg-muted p-2">
-              <lucide-icon
-                [img]="isGroupExpanded(group.id) ? ChevronDownIcon : ChevronRightIcon"
-                class="h-4 w-4"
-              ></lucide-icon>
-            </div>
-          </button>
+  <div class="space-y-4">
+    @for (group of groupedInstallments; track group.id) {
+    <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <button type="button"
+        class="flex w-full flex-wrap items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-muted/50"
+        (click)="toggleGroup(group.id)">
+        <div class="min-w-[200px]">
+          <p class="text-xs uppercase tracking-wide text-muted-foreground">Cliente</p>
+          <p class="text-lg font-semibold">{{ group.clientName }}</p>
+          <p class="text-sm text-muted-foreground">{{ group.eventName }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs uppercase tracking-wide text-muted-foreground">Valor total</p>
+          <p class="text-lg font-semibold">{{ formatCurrency(group.totalAmount) }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs uppercase tracking-wide text-muted-foreground">Próximo vencimento</p>
+          <p class="text-base font-medium">
+            {{ group.nextDueDate ? formatDate(group.nextDueDate) : '-' }}
+          </p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs uppercase tracking-wide text-muted-foreground">Parcelas pagas</p>
+          <p class="text-base font-medium">{{ group.paidCount }} / {{ group.totalCount }}</p>
+        </div>
+        <div class="rounded-full bg-muted p-2">
+          <lucide-icon [img]="isGroupExpanded(group.id) ? ChevronDownIcon : ChevronRightIcon"
+            class="h-4 w-4"></lucide-icon>
+        </div>
+      </button>
 
-          @if (isGroupExpanded(group.id)) {
-            <div class="border-t bg-muted/40">
-              <app-table>
-                <thead appTableHeader>
-                  <tr appTableRow>
-                    <th appTableHead>Nº</th>
-                    <th appTableHead>Valor</th>
-                    <th appTableHead>Vencimento</th>
-                    <th appTableHead>Status</th>
-                    <th appTableHead>Data Pagamento</th>
-                    <th appTableHead>Forma de Pagamento</th>
-                    <th appTableHead class="text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody appTableBody>
-                  @for (installment of group.installments; track installment.id) {
-                    <tr appTableRow>
-                      <td appTableCell class="font-medium">{{ installment.installmentNumber }}</td>
-                      <td appTableCell>{{ formatCurrency(installment.amount) }}</td>
-                      <td appTableCell>{{ formatDate(installment.dueDate) }}</td>
-                      <td appTableCell>
-                        <span
-                          [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(installment.status)"
-                        >
-                          {{ translateStatus(installment.status) }}
-                        </span>
-                      </td>
-                      <td appTableCell>
-                        {{ installment.paymentDate ? formatDate(installment.paymentDate) : '-' }}
-                      </td>
-                      <td appTableCell>
-                        {{ installment.paymentMethod || '-' }}
-                      </td>
-                      <td appTableCell class="text-right">
-                        <div class="flex items-center justify-end space-x-2">
-                          <button appButton variant="ghost" size="sm" title="Ver detalhes">
-                            <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
-                          </button>
-                          @if (
-                            installment.status === 'pending' ||
-                            installment.status === 'overdue' ||
-                            installment.status === 'Pendente' ||
-                            installment.status === 'Atrasado'
-                          ) {
-                            <button
-                              appButton
-                              variant="ghost"
-                              size="sm"
-                              (click)="handlePaymentClick(installment)"
-                              title="Marcar como pago"
-                            >
-                              <lucide-icon [img]="CheckCircle2Icon" class="h-4 w-4"></lucide-icon>
-                            </button>
-                          }
-                          <button
-                            appButton
-                            variant="ghost"
-                            size="sm"
-                            (click)="handleDeleteClick(installment)"
-                            title="Excluir"
-                          >
-                            <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </app-table>
+      @if (isGroupExpanded(group.id)) {
+      <div class="border-t bg-muted/40">
+        <!-- Desktop Table View -->
+        <div class="hidden lg:block">
+          <app-table>
+            <thead appTableHeader>
+              <tr appTableRow>
+                <th appTableHead>Nº</th>
+                <th appTableHead>Valor</th>
+                <th appTableHead>Vencimento</th>
+                <th appTableHead>Status</th>
+                <th appTableHead>Data Pagamento</th>
+                <th appTableHead>Forma de Pagamento</th>
+                <th appTableHead class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody appTableBody>
+              @for (installment of group.installments; track installment.id) {
+              <tr appTableRow>
+                <td appTableCell class="font-medium">{{ installment.installmentNumber }}</td>
+                <td appTableCell>{{ formatCurrency(installment.amount) }}</td>
+                <td appTableCell>{{ formatDate(installment.dueDate) }}</td>
+                <td appTableCell>
+                  <span
+                    [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(installment.status)">
+                    {{ translateStatus(installment.status) }}
+                  </span>
+                </td>
+                <td appTableCell>
+                  {{ installment.paymentDate ? formatDate(installment.paymentDate) : '-' }}
+                </td>
+                <td appTableCell>
+                  {{ installment.paymentMethod || '-' }}
+                </td>
+                <td appTableCell class="text-right">
+                  <div class="flex items-center justify-end space-x-2">
+                    <button appButton variant="ghost" size="sm" title="Ver detalhes">
+                      <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+                    </button>
+                    @if (
+                    installment.status === 'pending' ||
+                    installment.status === 'overdue' ||
+                    installment.status === 'Pendente' ||
+                    installment.status === 'Atrasado'
+                    ) {
+                    <button appButton variant="ghost" size="sm" (click)="handlePaymentClick(installment)"
+                      title="Marcar como pago">
+                      <lucide-icon [img]="CheckCircle2Icon" class="h-4 w-4"></lucide-icon>
+                    </button>
+                    }
+                    <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(installment)"
+                      title="Excluir">
+                      <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </app-table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="lg:hidden p-4">
+          @for (installment of group.installments; track installment.id) {
+          <app-mobile-card class="mb-4">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <p class="text-sm font-semibold text-gray-900">Parcela Nº {{ installment.installmentNumber }}</p>
+                  <p class="text-xs text-muted-foreground mt-1">{{ group.clientName }}</p>
+                </div>
+                <span
+                  [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(installment.status)">
+                  {{ translateStatus(installment.status) }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p class="text-xs text-muted-foreground">Valor</p>
+                  <p class="font-medium">{{ formatCurrency(installment.amount) }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-muted-foreground">Vencimento</p>
+                  <p class="font-medium">{{ formatDate(installment.dueDate) }}</p>
+                </div>
+                @if (installment.paymentDate) {
+                <div>
+                  <p class="text-xs text-muted-foreground">Pagamento</p>
+                  <p class="font-medium">{{ formatDate(installment.paymentDate) }}</p>
+                </div>
+                }
+                @if (installment.paymentMethod) {
+                <div>
+                  <p class="text-xs text-muted-foreground">Método</p>
+                  <p class="font-medium">{{ installment.paymentMethod }}</p>
+                </div>
+                }
+              </div>
+
+              <div class="flex items-center gap-2 pt-2 border-t">
+                @if (
+                installment.status === 'pending' ||
+                installment.status === 'overdue' ||
+                installment.status === 'Pendente' ||
+                installment.status === 'Atrasado'
+                ) {
+                <button appButton
+                  class="flex-1 bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70"
+                  size="sm" (click)="handlePaymentClick(installment)">
+                  <lucide-icon [img]="CheckCircle2Icon" class="mr-1.5 h-4 w-4"></lucide-icon>
+                  Pagar
+                </button>
+                }
+                <button appButton variant="outline" size="sm">
+                  <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+                </button>
+                <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(installment)">
+                  <lucide-icon [img]="Trash2Icon" class="h-4 w-4 text-red-500"></lucide-icon>
+                </button>
+              </div>
             </div>
+          </app-mobile-card>
           }
         </div>
+      </div>
       }
     </div>
+    }
+  </div>
   }
 
   <!-- Empty State -->
   @if (!isLoading && groupedInstallments.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">
-        {{ searchTerm || filterStatus !== 'todos' ? 'Nenhuma parcela encontrada.' : 'Nenhuma parcela cadastrada.' }}
-      </p>
-    </div>
+  <app-empty-state
+    [title]="searchTerm || filterStatus !== 'todos' ? 'Nenhuma parcela encontrada' : 'Nenhuma parcela cadastrada'"
+    [message]="searchTerm || filterStatus !== 'todos' ? 'Tente ajustar os filtros de busca' : 'As parcelas dos contratos aparecerão aqui'">
+  </app-empty-state>
   }
 
   <!-- Delete Confirmation Modal -->
-  <app-confirmation-modal
-    [isOpen]="showDeleteModal"
-    (onClose)="handleCancelDelete()"
-    (onConfirm)="handleConfirmDelete()"
-    title="Excluir Parcela"
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Excluir Parcela"
     [message]="'Tem certeza que deseja excluir a parcela nº ' + (installmentToDelete?.installmentNumber || '') + '? Esta ação não pode ser desfeita.'"
-    confirmText="Excluir"
-    cancelText="Cancelar"
-    variant="danger"
-    [loading]="isDeleting"
-  ></app-confirmation-modal>
+    confirmText="Excluir" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
 
   <!-- Payment Modal -->
   @if (showPaymentModal) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="handleCancelPayment()">
-      <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
-        <div>
-          <h2 class="text-xl font-semibold">Registrar Pagamento</h2>
-          <p class="text-sm text-muted-foreground mt-1">
-            Parcela nº {{ installmentToPay?.installmentNumber }} - {{ installmentToPay?.contract?.client?.name }}
-          </p>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="handleCancelPayment()">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
+      <div>
+        <h2 class="text-xl font-semibold">Registrar Pagamento</h2>
+        <p class="text-sm text-muted-foreground mt-1">
+          Parcela nº {{ installmentToPay?.installmentNumber }} - {{ installmentToPay?.contract?.client?.name }}
+        </p>
+      </div>
+
+      <form [formGroup]="paymentForm" (ngSubmit)="handleConfirmPayment()" class="space-y-4">
+        <!-- Payment Date -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="paymentDate">Data do Pagamento *</label>
+          <input type="date" id="paymentDate" formControlName="paymentDate"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('paymentDate') ? 'border-red-500' : '')" />
+          @if (hasError('paymentDate')) {
+          <p class="text-sm text-red-500">{{ getFieldError('paymentDate') }}</p>
+          }
         </div>
 
-        <form [formGroup]="paymentForm" (ngSubmit)="handleConfirmPayment()" class="space-y-4">
-          <!-- Payment Date -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="paymentDate">Data do Pagamento *</label>
-            <input
-              type="date"
-              id="paymentDate"
-              formControlName="paymentDate"
-              [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('paymentDate') ? 'border-red-500' : '')"
-            />
-            @if (hasError('paymentDate')) {
-              <p class="text-sm text-red-500">{{ getFieldError('paymentDate') }}</p>
+        <!-- Payment Amount -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="paymentAmount">Valor Pago *</label>
+          <input type="number" id="paymentAmount" formControlName="paymentAmount" step="0.01" placeholder="0.00"
+            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('paymentAmount') ? 'border-red-500' : '')" />
+          @if (hasError('paymentAmount')) {
+          <p class="text-sm text-red-500">{{ getFieldError('paymentAmount') }}</p>
+          }
+        </div>
+
+        <!-- Payment Method -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="paymentMethod">Forma de Pagamento</label>
+          <select id="paymentMethod" formControlName="paymentMethod"
+            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
+            <option value="">Selecione uma forma de pagamento</option>
+            @for (method of paymentMethods; track method) {
+            <option [value]="method">{{ method }}</option>
             }
-          </div>
+          </select>
+        </div>
 
-          <!-- Payment Amount -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="paymentAmount">Valor Pago *</label>
-            <input
-              type="number"
-              id="paymentAmount"
-              formControlName="paymentAmount"
-              step="0.01"
-              placeholder="0.00"
-              [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('paymentAmount') ? 'border-red-500' : '')"
-            />
-            @if (hasError('paymentAmount')) {
-              <p class="text-sm text-red-500">{{ getFieldError('paymentAmount') }}</p>
-            }
-          </div>
+        <!-- Notes -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="notes">Observações</label>
+          <textarea id="notes" formControlName="notes" rows="3" placeholder="Observações sobre o pagamento (opcional)"
+            class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"></textarea>
+        </div>
 
-          <!-- Payment Method -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="paymentMethod">Forma de Pagamento</label>
-            <select
-              id="paymentMethod"
-              formControlName="paymentMethod"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            >
-              <option value="">Selecione uma forma de pagamento</option>
-              @for (method of paymentMethods; track method) {
-                <option [value]="method">{{ method }}</option>
-              }
-            </select>
-          </div>
-
-          <!-- Notes -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="notes">Observações</label>
-            <textarea
-              id="notes"
-              formControlName="notes"
-              rows="3"
-              placeholder="Observações sobre o pagamento (opcional)"
-              class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            ></textarea>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-center justify-end space-x-2 pt-4 border-t">
-            <button 
-              appButton 
-              type="button" 
-              variant="outline" 
-              (click)="handleCancelPayment()"
-              [disabled]="isPaymentProcessing"
-            >
-              Cancelar
-            </button>
-            <button 
-              appButton 
-              type="submit" 
-              variant="outline"
-              [disabled]="isPaymentProcessing"
-            >
-              {{ isPaymentProcessing ? 'Processando...' : 'Confirmar Pagamento' }}
-            </button>
-          </div>
-        </form>
-      </div>
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-end space-x-2 pt-4 border-t">
+          <button appButton type="button" variant="outline" (click)="handleCancelPayment()"
+            [disabled]="isPaymentProcessing">
+            Cancelar
+          </button>
+          <button appButton type="submit" variant="outline" [disabled]="isPaymentProcessing">
+            {{ isPaymentProcessing ? 'Processando...' : 'Confirmar Pagamento' }}
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
   }
 </div>
-
-

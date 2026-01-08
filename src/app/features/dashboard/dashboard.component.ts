@@ -9,6 +9,8 @@ import { firstValueFrom } from 'rxjs'
 import type { DashboardStats, DashboardInstallment, DashboardEvent, Event, Unit } from '@shared/models/api.types'
 import { parseDateIgnoringTimezone, formatDateBR, getDaysUntil, isSameDayAsDate } from '@shared/utils/date.utils'
 import { EventDetailModalComponent } from '@shared/components/ui/event-detail-modal/event-detail-modal.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 
 interface CalendarDay {
   date: number
@@ -20,7 +22,7 @@ interface CalendarDay {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, EventDetailModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, EventDetailModalComponent, SkeletonComponent, EmptyStateComponent],
   templateUrl: './dashboard.component.html',
   styles: []
 })

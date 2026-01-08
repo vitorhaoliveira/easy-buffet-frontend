@@ -15,48 +15,41 @@
 
   <!-- Loading State -->
   @if (isLoadingData) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando dados...</p>
-    </div>
+  <div class="text-center py-8">
+    <p class="text-muted-foreground">Carregando dados...</p>
+  </div>
   }
 
   <!-- Error Message -->
   @if (errorMessage) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ errorMessage }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ errorMessage }}
+  </div>
   }
 
   <!-- Formulário -->
   @if (!isLoadingData) {
-    <form [formGroup]="costForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+  <form [formGroup]="costForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Description -->
         <div class="space-y-2 md:col-span-2">
           <label appLabel htmlFor="description">Descrição *</label>
-          <input
-            type="text"
-            id="description"
-            formControlName="description"
-            placeholder="Descrição do custo ou despesa"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('description') ? 'border-red-500' : '')"
-          />
+          <input type="text" id="description" formControlName="description" placeholder="Descrição do custo ou despesa"
+            [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('description') ? 'border-red-500' : '')" />
           @if (hasError('description')) {
-            <p class="text-sm text-red-500">{{ getFieldError('description') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('description') }}</p>
           }
         </div>
 
         <!-- Event -->
         <div class="space-y-2">
           <label appLabel htmlFor="eventId">Evento</label>
-          <select
-            id="eventId"
-            formControlName="eventId"
-            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          >
+          <select id="eventId" formControlName="eventId"
+            class="flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
             <option value="">Nenhum (opcional)</option>
             @for (event of events; track event.id) {
-              <option [value]="event.id">{{ event.name }}</option>
+            <option [value]="event.id">{{ event.name }}</option>
             }
           </select>
         </div>
@@ -64,63 +57,48 @@
         <!-- Category -->
         <div class="space-y-2">
           <label appLabel htmlFor="category">Categoria *</label>
-          <select
-            id="category"
-            formControlName="category"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('category') ? 'border-red-500' : '')"
-          >
+          <select id="category" formControlName="category"
+            [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('category') ? 'border-red-500' : '')">
             <option value="">Selecione uma categoria</option>
             @for (category of categories; track category.value) {
-              <option [value]="category.value">{{ category.label }}</option>
+            <option [value]="category.value">{{ category.label }}</option>
             }
           </select>
           @if (hasError('category')) {
-            <p class="text-sm text-red-500">{{ getFieldError('category') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('category') }}</p>
           }
         </div>
 
         <!-- Amount -->
         <div class="space-y-2">
           <label appLabel htmlFor="amount">Valor (R$) *</label>
-          <input
-            type="number"
-            id="amount"
-            formControlName="amount"
-            step="0.01"
-            placeholder="0.00"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('amount') ? 'border-red-500' : '')"
-          />
+          <input type="number" id="amount" formControlName="amount" step="0.01" placeholder="0.00"
+            [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('amount') ? 'border-red-500' : '')" />
           @if (hasError('amount')) {
-            <p class="text-sm text-red-500">{{ getFieldError('amount') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('amount') }}</p>
           }
         </div>
 
         <!-- Notes -->
         <div class="space-y-2 md:col-span-2">
           <label appLabel htmlFor="notes">Observações</label>
-          <textarea
-            id="notes"
-            formControlName="notes"
-            rows="4"
-            placeholder="Observações sobre o custo (opcional)"
-            class="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          ></textarea>
+          <textarea id="notes" formControlName="notes" rows="4" placeholder="Observações sobre o custo (opcional)"
+            class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
         </div>
       </div>
+    </div>
 
-      <!-- Botões -->
-      <div class="flex items-center justify-end space-x-2 pt-6 border-t">
-        <button appButton type="button" variant="outline" (click)="handleCancel()">
-          <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          Cancelar
-        </button>
-        <button appButton type="submit" variant="outline" [disabled]="isLoading">
-          <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          {{ isLoading ? 'Salvando...' : 'Salvar' }}
-        </button>
-      </div>
-    </form>
+    <!-- Botões -->
+    <div class="flex items-center justify-end space-x-2 pt-6 border-t">
+      <button appButton type="button" variant="outline" (click)="handleCancel()">
+        <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Cancelar
+      </button>
+      <button appButton type="submit" variant="outline" [disabled]="isLoading">
+        <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        {{ isLoading ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+  </form>
   }
 </div>
-
-

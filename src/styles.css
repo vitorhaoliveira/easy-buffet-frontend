@@ -66,4 +66,20 @@
   .text-accent-foreground {
     color: var(--color-accent-foreground);
   }
+  
+  /* Logo animation - Fade with blur effect */
+  @keyframes fade-blur {
+    0% {
+      opacity: 0;
+      filter: blur(20px);
+    }
+    100% {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+  
+  .animate-fade-in-scale {
+    animation: fade-blur 1.5s ease-out forwards;
+  }
 }

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core'
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'
 import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, Home, ClipboardList, DollarSign, Settings, HelpCircle, MessageCircle, LogOut, Building2, ChevronDown, Plus, X } from 'lucide-angular'
+import { LucideAngularModule, Home, ClipboardList, DollarSign, Settings, HelpCircle, MessageCircle, LogOut, Building2, ChevronDown, Plus, X, Menu } from 'lucide-angular'
 import { Subject, takeUntil, firstValueFrom } from 'rxjs'
 import { AuthStateService } from '@core/services/auth-state.service'
 import { AuthService } from '@core/services/auth.service'
@@ -11,6 +11,7 @@ import { StorageService } from '@core/services/storage.service'
 import { PhoneMaskDirective } from '@shared/directives/phone-mask.directive'
 import { phoneValidator } from '@shared/validators'
 import type { User } from '@shared/models/api.types'
+import { ToastComponent } from '@shared/components/ui/toast/toast.component'
 
 interface MenuItem {
   title: string;
@@ -35,7 +36,8 @@ interface SubMenuItem {
     RouterLink, 
     RouterLinkActive, 
     LucideAngularModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    ToastComponent
   ],
   templateUrl: './main-layout.component.html',
   styles: [`
@@ -58,9 +60,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   readonly ChevronDownIcon = ChevronDown
   readonly PlusIcon = Plus
   readonly XIcon = X
+  readonly MenuIcon = Menu
 
   // State
   sidebarCollapsed = false
+  mobileMenuOpen = false
   currentUser: User | null = null
   showOrgDropdown = false
   isSwitchingOrg = false
@@ -119,6 +123,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       expanded: false,
       items: [
         { title: 'Minha Conta', url: '/conta' },
+        { title: 'Assinatura', url: '/assinatura' },
       ]
     }
   ]
@@ -247,6 +252,28 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     if (this.sidebarCollapsed) {
       this.menuItems.forEach(item => item.expanded = false)
     }
+  }
+
+  /**
+   * @Function - toggleMobileSidebar
+   * @description - Toggle mobile sidebar visibility
+   * @author - Vitor Hugo
+   * @param - void
+   * @returns - void
+   */
+  toggleMobileSidebar(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen
+  }
+
+  /**
+   * @Function - closeMobileSidebar
+   * @description - Close mobile sidebar
+   * @author - Vitor Hugo
+   * @param - void
+   * @returns - void
+   */
+  closeMobileSidebar(): void {
+    this.mobileMenuOpen = false
   }
 
   /**

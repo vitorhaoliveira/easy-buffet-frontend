@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { RouterModule } from '@angular/router'
+import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
 import { LucideAngularModule, Plus, Edit, Trash2, FileText, DollarSign, Eye } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
@@ -8,6 +8,9 @@ import { firstValueFrom } from 'rxjs'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { 
   TableComponent, 
   TableHeaderComponent, 
@@ -33,6 +36,9 @@ import { formatDateBR } from '@shared/utils/date.utils'
     ButtonComponent,
     SearchBarComponent,
     ConfirmationModalComponent,
+    SkeletonComponent,
+    MobileCardComponent,
+    EmptyStateComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
@@ -53,6 +59,7 @@ export class QuoteListComponent implements OnInit {
   private readonly quoteService = inject(QuoteService)
   private readonly clientService = inject(ClientService)
   private readonly exportService = inject(ExportService)
+  public readonly router = inject(Router)
 
   quotes: Quote[] = []
   searchTerm: string = ''

@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { UnitService } from '@core/services/unit.service'
 import type { CreateUnitRequest, UpdateUnitRequest } from '@shared/models/api.types'
 
@@ -18,7 +19,8 @@ import type { CreateUnitRequest, UpdateUnitRequest } from '@shared/models/api.ty
     ReactiveFormsModule,
     LucideAngularModule,
     ButtonComponent,
-    LabelComponent
+    LabelComponent,
+    SkeletonComponent
   ],
   templateUrl: './unit-form.component.html'
 })

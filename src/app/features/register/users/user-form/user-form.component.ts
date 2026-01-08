@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { PhoneMaskDirective } from '@shared/directives/phone-mask.directive'
 import { phoneValidator } from '@shared/validators'
 import { UserService } from '@core/services/user.service'
@@ -21,6 +22,7 @@ import type { CreateUserRequest, UpdateUserRequest, UserPermissions } from '@sha
     LucideAngularModule,
     ButtonComponent,
     LabelComponent,
+    SkeletonComponent,
     PhoneMaskDirective
   ],
   templateUrl: './user-form.component.html'

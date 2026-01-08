@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { ChecklistService } from '@core/services/checklist.service'
 import type { ChecklistTemplate, ChecklistPhase } from '@shared/models/api.types'
 
@@ -19,7 +21,9 @@ import type { ChecklistTemplate, ChecklistPhase } from '@shared/models/api.types
     FormsModule,
     LucideAngularModule,
     ButtonComponent,
-    ConfirmationModalComponent
+    ConfirmationModalComponent,
+    SkeletonComponent,
+    EmptyStateComponent
   ],
   templateUrl: './template-list.component.html'
 })

@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6 p-4 sm:p-6">
   <!-- Header -->
   <div class="flex items-center space-x-4">
     <button appButton variant="ghost" size="sm" (click)="handleCancel()">
@@ -6,10 +6,10 @@
       Voltar
     </button>
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
         {{ isEditing ? 'Editar Evento' : 'Nova Reserva' }}
       </h1>
-      <p class="text-muted-foreground">
+      <p class="text-muted-foreground text-sm sm:text-base">
         {{ isEditing ? 'Atualize as informações do evento' : 'Preencha os dados da nova reserva' }}
       </p>
     </div>
@@ -17,76 +17,68 @@
 
   <!-- Loading State -->
   @if (isLoadingData) {
-    <div class="flex items-center justify-center h-64">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        <p class="mt-2 text-muted-foreground">Carregando...</p>
-      </div>
+  <div class="flex items-center justify-center h-64">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+      <p class="mt-2 text-muted-foreground">Carregando...</p>
     </div>
+  </div>
   }
 
   <!-- Error message -->
   @if (errorMessage) {
-    <div class="bg-red-50 border border-red-200 rounded-md p-4">
-      <p class="text-red-600">{{ errorMessage }}</p>
-    </div>
+  <div class="bg-red-50 border border-red-200 rounded-md p-4">
+    <p class="text-red-600">{{ errorMessage }}</p>
+  </div>
   }
 
   <!-- Formulário -->
   @if (!isLoadingData) {
-    <form [formGroup]="eventForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+  <form [formGroup]="eventForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Cliente -->
         <div class="space-y-2">
           <label appLabel htmlFor="clientId">Cliente *</label>
-          <select
-            id="clientId"
-            formControlName="clientId"
-            [class]="'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('clientId') ? 'border-red-500' : '')"
-          >
+          <select id="clientId" formControlName="clientId"
+            [class]="'flex min-h-[44px] h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('clientId') ? 'border-red-500' : '')">
             <option value="">Selecione um cliente</option>
             @for (client of clients; track client.id) {
-              <option [value]="client.id">{{ client.name }}</option>
+            <option [value]="client.id">{{ client.name }}</option>
             }
           </select>
           @if (hasError('clientId')) {
-            <p class="text-sm text-red-500">{{ getFieldError('clientId') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('clientId') }}</p>
           }
         </div>
 
         <!-- Pacote -->
         <div class="space-y-2">
           <label appLabel htmlFor="packageId">Pacote/Serviço *</label>
-          <select
-            id="packageId"
-            formControlName="packageId"
-            [class]="'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('packageId') ? 'border-red-500' : '')"
-          >
+          <select id="packageId" formControlName="packageId"
+            [class]="'flex min-h-[44px] h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('packageId') ? 'border-red-500' : '')">
             <option value="">Selecione um pacote</option>
             @for (pkg of packages; track pkg.id) {
-              <option [value]="pkg.id">
-                {{ pkg.name }} - {{ formatCurrency(pkg.price) }}
-              </option>
+            <option [value]="pkg.id">
+              {{ pkg.name }} - {{ formatCurrency(pkg.price) }}
+            </option>
             }
           </select>
           @if (hasError('packageId')) {
-            <p class="text-sm text-red-500">{{ getFieldError('packageId') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('packageId') }}</p>
           }
         </div>
 
         <!-- Unidade -->
         <div class="space-y-2">
           <label appLabel htmlFor="unitId">Unidade</label>
-          <select
-            id="unitId"
-            formControlName="unitId"
-            class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <select id="unitId" formControlName="unitId"
+            class="flex min-h-[44px] h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
             <option value="">Todas as unidades</option>
             @for (unit of units; track unit.id) {
-              <option [value]="unit.id">
-                {{ unit.name }}@if (unit.code) { ({{ unit.code }})}
-              </option>
+            <option [value]="unit.id">
+              {{ unit.name }}@if (unit.code) { ({{ unit.code }})}
+            </option>
             }
           </select>
         </div>
@@ -94,85 +86,59 @@
         <!-- Nome do Evento -->
         <div class="space-y-2">
           <label appLabel htmlFor="name">Nome do Evento *</label>
-          <input
-            type="text"
-            id="name"
-            formControlName="name"
-            placeholder="Ex: Casamento João e Maria"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')"
-          />
+          <input type="text" id="name" formControlName="name" placeholder="Ex: Casamento João e Maria"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('name') ? 'border-red-500' : '')" />
           @if (hasError('name')) {
-            <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
           }
         </div>
 
         <!-- Data -->
         <div class="space-y-2">
           <label appLabel htmlFor="eventDate">Data *</label>
-          <input
-            type="date"
-            id="eventDate"
-            formControlName="eventDate"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('eventDate') ? 'border-red-500' : '')"
-          />
+          <input type="date" id="eventDate" formControlName="eventDate"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('eventDate') ? 'border-red-500' : '')" />
           @if (hasError('eventDate')) {
-            <p class="text-sm text-red-500">{{ getFieldError('eventDate') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('eventDate') }}</p>
           }
         </div>
 
         <!-- Horário -->
         <div class="space-y-2">
           <label appLabel htmlFor="eventTime">Horário *</label>
-          <input
-            type="time"
-            id="eventTime"
-            formControlName="eventTime"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('eventTime') ? 'border-red-500' : '')"
-          />
+          <input type="time" id="eventTime" formControlName="eventTime"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('eventTime') ? 'border-red-500' : '')" />
           @if (hasError('eventTime')) {
-            <p class="text-sm text-red-500">{{ getFieldError('eventTime') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('eventTime') }}</p>
           }
         </div>
 
         <!-- Local -->
         <div class="space-y-2">
           <label appLabel htmlFor="location">Local *</label>
-          <input
-            type="text"
-            id="location"
-            formControlName="location"
+          <input type="text" id="location" formControlName="location"
             placeholder="Ex: Salão de Festas Jardim das Flores"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('location') ? 'border-red-500' : '')"
-          />
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('location') ? 'border-red-500' : '')" />
           @if (hasError('location')) {
-            <p class="text-sm text-red-500">{{ getFieldError('location') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('location') }}</p>
           }
         </div>
 
         <!-- Número de Convidados -->
         <div class="space-y-2">
           <label appLabel htmlFor="guestCount">Número de Convidados *</label>
-          <input
-            type="number"
-            min="1"
-            id="guestCount"
-            formControlName="guestCount"
-            placeholder="Ex: 150"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('guestCount') ? 'border-red-500' : '')"
-          />
+          <input type="number" min="1" id="guestCount" formControlName="guestCount" placeholder="Ex: 150"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('guestCount') ? 'border-red-500' : '')" />
           @if (hasError('guestCount')) {
-            <p class="text-sm text-red-500">{{ getFieldError('guestCount') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('guestCount') }}</p>
           }
         </div>
 
         <!-- Status -->
         <div class="space-y-2">
           <label appLabel htmlFor="status">Status</label>
-          <select
-            id="status"
-            formControlName="status"
-            class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <select id="status" formControlName="status"
+            class="flex min-h-[44px] h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
             <option value="Pendente">Pendente</option>
             <option value="Confirmado">Confirmado</option>
             <option value="Realizado">Realizado</option>
@@ -184,26 +150,26 @@
       <!-- Notas -->
       <div class="space-y-2">
         <label appLabel htmlFor="notes">Notas</label>
-        <textarea
-          id="notes"
-          formControlName="notes"
+        <textarea id="notes" formControlName="notes"
           placeholder="Informações adicionais sobre o evento (ex: Decoração em tons de azul e branco)"
-          class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          rows="3"
-        ></textarea>
+          class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+          rows="3"></textarea>
       </div>
+    </div>
 
-      <!-- Botões -->
-      <div class="flex items-center justify-end space-x-2 pt-6 border-t">
-        <button appButton type="button" variant="outline" (click)="handleCancel()" [disabled]="isLoading">
-          <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          Cancelar
-        </button>
-        <button appButton type="submit" variant="outline" [disabled]="isLoading">
-          <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
-        </button>
-      </div>
-    </form>
+    <!-- Botões -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-6 border-t">
+      <button appButton type="button" variant="outline" (click)="handleCancel()" [disabled]="isLoading"
+        class="w-full sm:w-auto">
+        <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Cancelar
+      </button>
+      <button appButton type="submit" [disabled]="isLoading"
+        class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white border-0 transform hover:scale-105 transition-all duration-200">
+        <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar Evento') }}
+      </button>
+    </div>
+  </form>
   }
 </div>

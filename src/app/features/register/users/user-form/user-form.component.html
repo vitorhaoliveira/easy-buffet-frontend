@@ -1,68 +1,69 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center space-x-4">
-    <button appButton variant="ghost" size="sm" (click)="handleCancel()">
+  <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+    <button appButton variant="ghost" size="sm" (click)="handleCancel()" class="w-full sm:w-auto min-h-[44px]">
       <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
       Voltar
     </button>
-    <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+    <div class="flex-1">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
         {{ isEditing ? 'Editar Usuário' : 'Novo Usuário' }}
       </h1>
-      <p class="text-muted-foreground">
+      <p class="text-sm sm:text-base text-muted-foreground mt-1">
         {{ isEditing ? 'Atualize as informações do usuário' : 'Preencha os dados do novo usuário' }}
       </p>
     </div>
   </div>
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons -->
   @if (isLoadingData) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando dados do usuário...</p>
+  <div class="space-y-6">
+    <div class="space-y-4">
+      <app-skeleton [width]="'30%'" [height]="'24px'"></app-skeleton>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @for (i of [1,2,3,4]; track i) {
+        <div class="space-y-2">
+          <app-skeleton [width]="'40%'" [height]="'16px'"></app-skeleton>
+          <app-skeleton [width]="'100%'" [height]="'40px'"></app-skeleton>
+        </div>
+        }
+      </div>
     </div>
+  </div>
   }
 
   <!-- Error Message -->
   @if (errorMessage) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ errorMessage }}
-    </div>
+  <div class="w-full p-3 sm:p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+    {{ errorMessage }}
+  </div>
   }
 
   <!-- Formulário -->
   @if (!isLoadingData) {
-    <form [formGroup]="userForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+  <form [formGroup]="userForm" (ngSubmit)="handleSubmit()" class="space-y-4 sm:space-y-6">
     <!-- Dados Básicos -->
-    <div class="space-y-4">
-      <h2 class="text-xl font-semibold">Dados Básicos</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
+      <h2 class="text-lg sm:text-xl font-semibold text-gray-900">Dados Básicos</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <!-- Nome -->
         <div class="space-y-2">
           <label appLabel htmlFor="name">Nome *</label>
-          <input
-            type="text"
-            id="name"
-            formControlName="name"
-            placeholder="Nome completo do usuário"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')"
-          />
+          <input type="text" id="name" formControlName="name" placeholder="Nome completo do usuário"
+            [class]="'flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('name') ? 'border-red-500' : '')" />
           @if (hasError('name')) {
-            <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
           }
         </div>
 
         <!-- Email -->
         <div class="space-y-2">
           <label appLabel htmlFor="email">Email *</label>
-          <input
-            type="email"
-            id="email"
-            formControlName="email"
-            placeholder="email@exemplo.com"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('email') ? 'border-red-500' : '')"
-          />
+          <input type="email" id="email" formControlName="email" placeholder="email@exemplo.com"
+            [class]="'flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('email') ? 'border-red-500' : '')" />
           @if (hasError('email')) {
-            <p class="text-sm text-red-500">{{ getFieldError('email') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('email') }}</p>
           }
         </div>
 
@@ -71,44 +72,28 @@
           <label appLabel htmlFor="password">
             {{ isEditing ? 'Senha (deixe em branco para não alterar)' : 'Senha *' }}
           </label>
-          <input
-            type="password"
-            id="password"
-            formControlName="password"
-            placeholder="••••••••"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('password') ? 'border-red-500' : '')"
-          />
+          <input type="password" id="password" formControlName="password" placeholder="••••••••"
+            [class]="'flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('password') ? 'border-red-500' : '')" />
           @if (hasError('password')) {
-            <p class="text-sm text-red-500">{{ getFieldError('password') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('password') }}</p>
           }
         </div>
 
         <!-- Telefone -->
         <div class="space-y-2">
           <label appLabel htmlFor="phone">Telefone</label>
-          <input
-            type="tel"
-            id="phone"
-            formControlName="phone"
-            appPhoneMask
-            placeholder="(11) 99999-9999"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('phone') ? 'border-red-500' : '')"
-          />
+          <input type="tel" id="phone" formControlName="phone" appPhoneMask placeholder="(11) 99999-9999"
+            [class]="'flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('phone') ? 'border-red-500' : '')" />
           @if (hasError('phone')) {
-            <p class="text-sm text-red-500">{{ getFieldError('phone') }}</p>
+          <p class="text-sm text-red-500">{{ getFieldError('phone') }}</p>
           }
         </div>
 
         <!-- Função -->
         <div class="space-y-2">
           <label appLabel htmlFor="role">Função *</label>
-          <select
-            id="role"
-            formControlName="role"
-            (change)="setRolePermissions($event)"
-            [disabled]="isEditing"
-            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          >
+          <select id="role" formControlName="role" (change)="setRolePermissions($event)" [disabled]="isEditing"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
             <option value="Auxiliar">Auxiliar</option>
             <option value="Administrador">Administrador</option>
           </select>
@@ -116,146 +101,99 @@
 
         <!-- Status (apenas na edição) -->
         @if (isEditing) {
-          <div class="space-y-2">
-            <label appLabel htmlFor="status">Status *</label>
-            <select
-              id="status"
-              formControlName="status"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            >
-              <option value="Ativo">Ativo</option>
-              <option value="Inativo">Inativo</option>
-            </select>
-          </div>
+        <div class="space-y-2">
+          <label appLabel htmlFor="status">Status *</label>
+          <select id="status" formControlName="status"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
+        </div>
         }
       </div>
     </div>
 
     <!-- Permissões -->
-    <div class="space-y-4 pt-6 border-t">
-      <h2 class="text-xl font-semibold">Permissões</h2>
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
+      <h2 class="text-lg sm:text-xl font-semibold text-gray-900">Permissões</h2>
       <div [formGroup]="permissionsForm" class="space-y-6">
         <!-- Dashboard -->
         <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-gray-700">Dashboard</h3>
-          <div class="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="dashboardView"
-              formControlName="dashboardView"
-              class="rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <label htmlFor="dashboardView" class="text-sm">Visualizar</label>
+          <h3 class="text-sm font-semibold text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">Dashboard</h3>
+          <div class="flex items-center space-x-2 pl-3">
+            <input type="checkbox" id="dashboardView" formControlName="dashboardView"
+              class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+            <label htmlFor="dashboardView" class="text-sm cursor-pointer select-none">Visualizar</label>
           </div>
         </div>
 
         <!-- Cadastros -->
         <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-gray-700">Cadastros</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <h3 class="text-sm font-semibold text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">Cadastros</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pl-3">
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="cadastrosView"
-                formControlName="cadastrosView"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="cadastrosView" class="text-sm">Visualizar</label>
+              <input type="checkbox" id="cadastrosView" formControlName="cadastrosView"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="cadastrosView" class="text-sm cursor-pointer select-none">Visualizar</label>
             </div>
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="cadastrosCreate"
-                formControlName="cadastrosCreate"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="cadastrosCreate" class="text-sm">Criar</label>
+              <input type="checkbox" id="cadastrosCreate" formControlName="cadastrosCreate"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="cadastrosCreate" class="text-sm cursor-pointer select-none">Criar</label>
             </div>
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="cadastrosEdit"
-                formControlName="cadastrosEdit"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="cadastrosEdit" class="text-sm">Editar</label>
+              <input type="checkbox" id="cadastrosEdit" formControlName="cadastrosEdit"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="cadastrosEdit" class="text-sm cursor-pointer select-none">Editar</label>
             </div>
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="cadastrosDelete"
-                formControlName="cadastrosDelete"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="cadastrosDelete" class="text-sm">Deletar</label>
+              <input type="checkbox" id="cadastrosDelete" formControlName="cadastrosDelete"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="cadastrosDelete" class="text-sm cursor-pointer select-none">Deletar</label>
             </div>
           </div>
         </div>
 
         <!-- Financeiro -->
         <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-gray-700">Financeiro</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <h3 class="text-sm font-semibold text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">Financeiro</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pl-3">
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="financeiroView"
-                formControlName="financeiroView"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="financeiroView" class="text-sm">Visualizar</label>
+              <input type="checkbox" id="financeiroView" formControlName="financeiroView"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="financeiroView" class="text-sm cursor-pointer select-none">Visualizar</label>
             </div>
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="financeiroCreate"
-                formControlName="financeiroCreate"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="financeiroCreate" class="text-sm">Criar</label>
+              <input type="checkbox" id="financeiroCreate" formControlName="financeiroCreate"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="financeiroCreate" class="text-sm cursor-pointer select-none">Criar</label>
             </div>
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="financeiroEdit"
-                formControlName="financeiroEdit"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="financeiroEdit" class="text-sm">Editar</label>
+              <input type="checkbox" id="financeiroEdit" formControlName="financeiroEdit"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="financeiroEdit" class="text-sm cursor-pointer select-none">Editar</label>
             </div>
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="financeiroDelete"
-                formControlName="financeiroDelete"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="financeiroDelete" class="text-sm">Deletar</label>
+              <input type="checkbox" id="financeiroDelete" formControlName="financeiroDelete"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="financeiroDelete" class="text-sm cursor-pointer select-none">Deletar</label>
             </div>
           </div>
         </div>
 
         <!-- Relatórios -->
         <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-gray-700">Relatórios</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <h3 class="text-sm font-semibold text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">Relatórios</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pl-3">
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="relatoriosView"
-                formControlName="relatoriosView"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="relatoriosView" class="text-sm">Visualizar</label>
+              <input type="checkbox" id="relatoriosView" formControlName="relatoriosView"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="relatoriosView" class="text-sm cursor-pointer select-none">Visualizar</label>
             </div>
             <div class="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="relatoriosExport"
-                formControlName="relatoriosExport"
-                class="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="relatoriosExport" class="text-sm">Exportar</label>
+              <input type="checkbox" id="relatoriosExport" formControlName="relatoriosExport"
+                class="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label htmlFor="relatoriosExport" class="text-sm cursor-pointer select-none">Exportar</label>
             </div>
           </div>
         </div>
@@ -263,17 +201,18 @@
     </div>
 
     <!-- Botões -->
-    <div class="flex items-center justify-end space-x-2 pt-6 border-t">
-      <button appButton type="button" variant="outline" (click)="handleCancel()">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
+      <button appButton type="button" variant="outline" (click)="handleCancel()"
+        class="w-full sm:w-auto min-h-[44px] order-2 sm:order-1">
         <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
         Cancelar
       </button>
-      <button appButton type="submit" variant="outline" [disabled]="isLoading">
+      <button appButton type="submit" [disabled]="isLoading"
+        class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px] order-1 sm:order-2">
         <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
         {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
       </button>
     </div>
-    </form>
+  </form>
   }
 </div>
-

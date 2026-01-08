@@ -1,14 +1,15 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center space-x-4">
-    <button appButton variant="ghost" size="sm" (click)="handleCancel()">
+  <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+    <button appButton variant="ghost" size="sm" (click)="handleCancel()" class="self-start">
       <lucide-icon [img]="ArrowLeftIcon" class="h-5 w-5"></lucide-icon>
     </button>
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
         {{ isEditing ? 'Editar Orçamento' : 'Novo Orçamento' }}
       </h1>
-      <p class="text-muted-foreground">
+      <p class="text-sm sm:text-base text-muted-foreground">
         {{ isEditing ? 'Atualize os dados do orçamento' : 'Crie um novo orçamento personalizado' }}
       </p>
     </div>
@@ -16,8 +17,10 @@
 
   <!-- Loading State -->
   @if (isLoadingData) {
-  <div class="text-center py-8">
-    <p class="text-muted-foreground">Carregando dados...</p>
+  <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
+    <app-skeleton width="100%" height="44px"></app-skeleton>
+    <app-skeleton width="100%" height="44px"></app-skeleton>
+    <app-skeleton width="100%" height="120px"></app-skeleton>
   </div>
   }
 
@@ -29,17 +32,19 @@
   }
 
   @if (!isLoadingData) {
-  <form [formGroup]="quoteForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+  <form [formGroup]="quoteForm" (ngSubmit)="handleSubmit()" class="space-y-4 sm:space-y-6">
     <!-- Basic Info Section -->
-    <div class="bg-white rounded-lg border p-6 space-y-4">
-      <h2 class="text-lg font-semibold">Informações Básicas</h2>
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
+      <h2
+        class="text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Informações Básicas</h2>
 
       <!-- Client Selection -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="space-y-2">
           <label for="clientId" class="text-sm font-medium">Cliente *</label>
           <select id="clientId" formControlName="clientId"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
             [class.border-red-500]="hasError('clientId')">
             <option value="">Selecione um cliente</option>
             @for (client of clients; track client.id) {
@@ -54,7 +59,7 @@
         <div class="space-y-2">
           <label for="eventId" class="text-sm font-medium">Evento (opcional)</label>
           <select id="eventId" formControlName="eventId"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+            class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
             <option value="">Selecione um evento</option>
             @for (event of events; track event.id) {
             <option [value]="event.id">{{ event.name }} - {{ event.eventDate }}</option>
@@ -68,7 +73,7 @@
         <div class="space-y-2">
           <label for="packageId" class="text-sm font-medium">Pacote/Serviço *</label>
           <select id="packageId" formControlName="packageId"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
             [class.border-red-500]="hasError('packageId')">
             <option value="">Selecione um pacote</option>
             @for (pkg of packages; track pkg.id) {
@@ -83,7 +88,7 @@
         <div class="space-y-2">
           <label for="validUntilDate" class="text-sm font-medium">Data de Validade *</label>
           <input id="validUntilDate" type="date" formControlName="validUntilDate"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
             [class.border-red-500]="hasError('validUntilDate')" />
           @if (hasError('validUntilDate')) {
           <p class="text-xs text-red-600">{{ getFieldError('validUntilDate') }}</p>
@@ -95,16 +100,19 @@
       <div class="space-y-2">
         <label for="notes" class="text-sm font-medium">Observações</label>
         <textarea id="notes" formControlName="notes" rows="3"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+          class="w-full px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Adicione observações adicionais..."></textarea>
       </div>
     </div>
 
     <!-- Items Section -->
-    <div class="bg-white rounded-lg border p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Itens do Orçamento</h2>
-        <button type="button" appButton variant="outline" size="sm" (click)="addItem()">
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+        <h2
+          class="text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+          Itens do Orçamento</h2>
+        <button type="button" appButton variant="outline" size="sm" (click)="addItem()"
+          class="w-full sm:w-auto min-h-[44px]">
           <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
           Adicionar Item
         </button>
@@ -112,11 +120,11 @@
 
       <div class="space-y-4" formArrayName="items">
         @for (item of items.controls; let i = $index; track i) {
-        <div [formGroupName]="i" class="border rounded-lg p-4 space-y-4">
+        <div [formGroupName]="i" class="border rounded-xl p-4 space-y-4 bg-gray-50">
           <div class="flex items-center justify-between">
-            <h3 class="font-medium">Item {{ i + 1 }}</h3>
+            <h3 class="font-medium text-gray-900">Item {{ i + 1 }}</h3>
             <button type="button" appButton variant="ghost" size="sm" (click)="removeItem(i)"
-              class="text-red-600 hover:text-red-800">
+              class="text-red-600 hover:text-red-800 min-h-[44px]">
               <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
             </button>
           </div>
@@ -124,27 +132,29 @@
           <div class="space-y-2">
             <label [htmlFor]="'description-' + i" class="text-sm font-medium">Descrição *</label>
             <input [id]="'description-' + i" type="text" formControlName="description"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Ex: Buffet com 100 convidados" />
           </div>
 
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-2">
               <label [htmlFor]="'quantity-' + i" class="text-sm font-medium">Quantidade *</label>
               <input [id]="'quantity-' + i" type="number" formControlName="quantity" min="1"
-                (change)="calculateItemTotal(i)" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+                (change)="calculateItemTotal(i)"
+                class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
             </div>
 
             <div class="space-y-2">
               <label [htmlFor]="'unitPrice-' + i" class="text-sm font-medium">Preço Unitário *</label>
               <input [id]="'unitPrice-' + i" type="number" formControlName="unitPrice" min="0" step="0.01"
-                (change)="calculateItemTotal(i)" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+                (change)="calculateItemTotal(i)"
+                class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
             </div>
 
             <div class="space-y-2">
               <label [htmlFor]="'totalPrice-' + i" class="text-sm font-medium">Total</label>
               <input [id]="'totalPrice-' + i" type="number" formControlName="totalPrice" [disabled]="true"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50" />
+                class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50" />
             </div>
           </div>
         </div>
@@ -153,26 +163,28 @@
     </div>
 
     <!-- Summary Section -->
-    <div class="bg-emerald-50 rounded-lg border border-emerald-200 p-6">
-      <div class="flex items-center justify-between">
+    <div class="bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl border border-primary-200 p-4 sm:p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         <div>
           <p class="text-sm text-gray-600">Valor Total do Orçamento</p>
-          <p class="text-3xl font-bold text-emerald-600">
+          <p
+            class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
             {{ totalAmount | currency: 'BRL' }}
           </p>
         </div>
-        <div class="text-right text-xs text-gray-500">
+        <div class="text-left sm:text-right text-xs text-gray-500">
           <p>{{ items.length }} item(ns)</p>
         </div>
       </div>
     </div>
 
     <!-- Form Actions -->
-    <div class="flex items-center justify-between pt-6 border-t">
-      <button type="button" appButton variant="outline" (click)="handleCancel()">
+    <div class="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 pt-4 sm:pt-6 border-t">
+      <button type="button" appButton variant="outline" (click)="handleCancel()" class="w-full sm:w-auto min-h-[44px]">
         Cancelar
       </button>
-      <button type="submit" appButton [disabled]="quoteForm.invalid || items.length === 0 || isLoading">
+      <button type="submit" appButton [disabled]="quoteForm.invalid || items.length === 0 || isLoading"
+        class="w-full sm:w-auto min-h-[44px] bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200">
         <lucide-icon [img]="SaveIcon" class="mr-2 h-4 w-4"></lucide-icon>
         {{ isLoading ? 'Salvando...' : 'Salvar Orçamento' }}
       </button>

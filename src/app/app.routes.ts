@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router'
 import { authGuard } from './core/guards/auth.guard'
 import { permissionGuard } from './core/guards/permission.guard'
+import { subscriptionGuard } from './core/guards/subscription.guard'
 
 export const routes: Routes = [
   // Auth routes (no guard)
@@ -12,11 +13,38 @@ export const routes: Routes = [
     path: 'cadastrar',
     loadComponent: () => import('./features/auth/pages/signup/signup.component').then(m => m.SignupComponent)
   },
+
+  // Payment routes (with auth guard only)
+  {
+    path: 'checkout',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/payments/checkout/checkout.component').then(m => m.CheckoutComponent)
+  },
+  {
+    path: 'payment-success',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/payments/payment-success/payment-success.component').then(m => m.PaymentSuccessComponent)
+  },
+  {
+    path: 'payment-cancel',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/payments/payment-cancel/payment-cancel.component').then(m => m.PaymentCancelComponent)
+  },
+  {
+    path: 'payment-failed',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/payments/payment-failed/payment-failed.component').then(m => m.PaymentFailedComponent)
+  },
+  {
+    path: 'payment-required',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/payments/payment-required/payment-required.component').then(m => m.PaymentRequiredComponent)
+  },
   
   // Protected routes (with auth guard)
   {
     path: '',
-    canActivate: [authGuard],
+    canActivate: [authGuard, subscriptionGuard],
     loadComponent: () => import('./layouts/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
     children: [
       // Dashboard
@@ -269,6 +297,12 @@ export const routes: Routes = [
       {
         path: 'conta',
         loadComponent: () => import('./features/profile/account-settings/account-settings.component').then(m => m.AccountSettingsComponent)
+      },
+
+      // Billing route
+      {
+        path: 'assinatura',
+        loadComponent: () => import('./features/payments/billing/billing.component').then(m => m.BillingComponent)
       },
       
       // {

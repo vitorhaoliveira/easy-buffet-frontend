@@ -1,4 +1,4 @@
-<div class="space-y-6">
+<div class="space-y-6 p-4 sm:p-6">
   <!-- Header -->
   <div class="flex items-center space-x-4">
     <button appButton variant="ghost" size="sm" (click)="handleCancel()">
@@ -6,10 +6,10 @@
       Voltar
     </button>
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
         {{ isEditing ? 'Editar Cliente' : 'Novo Cliente' }}
       </h1>
-      <p class="text-muted-foreground">
+      <p class="text-muted-foreground text-sm sm:text-base">
         {{ isEditing ? 'Atualize as informações do cliente' : 'Preencha os dados do novo cliente' }}
       </p>
     </div>
@@ -17,110 +17,101 @@
 
   <!-- Loading State -->
   @if (isLoadingData) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando dados do cliente...</p>
+  <div class="space-y-6 animate-pulse">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="space-y-2">
+        <div class="h-4 bg-gray-200 rounded w-20"></div>
+        <div class="h-11 bg-gray-200 rounded"></div>
+      </div>
+      <div class="space-y-2">
+        <div class="h-4 bg-gray-200 rounded w-20"></div>
+        <div class="h-11 bg-gray-200 rounded"></div>
+      </div>
+      <div class="space-y-2">
+        <div class="h-4 bg-gray-200 rounded w-20"></div>
+        <div class="h-11 bg-gray-200 rounded"></div>
+      </div>
+      <div class="space-y-2">
+        <div class="h-4 bg-gray-200 rounded w-20"></div>
+        <div class="h-11 bg-gray-200 rounded"></div>
+      </div>
     </div>
+  </div>
   }
 
   <!-- Error Message -->
   @if (errorMessage) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ errorMessage }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ errorMessage }}
+  </div>
   }
 
   <!-- Formulário -->
   @if (!isLoadingData) {
-    <form [formGroup]="clientForm" (ngSubmit)="handleSubmit()" class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Nome -->
-      <div class="space-y-2">
-        <label appLabel htmlFor="name">Nome *</label>
-        <input
-          type="text"
-          id="name"
-          formControlName="name"
-          placeholder="Nome completo do cliente"
-          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')"
-        />
-        @if (hasError('name')) {
+  <form [formGroup]="clientForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Nome -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="name">Nome *</label>
+          <input type="text" id="name" formControlName="name" placeholder="Nome completo do cliente"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')" />
+          @if (hasError('name')) {
           <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
-        }
-      </div>
+          }
+        </div>
 
-      <!-- Email -->
-      <div class="space-y-2">
-        <label appLabel htmlFor="email">Email</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          placeholder="email@exemplo.com"
-          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('email') ? 'border-red-500' : '')"
-        />
-        @if (hasError('email')) {
+        <!-- Email -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="email">Email</label>
+          <input type="email" id="email" formControlName="email" placeholder="email@exemplo.com"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('email') ? 'border-red-500' : '')" />
+          @if (hasError('email')) {
           <p class="text-sm text-red-500">{{ getFieldError('email') }}</p>
-        }
-      </div>
+          }
+        </div>
 
-      <!-- Telefone -->
-      <div class="space-y-2">
-        <label appLabel htmlFor="phone">Telefone *</label>
-        <input
-          type="tel"
-          id="phone"
-          formControlName="phone"
-          appPhoneMask
-          placeholder="(11) 99999-9999"
-          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('phone') ? 'border-red-500' : '')"
-        />
-        @if (hasError('phone')) {
+        <!-- Telefone -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="phone">Telefone *</label>
+          <input type="tel" id="phone" formControlName="phone" appPhoneMask placeholder="(11) 99999-9999"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('phone') ? 'border-red-500' : '')" />
+          @if (hasError('phone')) {
           <p class="text-sm text-red-500">{{ getFieldError('phone') }}</p>
-        }
-      </div>
+          }
+        </div>
 
-      <!-- CPF -->
-      <div class="space-y-2">
-        <label appLabel htmlFor="cpf">CPF</label>
-        <input
-          type="text"
-          id="cpf"
-          formControlName="cpf"
-          appCpfMask
-          placeholder="000.000.000-00"
-          maxlength="14"
-          [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('cpf') ? 'border-red-500' : '')"
-        />
-        @if (hasError('cpf')) {
+        <!-- CPF -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="cpf">CPF</label>
+          <input type="text" id="cpf" formControlName="cpf" appCpfMask placeholder="000.000.000-00" maxlength="14"
+            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('cpf') ? 'border-red-500' : '')" />
+          @if (hasError('cpf')) {
           <p class="text-sm text-red-500">{{ getFieldError('cpf') }}</p>
-        }
-      </div>
+          }
+        </div>
 
-      <!-- Endereço -->
-      <div class="space-y-2 md:col-span-2">
-        <label appLabel htmlFor="address">Endereço</label>
-        <input
-          type="text"
-          id="address"
-          formControlName="address"
-          placeholder="Endereço completo"
-          class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-        />
+        <!-- Endereço -->
+        <div class="space-y-2 md:col-span-2">
+          <label appLabel htmlFor="address">Endereço</label>
+          <input type="text" id="address" formControlName="address" placeholder="Endereço completo"
+            class="flex min-h-[44px] h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm" />
+        </div>
       </div>
     </div>
 
     <!-- Botões -->
-    <div class="flex items-center justify-end space-x-2 pt-6 border-t">
-      <button appButton type="button" variant="outline" (click)="handleCancel()">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-6 border-t">
+      <button appButton type="button" variant="outline" (click)="handleCancel()" class="w-full sm:w-auto">
         <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
         Cancelar
       </button>
-      <button appButton type="submit" variant="outline" [disabled]="isLoading">
+      <button appButton type="submit" [disabled]="isLoading"
+        class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white border-0 transform hover:scale-105 transition-all duration-200">
         <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
         {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
       </button>
     </div>
-    </form>
+  </form>
   }
 </div>
-

@@ -1,122 +1,152 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Custos e Despesas</h1>
-      <p class="text-muted-foreground">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Custos e Despesas</h1>
+      <p class="text-sm sm:text-base text-muted-foreground">
         Gerencie os custos e despesas dos eventos
       </p>
     </div>
-    <button appButton variant="outline" routerLink="/financeiro/custos/novo">
-      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+    <button routerLink="/financeiro/custos/novo"
+      class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
+      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
       Novo Custo
     </button>
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center space-x-2">
-    <div class="flex-1">
-      <app-search-bar
-        placeholder="Buscar por descrição ou evento..."
-        [(ngModel)]="searchTerm"
-      ></app-search-bar>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <div class="flex-1">
+        <app-search-bar placeholder="Buscar por descrição ou evento..." [(ngModel)]="searchTerm"></app-search-bar>
+      </div>
+      <select [(ngModel)]="filterCategory"
+        class="flex min-h-[44px] w-full sm:w-48 items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+        <option value="todos">Todas as categorias</option>
+        <option value="staff">Pessoal</option>
+        <option value="food">Alimentação</option>
+        <option value="decoration">Decoração</option>
+        <option value="other">Outros</option>
+      </select>
     </div>
-    <select
-      [(ngModel)]="filterCategory"
-      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <option value="todos">Todas as categorias</option>
-      <option value="staff">Pessoal</option>
-      <option value="food">Alimentação</option>
-      <option value="decoration">Decoração</option>
-      <option value="other">Outros</option>
-    </select>
   </div>
 
   <!-- Error Message -->
   @if (error) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ error }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ error }}
+  </div>
   }
 
   <!-- Loading State -->
   @if (isLoading) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando custos...</p>
-    </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16"></app-skeleton>
+  </div>
   }
 
-  <!-- Tabela -->
+  <!-- Tabela Desktop -->
   @if (!isLoading) {
-    <div class="rounded-md border">
-      <app-table>
-        <thead appTableHeader>
-          <tr appTableRow>
-            <th appTableHead>Descrição</th>
-            <th appTableHead>Evento</th>
-            <th appTableHead>Valor</th>
-            <th appTableHead>Categoria</th>
-            <th appTableHead>Data</th>
-            <th appTableHead class="text-right">Ações</th>
-          </tr>
-        </thead>
-        <tbody appTableBody>
-          @for (cost of filteredCosts; track cost.id) {
-            <tr appTableRow>
-              <td appTableCell class="font-medium">{{ cost.description }}</td>
-              <td appTableCell>{{ cost.event?.name || '-' }}</td>
-              <td appTableCell>{{ formatCurrency(cost.amount) }}</td>
-              <td appTableCell>
-                <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getCategoryColor(cost.category)">
-                  {{ translateCategory(cost.category) }}
-                </span>
-              </td>
-              <td appTableCell>{{ formatDate(cost.createdAt) }}</td>
-              <td appTableCell class="text-right">
-                <div class="flex items-center justify-end space-x-2">
-                  <button appButton variant="ghost" size="sm" title="Ver detalhes">
-                    <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                  <button
-                    appButton
-                    variant="ghost"
-                    size="sm"
-                    (click)="handleDeleteClick(cost)"
-                    title="Excluir"
-                  >
-                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </app-table>
-    </div>
+  <!-- Desktop Table -->
+  <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <app-table>
+      <thead appTableHeader>
+        <tr appTableRow>
+          <th appTableHead>Descrição</th>
+          <th appTableHead>Evento</th>
+          <th appTableHead>Valor</th>
+          <th appTableHead>Categoria</th>
+          <th appTableHead>Data</th>
+          <th appTableHead class="text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody appTableBody>
+        @for (cost of filteredCosts; track cost.id) {
+        <tr appTableRow>
+          <td appTableCell class="font-medium">{{ cost.description }}</td>
+          <td appTableCell>{{ cost.event?.name || '-' }}</td>
+          <td appTableCell>{{ formatCurrency(cost.amount) }}</td>
+          <td appTableCell>
+            <span
+              [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getCategoryColor(cost.category)">
+              {{ translateCategory(cost.category) }}
+            </span>
+          </td>
+          <td appTableCell>{{ formatDate(cost.createdAt) }}</td>
+          <td appTableCell class="text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm" title="Ver detalhes">
+                <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(cost)" title="Excluir">
+                <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </app-table>
+  </div>
+
+  <!-- Mobile Card View -->
+  <div class="lg:hidden">
+    @for (cost of filteredCosts; track cost.id) {
+    <app-mobile-card class="mb-4">
+      <div class="space-y-3">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 truncate">{{ cost.description }}</p>
+            <p class="text-xs text-muted-foreground mt-1">{{ cost.event?.name || 'Sem evento' }}</p>
+          </div>
+          <span
+            [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ' + getCategoryColor(cost.category)">
+            {{ translateCategory(cost.category) }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p class="text-xs text-muted-foreground">Valor</p>
+            <p class="font-semibold text-base">{{ formatCurrency(cost.amount) }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground">Data</p>
+            <p class="font-medium">{{ formatDate(cost.createdAt) }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2 border-t">
+          <button appButton variant="outline" size="sm" class="flex-1">
+            <lucide-icon [img]="EyeIcon" class="mr-1.5 h-4 w-4"></lucide-icon>
+            Ver Detalhes
+          </button>
+          <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(cost)">
+            <lucide-icon [img]="Trash2Icon" class="h-4 w-4 text-red-500"></lucide-icon>
+          </button>
+        </div>
+      </div>
+    </app-mobile-card>
+    }
+  </div>
   }
 
   <!-- Empty State -->
   @if (!isLoading && filteredCosts.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">
-        {{ searchTerm || filterCategory !== 'todos' ? 'Nenhum custo encontrado.' : 'Nenhum custo cadastrado.' }}
-      </p>
-    </div>
+  <app-empty-state
+    [title]="searchTerm || filterCategory !== 'todos' ? 'Nenhum custo encontrado' : 'Nenhum custo cadastrado'"
+    [message]="searchTerm || filterCategory !== 'todos' ? 'Tente ajustar os filtros de busca' : 'Os custos e despesas dos eventos aparecerão aqui'">
+  </app-empty-state>
   }
 
   <!-- Delete Confirmation Modal -->
-  <app-confirmation-modal
-    [isOpen]="showDeleteModal"
-    (onClose)="handleCancelDelete()"
-    (onConfirm)="handleConfirmDelete()"
-    title="Excluir Custo"
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Excluir Custo"
     [message]="'Tem certeza que deseja excluir o custo &quot;' + (costToDelete?.description || '') + '&quot;? Esta ação não pode ser desfeita.'"
-    confirmText="Excluir"
-    cancelText="Cancelar"
-    variant="danger"
-    [loading]="isDeleting"
-  ></app-confirmation-modal>
+    confirmText="Excluir" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
 </div>
-
-

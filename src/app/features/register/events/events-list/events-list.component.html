@@ -1,172 +1,206 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Eventos e Reservas</h1>
-      <p class="text-muted-foreground">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Eventos e Reservas</h1>
+      <p class="text-muted-foreground text-sm sm:text-base">
         Gerencie os eventos e reservas dos clientes
       </p>
     </div>
-    <button appButton variant="outline" routerLink="/cadastros/eventos/novo">
-      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+    <button routerLink="/cadastros/eventos/novo"
+      class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
+      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
       Nova Reserva
     </button>
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center space-x-2">
-    <div class="flex-1">
-      <app-search-bar
-        placeholder="Buscar por cliente, pacote ou local..."
-        [(ngModel)]="searchTerm"
-      ></app-search-bar>
-    </div>
-    <select
-      [(ngModel)]="filterUnitId"
-      (ngModelChange)="onUnitFilterChange()"
-      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <option value="">Todas as unidades</option>
-      @for (unit of units; track unit.id) {
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <div class="flex-1 w-full">
+        <app-search-bar placeholder="Buscar por cliente, pacote ou local..." [(ngModel)]="searchTerm"></app-search-bar>
+      </div>
+      <select [(ngModel)]="filterUnitId" (ngModelChange)="onUnitFilterChange()"
+        class="flex min-h-[44px] w-full sm:w-48 items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+        <option value="">Todas as unidades</option>
+        @for (unit of units; track unit.id) {
         <option [value]="unit.id">{{ unit.name }}</option>
-      }
-    </select>
-    <select
-      [(ngModel)]="filterStatus"
-      class="flex h-10 w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <option value="todos">Todos os status</option>
-      <option value="Agendado">Agendado</option>
-      <option value="Confirmado">Confirmado</option>
-      <option value="Realizado">Realizado</option>
-      <option value="Cancelado">Cancelado</option>
-    </select>
+        }
+      </select>
+      <select [(ngModel)]="filterStatus"
+        class="flex min-h-[44px] w-full sm:w-48 items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+        <option value="todos">Todos os status</option>
+        <option value="Agendado">Agendado</option>
+        <option value="Confirmado">Confirmado</option>
+        <option value="Realizado">Realizado</option>
+        <option value="Cancelado">Cancelado</option>
+      </select>
+    </div>
   </div>
 
   <!-- Error Message -->
   @if (error) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ error }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ error }}
+  </div>
   }
 
   <!-- Loading State -->
   @if (isLoading) {
-    <div class="flex items-center justify-center h-64">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        <p class="mt-2 text-muted-foreground">Carregando eventos...</p>
-      </div>
-    </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16"></app-skeleton>
+  </div>
   }
 
-  <!-- Tabela -->
+  <!-- Desktop Table -->
   @if (!isLoading) {
-    <div class="rounded-md border">
-      <app-table>
-        <thead appTableHeader>
-          <tr appTableRow>
-            <th appTableHead>Nome</th>
-            <th appTableHead>Cliente</th>
-            <th appTableHead>Pacote</th>
-            <th appTableHead>Unidade</th>
-            <th appTableHead>Data</th>
-            <th appTableHead>Local</th>
-            <th appTableHead>Status</th>
-            <th appTableHead class="text-right">Ações</th>
-          </tr>
-        </thead>
-        <tbody appTableBody>
-          @for (event of filteredEvents; track event.id) {
-            <tr appTableRow>
-              <td appTableCell class="font-medium">{{ event.name }}</td>
-              <td appTableCell>{{ getClientName(event.clientId) }}</td>
-              <td appTableCell>{{ getPackageName(event.packageId) }}</td>
-              <td appTableCell>
-                @if (event.unit) {
-                  <span 
-                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
-                    [style.backgroundColor]="getUnitColor(event)"
-                  >
-                    {{ getUnitName(event) }}
-                  </span>
-                } @else {
-                  <span class="text-muted-foreground">-</span>
-                }
-              </td>
-              <td appTableCell>
-                <div class="flex items-center space-x-2">
-                  <lucide-icon [img]="CalendarIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-                  <span>{{ formatDate(event.eventDate) }}</span>
-                </div>
-              </td>
-              <td appTableCell>
-                <div class="flex items-center space-x-2">
-                  <lucide-icon [img]="MapPinIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-                  <span class="max-w-xs truncate">{{ event.location || 'Não informado' }}</span>
-                </div>
-              </td>
-              <td appTableCell>
-                <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(event.status)">
+  <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <app-table>
+      <thead appTableHeader>
+        <tr appTableRow>
+          <th appTableHead>Nome</th>
+          <th appTableHead>Cliente</th>
+          <th appTableHead>Pacote</th>
+          <th appTableHead>Unidade</th>
+          <th appTableHead>Data</th>
+          <th appTableHead>Local</th>
+          <th appTableHead>Status</th>
+          <th appTableHead class="text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody appTableBody>
+        @for (event of filteredEvents; track event.id) {
+        <tr appTableRow>
+          <td appTableCell class="font-medium">{{ event.name }}</td>
+          <td appTableCell>{{ getClientName(event.clientId) }}</td>
+          <td appTableCell>{{ getPackageName(event.packageId) }}</td>
+          <td appTableCell>
+            @if (event.unit) {
+            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white"
+              [style.backgroundColor]="getUnitColor(event)">
+              {{ getUnitName(event) }}
+            </span>
+            } @else {
+            <span class="text-muted-foreground">-</span>
+            }
+          </td>
+          <td appTableCell>
+            <div class="flex items-center space-x-2">
+              <lucide-icon [img]="CalendarIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+              <span>{{ formatDate(event.eventDate) }}</span>
+            </div>
+          </td>
+          <td appTableCell>
+            <div class="flex items-center space-x-2">
+              <lucide-icon [img]="MapPinIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+              <span class="max-w-xs truncate">{{ event.location || 'Não informado' }}</span>
+            </div>
+          </td>
+          <td appTableCell>
+            <span
+              [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(event.status)">
+              {{ event.status }}
+            </span>
+          </td>
+          <td appTableCell class="text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/eventos', event.id, 'checklist']"
+                title="Checklist do evento">
+                <lucide-icon [img]="ClipboardCheckIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/eventos/editar', event.id]"
+                title="Editar evento">
+                <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(event)" title="Excluir evento">
+                <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </app-table>
+  </div>
+
+  <!-- Mobile Cards -->
+  <div class="lg:hidden">
+    @for (event of filteredEvents; track event.id) {
+    <app-mobile-card class="hover:shadow-md mb-4">
+      <div class="space-y-3">
+        <div class="flex justify-between items-start gap-3">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-gray-900 text-base truncate">{{ event.name }}</h3>
+            <div class="mt-1 space-y-1">
+              <p class="text-sm text-gray-600 truncate">
+                <span class="font-medium">Cliente:</span> {{ getClientName(event.clientId) }}
+              </p>
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">Data:</span> {{ formatDate(event.eventDate) }}
+              </p>
+              @if (event.unit) {
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">Unidade:</span>
+                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white ml-1"
+                  [style.backgroundColor]="getUnitColor(event)">
+                  {{ getUnitName(event) }}
+                </span>
+              </p>
+              }
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">Status:</span>
+                <span
+                  [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ml-1 ' + getStatusColor(event.status)">
                   {{ event.status }}
                 </span>
-              </td>
-              <td appTableCell class="text-right">
-                <div class="flex items-center justify-end space-x-2">
-                  <button 
-                    appButton 
-                    variant="ghost" 
-                    size="sm"
-                    [routerLink]="['/cadastros/eventos', event.id, 'checklist']"
-                    title="Checklist do evento"
-                  >
-                    <lucide-icon [img]="ClipboardCheckIcon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                  <button 
-                    appButton 
-                    variant="ghost" 
-                    size="sm" 
-                    [routerLink]="['/cadastros/eventos/editar', event.id]"
-                    title="Editar evento"
-                  >
-                    <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                  <button
-                    appButton
-                    variant="ghost"
-                    size="sm"
-                    (click)="handleDeleteClick(event)"
-                    title="Excluir evento"
-                  >
-                    <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </app-table>
-    </div>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 pt-3 border-t border-gray-200">
+          <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+            [routerLink]="['/cadastros/eventos', event.id, 'checklist']">
+            <lucide-icon [img]="ClipboardCheckIcon" class="mr-2 h-4 w-4"></lucide-icon>
+            Checklist
+          </button>
+          <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+            [routerLink]="['/cadastros/eventos/editar', event.id]">
+            <lucide-icon [img]="EditIcon" class="mr-2 h-4 w-4"></lucide-icon>
+            Editar
+          </button>
+          <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]" (click)="handleDeleteClick(event)">
+            <lucide-icon [img]="Trash2Icon" class="mr-2 h-4 w-4"></lucide-icon>
+            Excluir
+          </button>
+        </div>
+      </div>
+    </app-mobile-card>
+    }
+  </div>
   }
 
   <!-- Empty State -->
   @if (!isLoading && filteredEvents.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">
-        {{ searchTerm ? 'Nenhum evento encontrado.' : 'Nenhum evento cadastrado.' }}
-      </p>
-    </div>
+  <app-empty-state [title]="searchTerm ? 'Nenhum evento encontrado' : 'Nenhum evento cadastrado'"
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece adicionando seu primeiro evento ou reserva'">
+    @if (!searchTerm) {
+    <button routerLink="/cadastros/eventos/novo"
+      class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2">
+      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
+      Nova Reserva
+    </button>
+    }
+  </app-empty-state>
   }
 
   <!-- Confirmation Modal -->
-  <app-confirmation-modal
-    [isOpen]="showDeleteModal"
-    (onClose)="handleCancelDelete()"
-    (onConfirm)="handleConfirmDelete()"
-    title="Excluir Evento"
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Excluir Evento"
     [message]="'Tem certeza que deseja excluir o evento &quot;' + (eventToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
-    confirmText="Excluir"
-    cancelText="Cancelar"
-    variant="danger"
-    [loading]="isDeleting"></app-confirmation-modal>
+    confirmText="Excluir" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
 </div>

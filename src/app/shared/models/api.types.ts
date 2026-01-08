@@ -39,6 +39,14 @@ export interface UserPermissions {
   }
 }
 
+export interface UserSubscription {
+  status: 'active' | 'trialing' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'unpaid' | 'paused'
+  stripeCustomerId: string | null
+  stripeSubscriptionId: string | null
+  trialEndsAt: string | null
+  subscriptionEndsAt: string | null
+}
+
 export interface User {
   id: string
   name: string
@@ -48,6 +56,7 @@ export interface User {
   phone?: string
   avatar?: string | null
   permissions?: UserPermissions
+  subscription?: UserSubscription
   currentOrganization?: {
     id: string
     name: string

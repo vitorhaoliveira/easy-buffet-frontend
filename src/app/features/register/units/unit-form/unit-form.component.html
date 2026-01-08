@@ -1,15 +1,16 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center space-x-4">
-    <button appButton variant="ghost" size="sm" (click)="handleCancel()">
+  <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+    <button appButton variant="ghost" size="sm" (click)="handleCancel()" class="self-start">
       <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
       Voltar
     </button>
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
         {{ isEditing ? 'Editar Unidade' : 'Nova Unidade' }}
       </h1>
-      <p class="text-muted-foreground">
+      <p class="text-sm sm:text-base text-muted-foreground">
         {{ isEditing ? 'Atualize as informações da unidade' : 'Preencha os dados da nova unidade' }}
       </p>
     </div>
@@ -17,202 +18,146 @@
 
   <!-- Loading State -->
   @if (isLoadingData) {
-    <div class="flex items-center justify-center h-64">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        <p class="mt-2 text-muted-foreground">Carregando...</p>
-      </div>
-    </div>
+  <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-6">
+    <app-skeleton width="100%" height="44px"></app-skeleton>
+    <app-skeleton width="100%" height="44px"></app-skeleton>
+    <app-skeleton width="100%" height="44px"></app-skeleton>
+    <app-skeleton width="100%" height="120px"></app-skeleton>
+  </div>
   }
 
   <!-- Error message -->
   @if (errorMessage) {
-    <div class="bg-red-50 border border-red-200 rounded-md p-4">
-      <p class="text-red-600">{{ errorMessage }}</p>
-    </div>
+  <div class="bg-red-50 border border-red-200 rounded-md p-4">
+    <p class="text-red-600">{{ errorMessage }}</p>
+  </div>
   }
 
   <!-- Formulário -->
   @if (!isLoadingData) {
-    <form [formGroup]="unitForm" (ngSubmit)="handleSubmit()" class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Nome -->
-        <div class="space-y-2">
-          <label appLabel htmlFor="name">Nome *</label>
-          <input
-            type="text"
-            id="name"
-            formControlName="name"
-            placeholder="Ex: Unidade Centro"
-            [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('name') ? 'border-red-500' : '')"
-          />
-          @if (hasError('name')) {
-            <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
-          }
-        </div>
-
-        <!-- Código -->
-        <div class="space-y-2">
-          <label appLabel htmlFor="code">Código</label>
-          <input
-            type="text"
-            id="code"
-            formControlName="code"
-            placeholder="Ex: CTR, ZS"
-            class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          />
-        </div>
-
-        <!-- Cor -->
-        <div class="space-y-2">
-          <label appLabel htmlFor="color">Cor</label>
-          <div class="flex items-center space-x-2">
-            <input
-              type="color"
-              id="color"
-              formControlName="color"
-              class="h-10 w-20 rounded-md border border-input cursor-pointer"
-            />
-            <input
-              type="text"
-              formControlName="color"
-              placeholder="#6c757d"
-              class="flex h-9 flex-1 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
-        </div>
-
-        <!-- Status (apenas na edição) -->
-        @if (isEditing) {
-          <div class="space-y-2">
-            <label appLabel htmlFor="isActive">Status</label>
-            <select
-              id="isActive"
-              formControlName="isActive"
-              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option [value]="true">Ativa</option>
-              <option [value]="false">Inativa</option>
-            </select>
-          </div>
+  <form [formGroup]="unitForm" (ngSubmit)="handleSubmit()"
+    class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <!-- Nome -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="name">Nome *</label>
+        <input type="text" id="name" formControlName="name" placeholder="Ex: Unidade Centro"
+          [class]="'flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('name') ? 'border-red-500' : '')" />
+        @if (hasError('name')) {
+        <p class="text-sm text-red-500">{{ getFieldError('name') }}</p>
         }
       </div>
 
-      <!-- Endereço -->
-      <div class="space-y-4 pt-4 border-t">
-        <h3 class="text-lg font-semibold">Endereço</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- CEP -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="zipCode">CEP</label>
-            <input
-              type="text"
-              id="zipCode"
-              formControlName="zipCode"
-              placeholder="00000-000"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
+      <!-- Código -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="code">Código</label>
+        <input type="text" id="code" formControlName="code" placeholder="Ex: CTR, ZS"
+          class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+      </div>
 
-          <!-- Rua -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="street">Rua</label>
-            <input
-              type="text"
-              id="street"
-              formControlName="street"
-              placeholder="Nome da rua"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
-
-          <!-- Número -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="number">Número</label>
-            <input
-              type="text"
-              id="number"
-              formControlName="number"
-              placeholder="123"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
-
-          <!-- Complemento -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="complement">Complemento</label>
-            <input
-              type="text"
-              id="complement"
-              formControlName="complement"
-              placeholder="Apto, Bloco, etc."
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
-
-          <!-- Bairro -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="neighborhood">Bairro</label>
-            <input
-              type="text"
-              id="neighborhood"
-              formControlName="neighborhood"
-              placeholder="Nome do bairro"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
-
-          <!-- Cidade -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="city">Cidade</label>
-            <input
-              type="text"
-              id="city"
-              formControlName="city"
-              placeholder="Nome da cidade"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
-
-          <!-- Estado -->
-          <div class="space-y-2">
-            <label appLabel htmlFor="state">Estado</label>
-            <input
-              type="text"
-              id="state"
-              formControlName="state"
-              placeholder="SP, RJ, MG..."
-              maxlength="2"
-              class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
+      <!-- Cor -->
+      <div class="space-y-2">
+        <label appLabel htmlFor="color">Cor</label>
+        <div class="flex items-center space-x-2">
+          <input type="color" id="color" formControlName="color"
+            class="h-[44px] w-20 rounded-lg border border-input cursor-pointer" />
+          <input type="text" formControlName="color" placeholder="#6c757d"
+            class="flex min-h-[44px] flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
         </div>
       </div>
 
-      <!-- Notas -->
+      <!-- Status (apenas na edição) -->
+      @if (isEditing) {
       <div class="space-y-2">
-        <label appLabel htmlFor="notes">Notas</label>
-        <textarea
-          id="notes"
-          formControlName="notes"
-          placeholder="Informações adicionais sobre a unidade"
-          class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          rows="3"
-        ></textarea>
+        <label appLabel htmlFor="isActive">Status</label>
+        <select id="isActive" formControlName="isActive"
+          class="flex min-h-[44px] w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+          <option [value]="true">Ativa</option>
+          <option [value]="false">Inativa</option>
+        </select>
       </div>
+      }
+    </div>
 
-      <!-- Botões -->
-      <div class="flex items-center justify-end space-x-2 pt-6 border-t">
-        <button appButton type="button" variant="outline" (click)="handleCancel()" [disabled]="isLoading">
-          <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          Cancelar
-        </button>
-        <button appButton type="submit" variant="outline" [disabled]="isLoading">
-          <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
-        </button>
+    <!-- Endereço -->
+    <div class="space-y-4 pt-4 border-t">
+      <h3
+        class="text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Endereço</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <!-- CEP -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="zipCode">CEP</label>
+          <input type="text" id="zipCode" formControlName="zipCode" placeholder="00000-000"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
+
+        <!-- Rua -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="street">Rua</label>
+          <input type="text" id="street" formControlName="street" placeholder="Nome da rua"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
+
+        <!-- Número -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="number">Número</label>
+          <input type="text" id="number" formControlName="number" placeholder="123"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
+
+        <!-- Complemento -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="complement">Complemento</label>
+          <input type="text" id="complement" formControlName="complement" placeholder="Apto, Bloco, etc."
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
+
+        <!-- Bairro -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="neighborhood">Bairro</label>
+          <input type="text" id="neighborhood" formControlName="neighborhood" placeholder="Nome do bairro"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
+
+        <!-- Cidade -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="city">Cidade</label>
+          <input type="text" id="city" formControlName="city" placeholder="Nome da cidade"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
+
+        <!-- Estado -->
+        <div class="space-y-2">
+          <label appLabel htmlFor="state">Estado</label>
+          <input type="text" id="state" formControlName="state" placeholder="SP, RJ, MG..." maxlength="2"
+            class="flex min-h-[44px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
       </div>
-    </form>
+    </div>
+
+    <!-- Notas -->
+    <div class="space-y-2">
+      <label appLabel htmlFor="notes">Notas</label>
+      <textarea id="notes" formControlName="notes" placeholder="Informações adicionais sobre a unidade"
+        class="flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+        rows="3"></textarea>
+    </div>
+
+    <!-- Botões -->
+    <div
+      class="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 sm:pt-6 border-t">
+      <button appButton type="button" variant="outline" (click)="handleCancel()" [disabled]="isLoading"
+        class="w-full sm:w-auto min-h-[44px]">
+        <lucide-icon [img]="XIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Cancelar
+      </button>
+      <button appButton type="submit" [disabled]="isLoading || unitForm.invalid"
+        class="w-full sm:w-auto min-h-[44px] bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200">
+        <lucide-icon [img]="SaveIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        {{ isLoading ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Salvar') }}
+      </button>
+    </div>
+  </form>
   }
 </div>
-

@@ -7,8 +7,11 @@ import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
+import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import {
   TableComponent,
   TableHeaderComponent,
@@ -44,8 +47,11 @@ interface InstallmentGroup {
     LucideAngularModule,
     ButtonComponent,
     SearchBarComponent,
+    MobileCardComponent,
     ConfirmationModalComponent,
     LabelComponent,
+    SkeletonComponent,
+    EmptyStateComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,

@@ -16,8 +16,8 @@ import {
 } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
-import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { ChecklistService } from '@core/services/checklist.service'
 import type { 
   EventChecklist, 
@@ -34,8 +34,8 @@ import type {
     CommonModule,
     FormsModule,
     LucideAngularModule,
-    ButtonComponent,
-    ConfirmationModalComponent
+    ConfirmationModalComponent,
+    SkeletonComponent
   ],
   templateUrl: './event-checklist.component.html'
 })

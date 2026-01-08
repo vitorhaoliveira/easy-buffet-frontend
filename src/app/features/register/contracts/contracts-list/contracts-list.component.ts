@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { RouterModule } from '@angular/router'
+import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
 import { LucideAngularModule, Plus, Edit, Trash2, Eye, FileText, Calendar, DollarSign, User, Lock } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
@@ -8,6 +8,9 @@ import { firstValueFrom } from 'rxjs'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { 
   TableComponent, 
   TableHeaderComponent, 
@@ -33,6 +36,9 @@ import { formatDateBR } from '@shared/utils/date.utils'
     ButtonComponent,
     SearchBarComponent,
     ConfirmationModalComponent,
+    SkeletonComponent,
+    MobileCardComponent,
+    EmptyStateComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
@@ -68,7 +74,8 @@ export class ContractsListComponent implements OnInit {
   constructor(
     private contractService: ContractService,
     private eventService: EventService,
-    private clientService: ClientService
+    private clientService: ClientService,
+    public router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {

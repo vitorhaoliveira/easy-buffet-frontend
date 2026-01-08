@@ -1,45 +1,58 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Usuários</h1>
-      <p class="text-muted-foreground">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Usuários</h1>
+      <p class="text-sm sm:text-base text-muted-foreground mt-1">
         Gerencie os usuários e permissões do sistema
       </p>
     </div>
-    <button appButton variant="outline" routerLink="/cadastros/usuarios/novo">
+    <button appButton
+      class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]"
+      routerLink="/cadastros/usuarios/novo">
       <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
       Novo Usuário
     </button>
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center space-x-2">
-    <div class="flex-1">
-      <app-search-bar
-        placeholder="Buscar por nome, email ou função..."
-        [(ngModel)]="searchTerm"
-      ></app-search-bar>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <div class="flex-1 w-full">
+        <app-search-bar placeholder="Buscar por nome, email ou função..." [(ngModel)]="searchTerm"></app-search-bar>
+      </div>
     </div>
   </div>
 
   <!-- Error Message -->
   @if (error) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ error }}
-    </div>
+  <div class="w-full p-3 sm:p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+    {{ error }}
+  </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons -->
   @if (isLoading) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando usuários...</p>
+  <div class="space-y-3">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="p-4 bg-white rounded-lg border shadow-sm">
+      <div class="flex items-center gap-4">
+        <app-skeleton [width]="'48px'" [height]="'48px'" [shape]="'circle'"></app-skeleton>
+        <div class="flex-1 space-y-2">
+          <app-skeleton [width]="'60%'" [height]="'20px'"></app-skeleton>
+          <app-skeleton [width]="'40%'" [height]="'16px'"></app-skeleton>
+        </div>
+      </div>
     </div>
+    }
+  </div>
   }
 
-  <!-- Tabela -->
-  @if (!isLoading) {
-    <div class="rounded-md border">
+  <!-- Desktop Table (hidden on mobile) -->
+  @if (!isLoading && filteredUsers.length > 0) {
+  <div class="hidden lg:block rounded-xl border shadow-sm overflow-hidden bg-white">
     <app-table>
       <thead appTableHeader>
         <tr appTableRow>
@@ -54,69 +67,104 @@
       </thead>
       <tbody appTableBody>
         @for (user of filteredUsers; track user.id) {
-          <tr appTableRow>
-            <td appTableCell class="font-medium">{{ user.name }}</td>
-            <td appTableCell>{{ user.email }}</td>
-            <td appTableCell>{{ user.phone || '-' }}</td>
-            <td appTableCell>
-              <span [class]="getRoleBadgeClass(user.role)">
-                {{ user.role }}
-              </span>
-            </td>
-            <td appTableCell>
-              <span [class]="getStatusBadgeClass(user.status)">
-                {{ user.status }}
-              </span>
-            </td>
-            <td appTableCell>{{ formatDate(user.createdAt) }}</td>
-            <td appTableCell class="text-right">
-              <div class="flex items-center justify-end space-x-2">
-                <button 
-                  appButton 
-                  variant="ghost" 
-                  size="sm" 
-                  [routerLink]="['/cadastros/usuarios/editar', user.id]"
-                  title="Editar usuário"
-                >
-                  <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
-                </button>
-                <button
-                  appButton
-                  variant="ghost"
-                  size="sm"
-                  (click)="handleDeleteClick(user)"
-                  title="Excluir usuário"
-                >
-                  <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
-                </button>
-              </div>
-            </td>
-          </tr>
+        <tr appTableRow>
+          <td appTableCell class="font-medium">{{ user.name }}</td>
+          <td appTableCell>{{ user.email }}</td>
+          <td appTableCell>{{ user.phone || '-' }}</td>
+          <td appTableCell>
+            <span [class]="getRoleBadgeClass(user.role)">
+              {{ user.role }}
+            </span>
+          </td>
+          <td appTableCell>
+            <span [class]="getStatusBadgeClass(user.status)">
+              {{ user.status }}
+            </span>
+          </td>
+          <td appTableCell>{{ formatDate(user.createdAt) }}</td>
+          <td appTableCell class="text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/usuarios/editar', user.id]"
+                title="Editar usuário" class="transform hover:scale-110 transition-transform">
+                <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(user)" title="Excluir usuário"
+                class="transform hover:scale-110 transition-transform text-red-600 hover:text-red-700">
+                <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
         }
       </tbody>
     </app-table>
-    </div>
+  </div>
+
+  <!-- Mobile Cards (visible on mobile only) -->
+  <div class="lg:hidden">
+    @for (user of filteredUsers; track user.id) {
+    <app-mobile-card class="mb-4">
+      <div class="flex items-start gap-3">
+        <div
+          class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white">
+          <lucide-icon [img]="UserCircleIcon" class="h-6 w-6"></lucide-icon>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-gray-900 truncate">{{ user.name }}</h3>
+          <p class="text-sm text-gray-600 truncate">{{ user.email }}</p>
+
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span [class]="getRoleBadgeClass(user.role)">
+              {{ user.role }}
+            </span>
+            <span [class]="getStatusBadgeClass(user.status)">
+              {{ user.status }}
+            </span>
+          </div>
+
+          <div class="mt-2 space-y-1 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Telefone:</span>
+              <span>{{ user.phone || '-' }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-medium">Cadastro:</span>
+              <span>{{ formatDate(user.createdAt) }}</span>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mt-3">
+            <button appButton size="sm"
+              class="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white min-h-[44px]"
+              [routerLink]="['/cadastros/usuarios/editar', user.id]">
+              <lucide-icon [img]="EditIcon" class="mr-2 h-4 w-4"></lucide-icon>
+              Editar
+            </button>
+            <button appButton variant="outline" size="sm"
+              class="min-h-[44px] text-red-600 border-red-300 hover:bg-red-50" (click)="handleDeleteClick(user)">
+              <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </app-mobile-card>
+    }
+  </div>
   }
 
   <!-- Empty State -->
   @if (!isLoading && filteredUsers.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-muted-foreground">
-        {{ searchTerm ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.' }}
-      </p>
-    </div>
+  <app-empty-state [icon]="UserCircleIcon"
+    [title]="searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'"
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece cadastrando seu primeiro usuário no sistema.'"
+    [actionLabel]="searchTerm ? '' : 'Novo Usuário'" [actionIcon]="PlusIcon"
+    (action)="router.navigate(['/cadastros/usuarios/novo'])"></app-empty-state>
   }
 
   <!-- Confirmation Modal -->
-  <app-confirmation-modal
-    [isOpen]="showDeleteModal"
-    (onClose)="handleCancelDelete()"
-    (onConfirm)="handleConfirmDelete()"
-    title="Excluir Usuário"
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Excluir Usuário"
     [message]="'Tem certeza que deseja excluir o usuário &quot;' + (userToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
-    confirmText="Excluir"
-    cancelText="Cancelar"
-    variant="danger"
-    [loading]="isDeleting"></app-confirmation-modal>
+    confirmText="Excluir" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
 </div>
-

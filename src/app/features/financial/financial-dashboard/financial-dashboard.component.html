@@ -1,9 +1,11 @@
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Dashboard Financeiro</h1>
-      <p class="text-muted-foreground">
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Dashboard Financeiro</h1>
+      <p class="text-sm sm:text-base text-muted-foreground">
         Visão geral das finanças e parcelas
       </p>
     </div>
@@ -11,203 +13,246 @@
 
   <!-- Error Message -->
   @if (error) {
-    <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-      {{ error }}
-    </div>
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+    {{ error }}
+  </div>
   }
 
   <!-- Loading State -->
   @if (isLoading) {
-    <div class="flex items-center justify-center h-64">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        <p class="mt-2 text-muted-foreground">Carregando dados financeiros...</p>
+  <div class="space-y-4 sm:space-y-6">
+    <!-- Skeleton Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      @for (i of [1,2,3,4]; track i) {
+      <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+        <app-skeleton width="100%" height="120px"></app-skeleton>
       </div>
+      }
     </div>
+
+    <!-- Skeleton Table -->
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+      <app-skeleton width="200px" height="24px" class="mb-4"></app-skeleton>
+      <app-skeleton width="100%" height="200px"></app-skeleton>
+    </div>
+
+    <!-- Skeleton Chart -->
+    <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+      <app-skeleton width="200px" height="24px" class="mb-4"></app-skeleton>
+      <app-skeleton width="100%" height="380px"></app-skeleton>
+    </div>
+  </div>
   }
 
   <!-- Dashboard Content -->
   @if (!isLoading && stats) {
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Upcoming 7 Days -->
-      <div class="bg-white rounded-lg border p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600">Próximos 7 dias</p>
-            <p class="text-2xl font-bold text-gray-900 mt-2">
-              {{ stats.upcomingInstallments7Days || 0 }}
-            </p>
-            <p class="text-xs text-gray-500 mt-1">parcelas a receber</p>
-          </div>
-          <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <lucide-icon [img]="CalendarIcon" class="h-6 w-6 text-blue-600"></lucide-icon>
-          </div>
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <!-- Upcoming 7 Days -->
+    <div
+      class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Próximos 7 dias</p>
+          <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-2">
+            {{ stats.upcomingInstallments7Days || 0 }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">parcelas a receber</p>
+        </div>
+        <div
+          class="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center">
+          <lucide-icon [img]="CalendarIcon" class="h-5 w-5 sm:h-6 sm:w-6 text-white"></lucide-icon>
         </div>
       </div>
+    </div>
 
-      <!-- Upcoming 30 Days -->
-      <div class="bg-white rounded-lg border p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600">Próximos 30 dias</p>
-            <p class="text-2xl font-bold text-gray-900 mt-2">
-              {{ stats.upcomingInstallments30Days || 0 }}
-            </p>
-            <p class="text-xs text-gray-500 mt-1">parcelas a receber</p>
-          </div>
-          <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-            <lucide-icon [img]="ClockIcon" class="h-6 w-6 text-purple-600"></lucide-icon>
-          </div>
+    <!-- Upcoming 30 Days -->
+    <div
+      class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Próximos 30 dias</p>
+          <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-2">
+            {{ stats.upcomingInstallments30Days || 0 }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">parcelas a receber</p>
+        </div>
+        <div class="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+          <lucide-icon [img]="ClockIcon" class="h-5 w-5 sm:h-6 sm:w-6 text-purple-600"></lucide-icon>
         </div>
       </div>
+    </div>
 
-      <!-- Overdue Installments -->
-      <div class="bg-white rounded-lg border p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600">Parcelas Atrasadas</p>
-            <p class="text-2xl font-bold text-red-600 mt-2">
-              {{ stats.overdueInstallments || 0 }}
-            </p>
-            <p class="text-xs text-gray-500 mt-1">parcelas vencidas</p>
-          </div>
-          <div class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
-            <lucide-icon [img]="AlertCircleIcon" class="h-6 w-6 text-red-600"></lucide-icon>
-          </div>
+    <!-- Overdue Installments -->
+    <div
+      class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Parcelas Atrasadas</p>
+          <p class="text-xl sm:text-2xl font-bold text-red-600 mt-2">
+            {{ stats.overdueInstallments || 0 }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">parcelas vencidas</p>
+        </div>
+        <div class="h-10 w-10 sm:h-12 sm:w-12 bg-red-100 rounded-lg flex items-center justify-center">
+          <lucide-icon [img]="AlertCircleIcon" class="h-5 w-5 sm:h-6 sm:w-6 text-red-600"></lucide-icon>
         </div>
       </div>
+    </div>
 
-      <!-- Monthly Revenue -->
-      <div class="bg-white rounded-lg border p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600">Receita do Mês</p>
-            <p class="text-2xl font-bold text-green-600 mt-2">
-              {{ formatCurrency(stats.monthlyRevenue) }}
-            </p>
-            @if (stats.monthlyRevenueFromInstallments !== undefined || stats.monthlyRevenueFromAdditionalPayments !== undefined) {
-              <p class="text-xs text-gray-500 mt-1">
-                Parcelas: {{ formatCurrency(stats.monthlyRevenueFromInstallments || 0) }} + 
-                Adicionais: {{ formatCurrency(stats.monthlyRevenueFromAdditionalPayments || 0) }}
-              </p>
-            } @else {
-              <p class="text-xs text-gray-500 mt-1">parcelas + pagamentos adicionais</p>
+    <!-- Monthly Revenue -->
+    <div
+      class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Receita do Mês</p>
+          <p class="text-xl sm:text-2xl font-bold text-green-600 mt-2">
+            {{ formatCurrency(stats.monthlyRevenue) }}
+          </p>
+          @if (stats.monthlyRevenueFromInstallments !== undefined || stats.monthlyRevenueFromAdditionalPayments !==
+          undefined) {
+          <p class="text-xs text-gray-500 mt-1">
+            Parcelas: {{ formatCurrency(stats.monthlyRevenueFromInstallments || 0) }} +
+            Adicionais: {{ formatCurrency(stats.monthlyRevenueFromAdditionalPayments || 0) }}
+          </p>
+          } @else {
+          <p class="text-xs text-gray-500 mt-1">parcelas + pagamentos adicionais</p>
+          }
+        </div>
+        <div class="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
+          <lucide-icon [img]="DollarSignIcon" class="h-5 w-5 sm:h-6 sm:w-6 text-green-600"></lucide-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Installments Table -->
+  <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+      <h2
+        class="text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Próximas Parcelas</h2>
+      <button appButton variant="outline" routerLink="/financeiro/parcelas" class="min-h-[44px] w-full sm:w-auto">
+        Ver todas
+      </button>
+    </div>
+
+    @if (upcomingInstallments.length > 0) {
+    <!-- Desktop Table -->
+    <div class="hidden lg:block rounded-lg border overflow-x-auto">
+      <div class="min-w-[640px]">
+        <app-table>
+          <thead appTableHeader>
+            <tr appTableRow>
+              <th appTableHead>Cliente</th>
+              <th appTableHead>Evento</th>
+              <th appTableHead>Valor</th>
+              <th appTableHead>Vencimento</th>
+              <th appTableHead>Dias até vencer</th>
+              <th appTableHead>Status</th>
+            </tr>
+          </thead>
+          <tbody appTableBody>
+            @for (installment of upcomingInstallments; track installment.id) {
+            <tr appTableRow>
+              <td appTableCell class="font-medium">{{ installment.clientName }}</td>
+              <td appTableCell>{{ installment.eventName }}</td>
+              <td appTableCell>{{ formatCurrency(installment.amount) }}</td>
+              <td appTableCell>{{ formatDate(installment.dueDate) }}</td>
+              <td appTableCell>
+                <span class="text-sm text-gray-600">{{ installment.daysUntilDue }} dias</span>
+              </td>
+              <td appTableCell>
+                <span
+                  [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(installment.status)">
+                  {{ translateStatus(installment.status) }}
+                </span>
+              </td>
+            </tr>
             }
-          </div>
-          <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-            <lucide-icon [img]="DollarSignIcon" class="h-6 w-6 text-green-600"></lucide-icon>
-          </div>
-        </div>
+          </tbody>
+        </app-table>
       </div>
     </div>
 
-    <!-- Upcoming Installments Table -->
-    <div class="bg-white rounded-lg border p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold">Próximas Parcelas</h2>
-        <button appButton variant="outline" routerLink="/financeiro/parcelas">
-          Ver todas
-        </button>
-      </div>
-
-      @if (upcomingInstallments.length > 0) {
-        <div class="rounded-md border">
-          <app-table>
-            <thead appTableHeader>
-              <tr appTableRow>
-                <th appTableHead>Cliente</th>
-                <th appTableHead>Evento</th>
-                <th appTableHead>Valor</th>
-                <th appTableHead>Vencimento</th>
-                <th appTableHead>Dias até vencer</th>
-                <th appTableHead>Status</th>
-              </tr>
-            </thead>
-            <tbody appTableBody>
-              @for (installment of upcomingInstallments; track installment.id) {
-                <tr appTableRow>
-                  <td appTableCell class="font-medium">{{ installment.clientName }}</td>
-                  <td appTableCell>{{ installment.eventName }}</td>
-                  <td appTableCell>{{ formatCurrency(installment.amount) }}</td>
-                  <td appTableCell>{{ formatDate(installment.dueDate) }}</td>
-                  <td appTableCell>
-                    <span class="text-sm text-gray-600">{{ installment.daysUntilDue }} dias</span>
-                  </td>
-                  <td appTableCell>
-                    <span [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(installment.status)">
-                      {{ translateStatus(installment.status) }}
-                    </span>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </app-table>
+    <!-- Mobile Cards -->
+    <div class="lg:hidden space-y-3">
+      @for (installment of upcomingInstallments; track installment.id) {
+      <app-mobile-card class="mb-4">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-medium text-gray-900">{{ installment.clientName }}</span>
+            <span
+              [class]="'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ' + getStatusColor(installment.status)">
+              {{ translateStatus(installment.status) }}
+            </span>
+          </div>
+          <div class="text-sm text-gray-600">
+            <div>{{ installment.eventName }}</div>
+            <div class="mt-1 font-medium text-gray-900">{{ formatCurrency(installment.amount) }}</div>
+          </div>
+          <div class="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
+            <span>Vencimento: {{ formatDate(installment.dueDate) }}</span>
+            <span class="font-medium">{{ installment.daysUntilDue }} dias</span>
+          </div>
         </div>
-      } @else {
-        <div class="text-center py-8">
-          <p class="text-muted-foreground">Nenhuma parcela próxima</p>
-        </div>
+      </app-mobile-card>
       }
     </div>
+    } @else {
+    <app-empty-state title="Nenhuma parcela próxima" message="Não há parcelas a vencer nos próximos dias" />
+    }
+  </div>
 
-    <!-- Monthly Evolution Chart -->
-    <div class="bg-white rounded-lg border p-6">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold">Evolução Mensal</h2>
+  <!-- Monthly Evolution Chart -->
+  <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+    <div class="flex items-center justify-between mb-4 sm:mb-6">
+      <h2
+        class="text-lg sm:text-xl font-semibold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Evolução Mensal</h2>
+    </div>
+
+    @if (monthlyEvolution.length > 0) {
+    <div class="space-y-4 sm:space-y-6">
+      <!-- ApexCharts Chart -->
+      <div class="w-full">
+        <apx-chart [series]="chartOptions.series!" [chart]="chartOptions.chart!" [dataLabels]="chartOptions.dataLabels!"
+          [plotOptions]="chartOptions.plotOptions!" [xaxis]="chartOptions.xaxis!" [yaxis]="chartOptions.yaxis!"
+          [stroke]="chartOptions.stroke!" [colors]="chartOptions.colors!" [tooltip]="chartOptions.tooltip!"
+          [legend]="chartOptions.legend!" [grid]="chartOptions.grid!"
+          [responsive]="chartOptions.responsive!"></apx-chart>
       </div>
 
-      @if (monthlyEvolution.length > 0) {
-        <div class="space-y-6">
-          <!-- ApexCharts Chart -->
-          <div class="w-full">
-            <apx-chart
-              [series]="chartOptions.series!"
-              [chart]="chartOptions.chart!"
-              [dataLabels]="chartOptions.dataLabels!"
-              [plotOptions]="chartOptions.plotOptions!"
-              [xaxis]="chartOptions.xaxis!"
-              [yaxis]="chartOptions.yaxis!"
-              [stroke]="chartOptions.stroke!"
-              [colors]="chartOptions.colors!"
-              [tooltip]="chartOptions.tooltip!"
-              [legend]="chartOptions.legend!"
-              [grid]="chartOptions.grid!"
-              [responsive]="chartOptions.responsive!"
-            ></apx-chart>
-          </div>
-
-          <!-- Values Table -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-t">
-                  <th class="text-left py-2 px-2 font-medium">Mês</th>
-                  <th class="text-right py-2 px-2 font-medium">Receita</th>
-                  <th class="text-right py-2 px-2 font-medium">Despesas</th>
-                  <th class="text-right py-2 px-2 font-medium">Lucro</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (month of monthlyEvolution; track $index) {
-                  <tr class="border-t">
-                    <td class="py-2 px-2">{{ month.month }} {{ month.year }}</td>
-                    <td class="text-right py-2 px-2 text-green-600 font-medium">{{ formatCurrency(month.revenue) }}</td>
-                    <td class="text-right py-2 px-2 text-red-600 font-medium">{{ formatCurrency(month.expenses) }}</td>
-                    <td class="text-right py-2 px-2 text-blue-600 font-medium">{{ formatCurrency(month.profit) }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      } @else {
-        <div class="text-center py-8">
-          <p class="text-muted-foreground">Sem dados de evolução mensal</p>
-        </div>
-      }
+      <!-- Values Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm">
+          <thead>
+            <tr class="border-t">
+              <th class="text-left py-2 px-2 font-medium">Mês</th>
+              <th class="text-right py-2 px-2 font-medium">Receita</th>
+              <th class="text-right py-2 px-2 font-medium">Despesas</th>
+              <th class="text-right py-2 px-2 font-medium">Lucro</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (month of monthlyEvolution; track $index) {
+            <tr class="border-t">
+              <td class="py-2 px-2">{{ month.month }} {{ month.year }}</td>
+              <td class="text-right py-2 px-2 text-green-600 font-medium">{{ formatCurrency(month.revenue) }}</td>
+              <td class="text-right py-2 px-2 text-red-600 font-medium">{{ formatCurrency(month.expenses) }}</td>
+              <td
+                class="text-right py-2 px-2 font-medium bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+                {{ formatCurrency(month.profit) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
+    } @else {
+    <app-empty-state title="Sem dados de evolução"
+      message="Ainda não há dados suficientes para exibir a evolução mensal" />
+    }
+  </div>
   }
 </div>
-
-

@@ -2,12 +2,15 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Eye, UserCircle2 } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
+import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { 
   TableComponent, 
   TableHeaderComponent, 
@@ -31,6 +34,9 @@ import { formatDateBR } from '@shared/utils/date.utils'
     ButtonComponent,
     SearchBarComponent,
     ConfirmationModalComponent,
+    SkeletonComponent,
+    MobileCardComponent,
+    EmptyStateComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
@@ -45,6 +51,7 @@ export class SellerListComponent implements OnInit {
   readonly EditIcon = Edit
   readonly Trash2Icon = Trash2
   readonly EyeIcon = Eye
+  readonly UserCircle2Icon = UserCircle2
 
   sellers: Seller[] = []
   searchTerm: string = ''
@@ -56,7 +63,7 @@ export class SellerListComponent implements OnInit {
 
   constructor(
     private sellerService: SellerService,
-    private router: Router
+    public router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
