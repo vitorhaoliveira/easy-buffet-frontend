@@ -172,6 +172,6 @@ export class PaymentRequiredComponent implements OnInit {
 
   logout(): void {
     this.authStateService.logout()
-    this.router.navigate(['/login'])
+    this.router.navigate(['/entrar'])
   }
 }
