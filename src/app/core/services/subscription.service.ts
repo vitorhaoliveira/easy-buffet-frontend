@@ -155,4 +155,127 @@ export class SubscriptionService {
   refresh(): void {
     this.loadSubscriptionFromBackend()
   }
+
+  /**
+   * Calcula quantos dias faltam até a expiração da assinatura
+   * Retorna null se não houver data de expiração
+   */
+  getDaysUntilExpiration(): Observable<number | null> {
+    return this.subscription$.pipe(
+      map((sub) => {
+        if (!sub) return null
+
+        const now = new Date()
+        let expirationDate: Date | null = null
+
+        if (sub.status === 'trialing' && sub.trialEndsAt) {
+          expirationDate = new Date(sub.trialEndsAt)
+        } else if (sub.status === 'active' && sub.subscriptionEndsAt) {
+          expirationDate = new Date(sub.subscriptionEndsAt)
+        }
+
+        if (!expirationDate) return null
+
+        const diffTime = expirationDate.getTime() - now.getTime()
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+        return diffDays > 0 ? diffDays : 0
+      })
+    )
+  }
+
+  /**
+   * Retorna mensagem de status da assinatura
+   */
+  getStatusMessage(): Observable<string> {
+    return combineLatest([
+      this.subscription$,
+      this.getDaysUntilExpiration()
+    ]).pipe(
+      map(([sub, daysLeft]) => {
+        if (!sub || !sub.status) {
+          return 'Sem assinatura'
+        }
+
+        switch (sub.status) {
+          case 'trialing':
+            return daysLeft !== null ? `Trial: ${daysLeft} dias restantes` : 'Trial ativo'
+          case 'active':
+            return 'Assinatura ativa ✅'
+          case 'past_due':
+            return 'Pagamento pendente ⚠️'
+          case 'canceled':
+            return 'Assinatura cancelada'
+          case 'incomplete':
+          case 'incomplete_expired':
+            return 'Assinatura incompleta'
+          case 'unpaid':
+            return 'Pagamento não realizado'
+          case 'paused':
+            return 'Assinatura pausada'
+          default:
+            return 'Status desconhecido'
+        }
+      })
+    )
+  }
+
+  /**
+   * Verifica se deve exibir aviso de expiração próxima
+   * Retorna true se faltar 3 dias ou menos
+   */
+  shouldShowWarning(): Observable<boolean> {
+    return this.getDaysUntilExpiration().pipe(
+      map((daysLeft) => daysLeft !== null && daysLeft <= 3 && daysLeft > 0)
+    )
+  }
+
+  /**
+   * Verifica se a subscription está expirada
+   */
+  isExpired(): Observable<boolean> {
+    return this.subscription$.pipe(
+      map((sub) => {
+        if (!sub || !sub.status) return true
+
+        const now = new Date()
+
+        // Verificar trial expirado
+        if (sub.status === 'trialing' && sub.trialEndsAt) {
+          const trialEndsAt = new Date(sub.trialEndsAt)
+          return now > trialEndsAt
+        }
+
+        // Verificar subscription expirada
+        if (sub.status === 'active' && sub.subscriptionEndsAt) {
+          const subscriptionEndsAt = new Date(sub.subscriptionEndsAt)
+          return now > subscriptionEndsAt
+        }
+
+        // Status que indicam expiração
+        return ['canceled', 'past_due', 'incomplete_expired', 'unpaid'].includes(sub.status)
+      })
+    )
+  }
+
+  /**
+   * Retorna a data de expiração formatada
+   */
+  getExpirationDate(): Observable<string | null> {
+    return this.subscription$.pipe(
+      map((sub) => {
+        if (!sub) return null
+
+        if (sub.status === 'trialing' && sub.trialEndsAt) {
+          return new Date(sub.trialEndsAt).toLocaleDateString('pt-BR')
+        }
+
+        if (sub.status === 'active' && sub.subscriptionEndsAt) {
+          return new Date(sub.subscriptionEndsAt).toLocaleDateString('pt-BR')
+        }
+
+        return null
+      })
+    )
+  }
 }
