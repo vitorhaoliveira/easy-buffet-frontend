@@ -228,7 +228,6 @@ export class QuoteListComponent implements OnInit {
           }
         ]
       })
-      console.log('PDF exportado com sucesso')
     } catch (error) {
       console.error('Erro ao exportar PDF:', error)
       this.error = error instanceof Error ? error.message : 'Erro ao exportar PDF'

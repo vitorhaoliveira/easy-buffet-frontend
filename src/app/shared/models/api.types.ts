@@ -40,11 +40,7 @@ export interface UserPermissions {
 }
 
 export interface UserSubscription {
-  status: 'active' | 'trialing' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'unpaid' | 'paused'
-  stripeCustomerId: string | null
-  stripeSubscriptionId: string | null
-  trialEndsAt: string | null
-  subscriptionEndsAt: string | null
+  status: 'active' | 'trialing' | 'canceled' | 'expired' | 'past_due'
 }
 
 export interface User {

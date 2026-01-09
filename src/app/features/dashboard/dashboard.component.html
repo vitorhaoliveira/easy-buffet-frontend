@@ -177,7 +177,7 @@
             @if (calendarDay.events.length > 0) {
             <div class="space-y-1">
               @for (event of calendarDay.events; track event.id) {
-              <div [style]="getEventColor(event)" [class]="getEventColorClasses(event)" (click)="onEventClick(event)"
+              <div [style]="getEventColor(event)" [class]="getEventColorClasses()" (click)="onEventClick(event)"
                 class="cursor-pointer hover:opacity-80 transition-all duration-200 hover:scale-105 text-[0.65rem] sm:text-xs"
                 [title]="event.eventName">
                 <span class="line-clamp-2">{{ event.eventName }}</span>

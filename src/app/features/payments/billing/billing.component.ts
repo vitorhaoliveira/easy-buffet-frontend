@@ -1,23 +1,15 @@
-import { Component, inject } from '@angular/core'
+import { Component, inject, OnInit, OnDestroy } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { SubscriptionService } from '@/app/core/services/subscription.service'
 import { ToastService } from '@/app/core/services/toast.service'
 import { Observable } from 'rxjs'
 import { Router } from '@angular/router'
-import { ConfirmationModalComponent } from '@/app/shared/components/ui/confirmation-modal/confirmation-modal.component'
-
-interface Subscription {
-  hasSubscription: boolean;
-  status: string;
-  trialEndsAt?: string;
-  subscriptionEndsAt?: string;
-  cancelAtPeriodEnd?: boolean;
-}
+import type { SubscriptionResponse } from '@/app/shared/models/subscription.model'
 
 @Component({
   selector: 'app-billing',
   standalone: true,
-  imports: [CommonModule, ConfirmationModalComponent],
+  imports: [CommonModule],
   template: `
     <div class="max-w-4xl mx-auto p-4 sm:p-6">
       <div class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
@@ -34,6 +26,18 @@ interface Subscription {
             <!-- Has Subscription -->
             <ng-container *ngIf="subscription.hasSubscription">
               <div class="space-y-6">
+                <!-- Plan Info -->
+                <div *ngIf="subscription.plan" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p class="text-sm text-blue-800">
+                    <span class="font-semibold">Plano:</span>
+                    {{ subscription.plan.name }}
+                  </p>
+                  <p class="text-sm text-blue-800 mt-1">
+                    <span class="font-semibold">Preço:</span>
+                    {{ subscription.plan.currency }} {{ subscription.plan.price }}/{{ subscription.plan.interval === 'month' ? 'mês' : 'ano' }}
+                  </p>
+                </div>
+
                 <!-- Status Badge -->
                 <div class="flex items-center space-x-3">
                   <span class="text-lg font-semibold text-gray-700">Status:</span>
@@ -51,29 +55,42 @@ interface Subscription {
                 </div>
 
                 <!-- Trial Info -->
-                <div *ngIf="subscription.status === 'trialing' && subscription.trialEndsAt" 
+                <div *ngIf="subscription.status === 'trialing' && subscription.trial.endsAt" 
                      class="bg-primary-50 border border-primary-200 rounded-lg p-4">
                   <p class="text-sm text-primary-800">
                     <span class="font-semibold">Período de trial:</span>
-                    Termina em {{ subscription.trialEndsAt | date: 'dd/MM/yyyy HH:mm' }}
+                    Termina em {{ subscription.trial.endsAt | date: 'dd/MM/yyyy HH:mm' }}
                   </p>
                 </div>
 
                 <!-- Active Subscription Info -->
-                <div *ngIf="subscription.status === 'active' && subscription.subscriptionEndsAt" 
+                <div *ngIf="subscription.status === 'active' && subscription.subscription.endsAt" 
                      class="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p class="text-sm text-green-800">
                     <span class="font-semibold">Próxima renovação:</span>
-                    {{ subscription.subscriptionEndsAt | date: 'dd/MM/yyyy' }}
+                    {{ subscription.subscription.endsAt | date: 'dd/MM/yyyy' }}
+                  </p>
+                  <p *ngIf="subscription.subscription.willRenew !== null" class="text-sm text-green-800 mt-2">
+                    <span class="font-semibold">Renovação automática:</span>
+                    {{ subscription.subscription.willRenew ? '✅ Ativa' : '❌ Desativada' }}
                   </p>
                 </div>
 
                 <!-- Cancellation Notice -->
-                <div *ngIf="subscription.cancelAtPeriodEnd" 
-                     class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p class="text-sm text-yellow-800">
-                    <span class="font-semibold">Cancelamento agendado:</span>
-                    Sua assinatura será cancelada no final do período atual.
+                <div *ngIf="subscription.status === 'canceled'" 
+                     class="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p class="text-sm text-red-800 font-semibold mb-2">⚠️ Assinatura Cancelada</p>
+                  <p *ngIf="subscription.subscription.canceledAt" class="text-sm text-red-800">
+                    <span class="font-semibold">Cancelada em:</span>
+                    {{ subscription.subscription.canceledAt | date: 'dd/MM/yyyy' }}
+                  </p>
+                  <p *ngIf="subscription.cancellation && subscription.cancellation.reason" class="text-sm text-red-800 mt-1">
+                    <span class="font-semibold">Motivo:</span>
+                    {{ getCancellationReasonText(subscription.cancellation.reason) }}
+                  </p>
+                  <p *ngIf="subscription.subscription.endsAt" class="text-sm text-red-800 mt-1">
+                    <span class="font-semibold">Acesso até:</span>
+                    {{ subscription.subscription.endsAt | date: 'dd/MM/yyyy' }}
                   </p>
                 </div>
 
@@ -82,15 +99,7 @@ interface Subscription {
                   <button
                     (click)="openPortal()"
                     class="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-md">
-                  >
                     Gerenciar Assinatura
-                  </button>
-                  <button
-                    *ngIf="!subscription.cancelAtPeriodEnd"
-                    (click)="cancelSubscription()"
-                    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-md">
-                  >
-                    Cancelar Assinatura
                   </button>
                 </div>
 
@@ -117,7 +126,6 @@ interface Subscription {
                 <button
                   (click)="goToCheckout()"
                   class="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-3 px-8 rounded-lg transition-all transform hover:scale-105 shadow-md inline-block">
-                >
                   Começar Trial Gratuito
                 </button>
               </div>
@@ -127,71 +135,47 @@ interface Subscription {
       </div>
     </div>
 
-    <!-- Confirmation Modal -->
-    <app-confirmation-modal
-      [isOpen]="showCancelModal"
-      [title]="'Cancelar Assinatura'"
-      [message]="'Tem certeza que deseja cancelar sua assinatura? Você perderá o acesso no final do período atual.'"
-      [confirmText]="'Sim, Cancelar'"
-      [cancelText]="'Não, Manter'"
-      [variant]="'danger'"
-      [loading]="isCancelling"
-      (onClose)="showCancelModal = false"
-      (onConfirm)="confirmCancelSubscription()"
-    ></app-confirmation-modal>
   `,
 })
-export class BillingComponent {
+export class BillingComponent implements OnInit, OnDestroy {
   private readonly subscriptionService = inject(SubscriptionService)
   private readonly toastService = inject(ToastService)
   private readonly router = inject(Router)
 
-  subscription$: Observable<Subscription | null>
-  loading$: Observable<boolean>
-  showCancelModal = false
-  isCancelling = false
+  subscription$!: Observable<SubscriptionResponse | null>
+  loading$!: Observable<boolean>
 
-  constructor() {
+  ngOnInit(): void {
     this.subscription$ = this.subscriptionService.getSubscription()
     this.loading$ = this.subscriptionService.isLoading()
   }
 
-  getStatusLabel(status: string): string {
+  ngOnDestroy(): void {}
+
+  getStatusLabel(status: string | null): string {
     const labels: Record<string, string> = {
       'active': 'Ativa',
       'trialing': 'Em Trial',
       'past_due': 'Pagamento Atrasado',
       'canceled': 'Cancelada',
-      'incomplete': 'Incompleta',
-      'incomplete_expired': 'Expirada',
-      'unpaid': 'Não Paga'
+      'expired': 'Expirada'
     }
-    return labels[status] || status
+    return labels[status || ''] || status || 'Desconhecido'
+  }
+
+  getCancellationReasonText(reason: string | null): string {
+    if (!reason) return 'Motivo desconhecido'
+    const reasons: Record<string, string> = {
+      'cancellation_requested': 'Cancelamento solicitado',
+      'payment_failed': 'Falha no pagamento',
+      'payment_disputed': 'Pagamento contestado',
+    }
+    return reasons[reason] || reason
   }
 
   openPortal(): void {
+    console.log('🔓 Opening Stripe portal...')
     this.subscriptionService.openPortal()
-  }
-
-  cancelSubscription(): void {
-    this.showCancelModal = true
-  }
-
-  confirmCancelSubscription(): void {
-    this.isCancelling = true
-    
-    this.subscriptionService.cancel().subscribe({
-      next: () => {
-        this.isCancelling = false
-        this.showCancelModal = false
-        this.toastService.success('Assinatura cancelada com sucesso')
-      },
-      error: (error) => {
-        console.error('Erro ao cancelar:', error)
-        this.isCancelling = false
-        this.toastService.error('Erro ao cancelar assinatura. Tente novamente.')
-      }
-    })
   }
 
   goToCheckout(): void {

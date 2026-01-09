@@ -47,7 +47,8 @@ export class PaymentFailedComponent {
   }
 
   contactSupport(): void {
-    // Implementar lógica de contato com suporte
-    alert('Funcionalidade de suporte em desenvolvimento')
+    const phoneNumber = '5511989327073'
+    const whatsappUrl = `https://wa.me/${phoneNumber}`
+    window.open(whatsappUrl, '_blank')
   }
 }

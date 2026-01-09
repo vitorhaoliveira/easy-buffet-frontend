@@ -85,7 +85,6 @@ export class CheckoutComponent implements OnInit {
     if (user?.subscription) {
       const validStatuses = ['active', 'trialing']
       if (validStatuses.includes(user.subscription.status)) {
-        console.log('Usuário já possui assinatura ativa, redirecionando para dashboard...')
         this.router.navigate(['/dashboard'])
         return
       }
@@ -93,13 +92,10 @@ export class CheckoutComponent implements OnInit {
   }
 
   handleCheckout(): void {
-    console.log('Iniciando processo de checkout...')
     this.loading = true
     
     this.paymentService.createCheckoutSession().subscribe({
       next: (response) => {
-        console.log('Sessão criada com sucesso:', response)
-        
         if (!response || !response.data || !response.data.url) {
           console.error('URL de checkout não encontrada na resposta:', response)
           alert('Erro: URL de checkout não recebida do servidor.')
@@ -107,7 +103,6 @@ export class CheckoutComponent implements OnInit {
           return
         }
         
-        console.log('Redirecionando para:', response.data.url)
         window.location.href = response.data.url
       },
       error: (err) => {

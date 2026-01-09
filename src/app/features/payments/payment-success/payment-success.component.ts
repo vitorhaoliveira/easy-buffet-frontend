@@ -65,7 +65,7 @@ export class PaymentSuccessComponent implements OnInit {
         if (subscription?.status) {
           if (subscription.status === 'trialing' || subscription.status === 'active') {
             // Recarrega a subscription no serviço
-            this.subscriptionService.reloadSubscription()
+            this.subscriptionService.refresh()
             
             // Aguarda um pouco antes de redirecionar para garantir que tudo foi atualizado
             setTimeout(() => {

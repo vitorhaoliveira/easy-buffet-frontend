@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs'
 import { EventChecklistComponent } from '../event-checklist/event-checklist.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EventService } from '@core/services/event.service'
-import type { Event, EventChecklist } from '@shared/models/api.types'
+import type { Event } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -115,22 +115,12 @@ export class EventChecklistPageComponent implements OnInit {
         const minutes = date.getMinutes().toString().padStart(2, '0')
         return `${hours}:${minutes}`
       }
-    } catch {
+    } catch (error){
       // If parsing fails, return as is
+      console.warn('⚠️ formatTime: Unable to parse time string:', error)
     }
     
     return timeString
-  }
-
-  /**
-   * @Function - onChecklistUpdated
-   * @description - Handles checklist update events
-   * @author - Vitor Hugo
-   * @param - checklist: EventChecklist
-   * @returns - void
-   */
-  onChecklistUpdated(checklist: EventChecklist): void {
-    console.log('Checklist updated:', checklist)
   }
 
   /**

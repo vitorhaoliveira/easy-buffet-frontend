@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { RouterLink, Router } from '@angular/router'
@@ -27,6 +27,11 @@ interface CalendarDay {
   styles: []
 })
 export class DashboardComponent implements OnInit {
+  private readonly dashboardService = inject(DashboardService)
+  private readonly eventService = inject(EventService)
+  private readonly unitService = inject(UnitService)
+  private readonly router = inject(Router)
+
   stats: DashboardStats | null = null
   upcomingInstallments: DashboardInstallment[] = []
   upcomingEvents: DashboardEvent[] = []
@@ -39,7 +44,7 @@ export class DashboardComponent implements OnInit {
   currentDate = new Date()
   calendarDays: CalendarDay[] = []
   monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
   weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
   
   // Pagination
@@ -50,13 +55,6 @@ export class DashboardComponent implements OnInit {
   selectedEvent: Event | null = null
   isLoadingEventDetails = false
   eventDetailsError: string | null = null
-
-  constructor(
-    private readonly dashboardService: DashboardService,
-    private readonly eventService: EventService,
-    private readonly unitService: UnitService,
-    private readonly router: Router
-  ) {}
 
   /**
    * @Function - ngOnInit
@@ -155,7 +153,7 @@ export class DashboardComponent implements OnInit {
         this.units = unitsResponse.data
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading dashboard:', err)
       this.error = 'Não foi possível conectar ao servidor. Usando dados de demonstração.'
       this.loadMockData()
@@ -379,11 +377,12 @@ export class DashboardComponent implements OnInit {
    * @Function - onInstallmentsLimitChange
    * @description - Update installments limit and reload data
    * @author - Vitor Hugo
-   * @param - event: any
+   * @param - event: DOM Event
    * @returns - Promise<void>
    */
-  async onInstallmentsLimitChange(event: any): Promise<void> {
-    const target = event.target as HTMLSelectElement
+  async onInstallmentsLimitChange(event: unknown): Promise<void> {
+    const domEvent = event as globalThis.Event
+    const target = domEvent.target as HTMLSelectElement
     this.installmentsLimit = parseInt(target.value, 10)
     
     try {
@@ -393,7 +392,7 @@ export class DashboardComponent implements OnInit {
       if (response.success && response.data) {
         this.upcomingInstallments = response.data
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error loading installments:', err)
     }
   }
@@ -407,7 +406,6 @@ export class DashboardComponent implements OnInit {
    */
   getEventColor(event: DashboardEvent): string {
     if (event.unit?.color) {
-      console.log('event.unit.color', event.unit.color)
       // Ensure color has # prefix if not present
       const color = event.unit.color.startsWith('#') ? event.unit.color : `#${event.unit.color}`
       // Apply unit color as background, white text, no border
@@ -441,9 +439,9 @@ export class DashboardComponent implements OnInit {
     
     const bgColor = statusColors[event.status] || '#f3f4f6'
     const textColor = event.status === 'Pendente' ? '#92400e' : 
-                     event.status === 'Confirmado' ? '#065f46' :
-                     event.status === 'Realizado' ? '#6b21a8' :
-                     event.status === 'Cancelado' ? '#374151' : '#1e40af'
+      event.status === 'Confirmado' ? '#065f46' :
+        event.status === 'Realizado' ? '#6b21a8' :
+          event.status === 'Cancelado' ? '#374151' : '#1e40af'
     
     return `background-color: ${bgColor}; color: ${textColor};`
   }
@@ -452,10 +450,9 @@ export class DashboardComponent implements OnInit {
    * @Function - getEventColorClasses
    * @description - Get CSS classes for event - always use base classes, color comes from style
    * @author - Vitor Hugo
-   * @param - event: DashboardEvent
    * @returns - string - CSS classes
    */
-  getEventColorClasses(event: DashboardEvent): string {
+  getEventColorClasses(): string {
     // Always return base classes - color is applied via inline style
     // Remove any border classes to ensure unit color shows as background
     return 'text-xs px-2 py-1 rounded font-medium border-0'
@@ -495,9 +492,10 @@ export class DashboardComponent implements OnInit {
       } else {
         this.eventDetailsError = 'Não foi possível carregar os detalhes do evento'
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading event details:', err)
-      this.eventDetailsError = err.message || 'Erro ao carregar detalhes do evento'
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar detalhes do evento'
+      this.eventDetailsError = errorMessage
     } finally {
       this.isLoadingEventDetails = false
     }

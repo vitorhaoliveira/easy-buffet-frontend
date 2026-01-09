@@ -1,6 +1,6 @@
 import { inject } from '@angular/core'
 import { Router, CanActivateFn } from '@angular/router'
-import { map } from 'rxjs/operators'
+import { map, filter, take } from 'rxjs/operators'
 import { SubscriptionService } from '../services/subscription.service'
 
 /**
@@ -12,6 +12,11 @@ export const subscriptionGuard: CanActivateFn = () => {
   const router = inject(Router)
 
   return subscriptionService.getSubscription().pipe(
+    // Espera até que a subscription seja carregada (não null)
+    filter((subscription) => {
+      return subscription !== null
+    }),
+    take(1), // Pega apenas o primeiro valor não-null
     map((subscription) => {
       // Verificar se tem subscription
       if (!subscription?.hasSubscription || !subscription.status) {
@@ -24,47 +29,43 @@ export const subscriptionGuard: CanActivateFn = () => {
 
       // Verificar se está em trial
       if (subscription.status === 'trialing') {
-        if (!subscription.trialEndsAt) {
+        if (!subscription.trial.endsAt) {
           console.warn('⚠️ Subscription Guard: Trial sem data de expiração')
           router.navigate(['/payment-required'])
           return false
         }
 
-        const trialEndsAt = new Date(subscription.trialEndsAt)
+        const trialEndsAt = new Date(subscription.trial.endsAt)
         
         if (now > trialEndsAt) {
           console.warn('⚠️ Subscription Guard: Trial expirado', {
-            trialEndsAt: subscription.trialEndsAt,
+            trialEndsAt: subscription.trial.endsAt,
             now: now.toISOString()
           })
           router.navigate(['/payment-required'])
           return false
         }
 
-        console.log('✅ Subscription Guard: Trial válido até', subscription.trialEndsAt)
         return true
       }
 
       // Verificar se subscription está ativa
       if (subscription.status === 'active') {
         // Se não tem data de expiração, considera ativa indefinidamente
-        if (!subscription.subscriptionEndsAt) {
-          console.log('✅ Subscription Guard: Assinatura ativa sem expiração')
+        if (!subscription.subscription.endsAt) {
           return true
         }
 
-        const subscriptionEndsAt = new Date(subscription.subscriptionEndsAt)
+        const subscriptionEndsAt = new Date(subscription.subscription.endsAt)
         
         if (now > subscriptionEndsAt) {
           console.warn('⚠️ Subscription Guard: Assinatura expirada', {
-            subscriptionEndsAt: subscription.subscriptionEndsAt,
+            subscriptionEndsAt: subscription.subscription.endsAt,
             now: now.toISOString()
           })
           router.navigate(['/payment-required'])
           return false
         }
-
-        console.log('✅ Subscription Guard: Assinatura ativa até', subscription.subscriptionEndsAt)
         return true
       }
 

@@ -2,14 +2,7 @@ import { Injectable, inject } from '@angular/core'
 import { BehaviorSubject, Observable, map, combineLatest } from 'rxjs'
 import { PaymentService } from './payment.service'
 import { AuthStateService } from './auth-state.service'
-
-interface Subscription {
-  hasSubscription: boolean;
-  status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | 'paused';
-  trialEndsAt?: string;
-  subscriptionEndsAt?: string;
-  cancelAtPeriodEnd?: boolean;
-}
+import type { SubscriptionResponse } from '@shared/models/subscription.model'
 
 @Injectable({
   providedIn: 'root',
@@ -18,7 +11,7 @@ export class SubscriptionService {
   private readonly paymentService = inject(PaymentService)
   private readonly authStateService = inject(AuthStateService)
   
-  private readonly subscription$ = new BehaviorSubject<Subscription | null>(null)
+  private readonly subscription$ = new BehaviorSubject<SubscriptionResponse | null>(null)
   private readonly loading$ = new BehaviorSubject<boolean>(true)
 
   constructor() {
@@ -31,17 +24,8 @@ export class SubscriptionService {
   private loadSubscriptionFromUser(): void {
     this.authStateService.user$.subscribe(user => {
       if (user?.subscription) {
-        const subscription: Subscription = {
-          hasSubscription: true,
-          status: user.subscription.status,
-          trialEndsAt: user.subscription.trialEndsAt || undefined,
-          subscriptionEndsAt: user.subscription.subscriptionEndsAt || undefined,
-          cancelAtPeriodEnd: false
-        }
-        this.subscription$.next(subscription)
-        this.loading$.next(false)
+        this.loadSubscriptionFromBackend()
       } else {
-        // Se não tiver subscription no user, tenta buscar do backend
         this.loadSubscriptionFromBackend()
       }
     })
@@ -54,7 +38,7 @@ export class SubscriptionService {
     this.loading$.next(true)
     this.paymentService.getSubscription().subscribe({
       next: (response) => {
-        this.subscription$.next(response.data)
+        this.subscription$.next(response.data as SubscriptionResponse)
         this.loading$.next(false)
       },
       error: (error) => {
@@ -68,7 +52,7 @@ export class SubscriptionService {
   /**
    * Retorna os dados da assinatura
    */
-  getSubscription(): Observable<Subscription | null> {
+  getSubscription(): Observable<SubscriptionResponse | null> {
     return this.subscription$.asObservable()
   }
 
@@ -84,7 +68,20 @@ export class SubscriptionService {
    */
   isActive(): Observable<boolean> {
     return this.subscription$.pipe(
-      map((sub) => sub?.status === 'active')
+      map((sub) => {
+        if (!sub) return false
+        const now = new Date()
+        
+        if (sub.status === 'trialing' && sub.trial.endsAt) {
+          return new Date(sub.trial.endsAt) > now
+        }
+
+        if (sub.status === 'active' && sub.subscription.endsAt) {
+          return new Date(sub.subscription.endsAt) > now
+        }
+
+        return false
+      })
     )
   }
 
@@ -93,7 +90,10 @@ export class SubscriptionService {
    */
   isTrialing(): Observable<boolean> {
     return this.subscription$.pipe(
-      map((sub) => sub?.status === 'trialing')
+      map((sub) => {
+        if (!sub) return false
+        return sub.status === 'trialing' && sub.trial.isActive
+      })
     )
   }
 
@@ -110,21 +110,20 @@ export class SubscriptionService {
   }
 
   /**
-   * Recarrega os dados da assinatura
-   */
-  reloadSubscription(): void {
-    this.loadSubscriptionFromBackend()
-  }
-
-  /**
    * Abre o portal de gerenciamento de assinatura do Stripe
    */
   openPortal(): void {
     console.log('🌐 SubscriptionService: Chamando openPortal...')
     this.paymentService.openPortal().subscribe({
       next: (response) => {
-        console.log('✅ Portal URL recebida:', response.data.url)
-        window.location.href = response.data.url
+        if (response.success && response.data?.url) {
+          console.log('✅ Portal URL recebida:', response.data.url)
+          // Redireciona para o portal na mesma aba
+          window.location.href = response.data.url
+        } else {
+          console.error('❌ Resposta inválida do portal:', response)
+          alert('Erro ao abrir portal de pagamento. Por favor, tente novamente.')
+        }
       },
       error: (error) => {
         console.error('❌ Erro ao abrir portal:', error)
@@ -161,7 +160,6 @@ export class SubscriptionService {
 
   /**
    * Calcula quantos dias faltam até a expiração da assinatura
-   * Retorna null se não houver data de expiração
    */
   getDaysUntilExpiration(): Observable<number | null> {
     return this.subscription$.pipe(
@@ -171,10 +169,10 @@ export class SubscriptionService {
         const now = new Date()
         let expirationDate: Date | null = null
 
-        if (sub.status === 'trialing' && sub.trialEndsAt) {
-          expirationDate = new Date(sub.trialEndsAt)
-        } else if (sub.status === 'active' && sub.subscriptionEndsAt) {
-          expirationDate = new Date(sub.subscriptionEndsAt)
+        if (sub.status === 'trialing' && sub.trial.endsAt) {
+          expirationDate = new Date(sub.trial.endsAt)
+        } else if (sub.status === 'active' && sub.subscription.endsAt) {
+          expirationDate = new Date(sub.subscription.endsAt)
         }
 
         if (!expirationDate) return null
@@ -209,13 +207,8 @@ export class SubscriptionService {
             return 'Pagamento pendente ⚠️'
           case 'canceled':
             return 'Assinatura cancelada'
-          case 'incomplete':
-          case 'incomplete_expired':
-            return 'Assinatura incompleta'
-          case 'unpaid':
-            return 'Pagamento não realizado'
-          case 'paused':
-            return 'Assinatura pausada'
+          case 'expired':
+            return 'Assinatura expirada'
           default:
             return 'Status desconhecido'
         }
@@ -225,7 +218,6 @@ export class SubscriptionService {
 
   /**
    * Verifica se deve exibir aviso de expiração próxima
-   * Retorna true se faltar 3 dias ou menos
    */
   shouldShowWarning(): Observable<boolean> {
     return this.getDaysUntilExpiration().pipe(
@@ -243,20 +235,17 @@ export class SubscriptionService {
 
         const now = new Date()
 
-        // Verificar trial expirado
-        if (sub.status === 'trialing' && sub.trialEndsAt) {
-          const trialEndsAt = new Date(sub.trialEndsAt)
+        if (sub.status === 'trialing' && sub.trial.endsAt) {
+          const trialEndsAt = new Date(sub.trial.endsAt)
           return now > trialEndsAt
         }
 
-        // Verificar subscription expirada
-        if (sub.status === 'active' && sub.subscriptionEndsAt) {
-          const subscriptionEndsAt = new Date(sub.subscriptionEndsAt)
+        if (sub.status === 'active' && sub.subscription.endsAt) {
+          const subscriptionEndsAt = new Date(sub.subscription.endsAt)
           return now > subscriptionEndsAt
         }
 
-        // Status que indicam expiração
-        return ['canceled', 'past_due', 'incomplete_expired', 'unpaid'].includes(sub.status)
+        return ['canceled', 'expired', 'past_due'].includes(sub.status)
       })
     )
   }
@@ -269,16 +258,70 @@ export class SubscriptionService {
       map((sub) => {
         if (!sub) return null
 
-        if (sub.status === 'trialing' && sub.trialEndsAt) {
-          return new Date(sub.trialEndsAt).toLocaleDateString('pt-BR')
+        if (sub.status === 'trialing' && sub.trial.endsAt) {
+          return new Date(sub.trial.endsAt).toLocaleDateString('pt-BR')
         }
 
-        if (sub.status === 'active' && sub.subscriptionEndsAt) {
-          return new Date(sub.subscriptionEndsAt).toLocaleDateString('pt-BR')
+        if (sub.status === 'active' && sub.subscription.endsAt) {
+          return new Date(sub.subscription.endsAt).toLocaleDateString('pt-BR')
         }
 
         return null
       })
     )
+  }
+
+  /**
+   * Verifica se tem acesso ativo à plataforma
+   */
+  hasActiveSubscription(): Observable<boolean> {
+    return this.subscription$.pipe(
+      map((sub) => {
+        if (!sub || !sub.hasSubscription) return false
+
+        const now = new Date()
+
+        if (sub.status === 'trialing') {
+          if (!sub.trial.endsAt) return false
+          return new Date(sub.trial.endsAt) > now
+        }
+
+        if (sub.status === 'active') {
+          if (!sub.subscription.endsAt) return true
+          return new Date(sub.subscription.endsAt) > now
+        }
+
+        return false
+      })
+    )
+  }
+
+  /**
+   * Retorna informações do plano formatadas
+   */
+  getPlanDescription(): Observable<string> {
+    return this.subscription$.pipe(
+      map((sub) => {
+        if (!sub?.plan) return ''
+
+        const { name, price, currency, interval } = sub.plan
+        const intervalText = interval === 'month' ? 'mês' : 'ano'
+
+        return `${name} - ${currency} ${price}/${intervalText}`
+      })
+    )
+  }
+
+  /**
+   * Obtém motivo do cancelamento formatado
+   */
+  getCancellationReasonText(reason: string): string {
+    const reasons: Record<string, string> = {
+      'cancellation_requested': 'Cancelamento solicitado',
+      'payment_failed': 'Falha no pagamento',
+      'payment_disputed': 'Pagamento contestado',
+    }
+
+    return reasons[reason] || reason
   }
 }

@@ -342,8 +342,6 @@ export class AuthStateService {
           this.organizationSubject.next(organization)
           this.storageService.setOrganization(organization)
         }
-        
-        console.log('✅ refreshUser concluído com sucesso')
         return true
       }
       

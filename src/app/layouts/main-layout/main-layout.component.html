@@ -186,18 +186,18 @@
 
     <!-- Footer Links -->
     <div class="border-t border-gray-200 p-3 space-y-1">
-      <a href="#" [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors ' + 
+      <button (click)="contactSupport()" [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors w-full ' + 
                  (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')" [title]="sidebarCollapsed ? 'Suporte' : ''">
         <lucide-icon [img]="HelpCircleIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
         <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
                       (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Suporte</span>
-      </a>
-      <a href="#" [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors ' + 
+      </button>
+      <button (click)="sendFeedback()" [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors w-full ' + 
                  (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')" [title]="sidebarCollapsed ? 'Feedback' : ''">
         <lucide-icon [img]="MessageCircleIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
         <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
                       (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Feedback</span>
-      </a>
+      </button>
     </div>
 
     <!-- User Profile -->

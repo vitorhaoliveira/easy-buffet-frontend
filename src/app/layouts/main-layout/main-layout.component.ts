@@ -8,7 +8,6 @@ import { AuthStateService } from '@core/services/auth-state.service'
 import { AuthService } from '@core/services/auth.service'
 import { OrganizationService } from '@core/services/organization.service'
 import { StorageService } from '@core/services/storage.service'
-import { PhoneMaskDirective } from '@shared/directives/phone-mask.directive'
 import { phoneValidator } from '@shared/validators'
 import type { User } from '@shared/models/api.types'
 import { ToastComponent } from '@shared/components/ui/toast/toast.component'
@@ -192,7 +191,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           permissions: currentOrg.permissions
         }
       }
-      console.log('✅ Synced current organization:', this.currentUser.currentOrganization)
     }
   }
 
@@ -221,7 +219,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             }
           }))
         }
-        console.log('✅ Organizations loaded:', this.currentUser.organizations)
       }
     } catch (error) {
       console.error('❌ Error loading organizations:', error)
@@ -397,9 +394,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.isSwitchingOrg = true
       this.errorMessage = ''
 
-      console.log('🔄 Attempting to switch to organization:', orgId)
-      console.log('📋 Current user organizations:', this.currentUser?.organizations)
-
       // Check if organization exists in user's organizations
       const targetOrg = this.currentUser?.organizations?.find(org => org.id === orgId)
       if (!targetOrg) {
@@ -414,16 +408,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.organizationService.switchOrganization(orgId)
       )
 
-      console.log('🔄 Backend switch response:', response)
-
       if (response.success) {
         // Update local storage
         const switchSuccess = this.storageService.switchOrganization(orgId)
         
-        console.log('💾 Local storage switch success:', switchSuccess)
-        
         if (switchSuccess) {
-          console.log('✅ Organization switched successfully, reloading page...')
           // Reload the page to refresh all data
           window.location.reload()
         } else {
@@ -577,6 +566,30 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       return 'Telefone inválido'
     }
     return ''
+  }
+
+  /**
+   * @Function - contactSupport
+   * @description - Opens WhatsApp support in a new tab
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  contactSupport(): void {
+    const phoneNumber = '5511989327073'
+    const whatsappUrl = `https://wa.me/${phoneNumber}`
+    window.open(whatsappUrl, '_blank')
+  }
+
+  /**
+   * @Function - sendFeedback
+   * @description - Opens WhatsApp feedback in a new tab
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  sendFeedback(): void {
+    const phoneNumber = '5511989327073'
+    const whatsappUrl = `https://wa.me/${phoneNumber}`
+    window.open(whatsappUrl, '_blank')
   }
 
   /**
