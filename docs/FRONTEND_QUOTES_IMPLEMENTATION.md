@@ -9,11 +9,11 @@ Implementação completa do sistema de orçamentos com 5 funcionalidades princip
 ## 📦 O que foi implementado
 
 ### 1️⃣ **Modelos e Tipos TypeScript**
+
 - ✅ Estendido interface `Quote` com novos campos:
   - `organizationId`, `viewedAt`, `expiresAt`
   - `publicLinkToken`, `publicLinkTokenExpiresAt`
   - Status expandido: `'Rascunho' | 'Enviado' | 'Visualizado' | 'Aceito' | 'Rejeitado' | 'Expirado'`
-  
 - ✅ Novos tipos criados:
   - `QuoteAcceptance` - Dados de aceite digital (nome, email, telefone, CPF, termos, IP)
   - `QuoteContract` - Informações do contrato gerado
@@ -25,9 +25,11 @@ Implementação completa do sistema de orçamentos com 5 funcionalidades princip
 ---
 
 ### 2️⃣ **Quote Service - Novos Endpoints**
+
 Service completamente refatorado com suporte a:
 
 #### CRUD Básico
+
 - `getQuotes(params?)` - Lista com paginação
 - `getQuoteById(id)` - Detalhes
 - `createQuote(data)` - Criar
@@ -35,17 +37,20 @@ Service completamente refatorado com suporte a:
 - `deleteQuote(id)` - Deletar (apenas Rascunho)
 
 #### Ações de Status
+
 - `sendQuote(id, data)` - Enviar com link público (Rascunho → Enviado)
 - `acceptQuote(id, data)` - Aceitar (privado)
 - `rejectQuote(id, data)` - Rejeitar
 
 #### Link Público (sem autenticação)
+
 - `getPublicQuote(token)` - Visualizar via token (Enviado → Visualizado)
 - `downloadPublicQuotePdf(token)` - Download PDF público
 - `acceptPublicQuote(token, data)` - Aceitar via link público
 - `rejectPublicQuote(token, data)` - Rejeitar via link público
 
 #### Contrato
+
 - `generateContract(id, data)` - Gerar contrato automático
 - `getQuoteContract(id)` - Obter contrato
 - `downloadContractPdf(id)` - Download PDF contrato
@@ -55,9 +60,11 @@ Service completamente refatorado com suporte a:
 ---
 
 ### 3️⃣ **Página Pública de Proposta (sem autenticação)**
+
 Novo componente standalone com UI responsiva:
 
 #### Funcionalidades:
+
 - ✅ Visualização de orçamento com status automático (Enviado → Visualizado)
 - ✅ Display lindo e responsivo para mobile/desktop
 - ✅ Download PDF da proposta
@@ -72,12 +79,14 @@ Novo componente standalone com UI responsiva:
 - ✅ Notificações via Toast
 - ✅ Pré-preenchimento com dados do cliente
 
-#### Arquivo:**
+#### Arquivo:\*\*
+
 - Componente: `src/app/features/register/quotes/proposal-page/proposal-page.component.ts`
 - Template: `src/app/features/register/quotes/proposal-page/proposal-page.component.html`
 - Estilos: `src/app/features/register/quotes/proposal-page/proposal-page.component.css`
 
 #### Rota Pública:
+
 ```typescript
 {
   path: 'proposal/:token',
@@ -88,6 +97,7 @@ Novo componente standalone com UI responsiva:
 ---
 
 ### 4️⃣ **Atualização Quote Form**
+
 Componente mantém funcionalidade de criação e edição de orçamentos em rascunho.
 
 **Arquivo:** `src/app/features/register/quotes/quote-form/quote-form.component.ts`
@@ -95,7 +105,9 @@ Componente mantém funcionalidade de criação e edição de orçamentos em rasc
 ---
 
 ### 5️⃣ **Atualização Quote List**
+
 Componente agora exibe:
+
 - ✅ 5 status: Rascunho, Enviado, Visualizado, Aceito, Rejeitado, Expirado
 - ✅ Filtros por status
 - ✅ Busca por cliente/ID
@@ -107,7 +119,9 @@ Componente agora exibe:
 ---
 
 ### 6️⃣ **Atualização Quote Preview**
+
 Componente de visualização interna com:
+
 - ✅ Botão "Enviar" com email (Rascunho → Enviado)
   - Valida se cliente tem email
   - Envia link público por email (via backend + Resend)
@@ -163,16 +177,19 @@ Componente de visualização interna com:
 ## 📱 Interface
 
 ### Desktop
+
 - Tabela completa com colunas: ID, Cliente, Valor, Status, Válido até, Data Criação, Ações
 - Múltiplas ações por linha
 - Filtros no topo
 
 ### Mobile
+
 - Cards adaptados com status badge
 - Ações em dropdown
 - Layout single-column responsivo
 
 ### Página Pública
+
 - Header simples com branding
 - Seções bem organizada
 - Formulário de aceite modal
@@ -196,6 +213,7 @@ Componente de visualização interna com:
 ## ✅ Checklist de Implementação
 
 ### Modelos e Tipos
+
 - [x] Estender Quote com novos campos
 - [x] Criar QuoteAcceptance interface
 - [x] Criar QuoteContract interface
@@ -204,6 +222,7 @@ Componente de visualização interna com:
 - [x] Status type expandido
 
 ### Serviço
+
 - [x] CRUD básico (já existia, apenas refatorado)
 - [x] sendQuote com parâmetros corretos
 - [x] acceptQuote (privado)
@@ -215,6 +234,7 @@ Componente de visualização interna com:
 - [x] Download PDFs
 
 ### Página Pública
+
 - [x] Componente standalone
 - [x] Carregamento de orçamento
 - [x] Visualização bonita
@@ -227,11 +247,13 @@ Componente de visualização interna com:
 - [x] Status tracking
 
 ### Componentes Existentes
+
 - [x] Quote Form (sem mudanças necessárias)
 - [x] Quote List (atualizado com 5 status)
 - [x] Quote Preview (atualizado com enviar, aceitar, rejeitar)
 
 ### Roteamento
+
 - [x] Rota pública /proposal/:token
 - [x] Sem guard (público)
 - [x] Integrada com auth routes
@@ -241,9 +263,11 @@ Componente de visualização interna com:
 ## 🔌 Integração com Backend
 
 ### Requisitos de API
+
 Backend precisa implementar:
 
 #### Endpoints
+
 ```
 POST   /quotes                    - Criar
 GET    /quotes                    - Listar
@@ -266,11 +290,13 @@ GET    /quotes/:id/contract/pdf      - Download contrato
 ```
 
 #### Email via Resend
+
 - Deve enviar email com link: `{APP_DOMAIN}/proposal/{token}`
 - Template: "Seu orçamento está pronto"
 - 7 dias de validade no token
 
 #### PDF Generation
+
 - Usar html2pdf ou Puppeteer
 - Template fixo de contrato
 - Pré-preenchido com dados da quote
@@ -282,6 +308,7 @@ GET    /quotes/:id/contract/pdf      - Download contrato
 ## 📝 Arquivo de Documentação Backend
 
 Um arquivo markdown completo com:
+
 - Estrutura de banco de dados (SQL)
 - DTOs detalhados (Request/Response)
 - Endpoints com exemplos
@@ -297,12 +324,14 @@ Um arquivo markdown completo com:
 ## 🚀 Próximos Passos
 
 1. **Backend Implementation**
+
    - Implementar endpoints listados
    - Integração com Resend
    - Geração de PDF (html2pdf ou Puppeteer)
    - Autenticação com tokens públicos
 
 2. **Testes**
+
    - Unit tests dos componentes
    - E2E tests do fluxo completo
    - Testes de segurança (CORS, validação)
@@ -338,6 +367,7 @@ src/app/
 ## 🎯 Resumo Executivo
 
 ✅ **Feature completa implementada no frontend**
+
 - Suporta ciclo completo: Rascunho → Enviado → Visualizado → Aceito
 - Página pública responsiva para clientes
 - Aceite digital com validações
@@ -352,6 +382,7 @@ src/app/
 ## 📞 Contato/Suporte
 
 Para dúvidas ou ajustes:
+
 1. Verifique `docs/BACKEND_QUOTES_SPEC.md` para specs de backend
 2. Revise componentes individualmente para entender fluxos
 3. Teste fluxo completo em staging antes de prod

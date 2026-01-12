@@ -9,9 +9,11 @@ Este documento é um guia rápido para o desenvolvedor de backend sobre o que fo
 ## 📦 O que o Frontend Implementou
 
 ### 1. Nova Página Pública (sem autenticação)
+
 **URL:** `https://app.com/proposal/{token}`
 
 O cliente recebe um email com este link e pode:
+
 - Ver detalhes da proposta
 - Baixar PDF
 - Aceitar com formulário simples
@@ -56,7 +58,7 @@ GET    /quotes/:id/contract/pdf      - Download PDF contrato
 ALTER TABLE quotes ADD COLUMN publicLinkToken VARCHAR(255) UNIQUE;
 ALTER TABLE quotes ADD COLUMN publicLinkTokenExpiresAt TIMESTAMP;
 ALTER TABLE quotes ADD COLUMN viewedAt TIMESTAMP;
-ALTER TABLE quotes ADD CONSTRAINT check_valid_status 
+ALTER TABLE quotes ADD CONSTRAINT check_valid_status
   CHECK (status IN ('Rascunho', 'Enviado', 'Visualizado', 'Aceito', 'Rejeitado', 'Expirado'));
 ```
 
@@ -97,9 +99,10 @@ CREATE TABLE quote_contracts (
 ### 4. Implementar Endpoint PATCH /quotes/:id/send
 
 **O que fazer:**
+
 1. Validar que quote existe e status = 'Rascunho'
 2. Gerar UUID token público
-3. Salvar em `quotes.publicLinkToken` 
+3. Salvar em `quotes.publicLinkToken`
 4. Salvar expiração (7 dias) em `quotes.publicLinkTokenExpiresAt`
 5. Atualizar status → 'Enviado'
 6. Salvar `sentAt` = now()
@@ -112,6 +115,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 ```
 
 **Request:**
+
 ```json
 {
   "clientEmail": "cliente@example.com",
@@ -121,6 +125,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -138,6 +143,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 ### 5. Implementar Endpoint GET /quotes/public/:token
 
 **O que fazer:**
+
 1. Buscar quote pelo token: `WHERE publicLinkToken = :token`
 2. Validar token não expirou: `publicLinkTokenExpiresAt > now()`
 3. Validar quote não expirou: `validUntilDate > now()`
@@ -147,6 +153,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 5. Retornar dados (sem campos sensíveis)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -165,6 +172,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 ### 6. Implementar Endpoint PATCH /quotes/public/:token/accept
 
 **Request:**
+
 ```json
 {
   "clientName": "João Silva",
@@ -176,6 +184,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 ```
 
 **O que fazer:**
+
 1. Validar token (mesmo que GET)
 2. Validar termsAccepted = true
 3. Validar clientName não vazio
@@ -187,6 +196,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 8. Enviar email de confirmação ao cliente
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -203,6 +213,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 ### 7. Implementar Endpoint POST /quotes/:id/generate-contract
 
 **O que fazer:**
+
 1. Validar quote existe e status = 'Aceito'
 2. Usar template HTML fixo (veja em BACKEND_QUOTES_SPEC.md)
 3. Substituir placeholders {{}} com dados reais:
@@ -223,6 +234,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 6. Enviar email com contrato em anexo
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -242,6 +254,7 @@ Link: https://app.easybuffet.com/proposal/{token}
 ## 📧 Integração Resend (Email)
 
 ### Configuração
+
 ```typescript
 // .env
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx
@@ -250,15 +263,17 @@ SENDER_EMAIL=noreply@easybuffet.com
 ```
 
 ### Instalação
+
 ```bash
 npm install resend
 ```
 
 ### Uso
-```typescript
-import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+```typescript
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Enviar email com link de proposta
 await resend.emails.send({
@@ -275,8 +290,8 @@ await resend.emails.send({
     </ul>
     <a href="${APP_DOMAIN}/proposal/${token}">Ver Proposta</a>
     <p>Este link expira em 7 dias.</p>
-  `
-});
+  `,
+})
 ```
 
 ---
@@ -284,18 +299,21 @@ await resend.emails.send({
 ## 🔐 Segurança
 
 ### Token Público
+
 - Usar UUID v4 (aleatório)
 - Expiração: 7 dias
 - Validar em cada request
 - Rate limiting na rota pública
 
 ### Aceite Digital
+
 - Capturar IP do cliente
 - Salvar User-Agent
 - Timestamp de aceite
 - Checkbox de termos obrigatório
 
 ### Validações
+
 - Cliente deve ter email para enviar
 - validUntilDate > agora
 - Transições de status permitidas apenas nas direções corretas
@@ -305,6 +323,7 @@ await resend.emails.send({
 ## 📝 Exemplo de Request/Response Completo
 
 ### Criar Orçamento
+
 ```bash
 POST /quotes HTTP/1.1
 Authorization: Bearer {token}
@@ -328,6 +347,7 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -335,7 +355,7 @@ Response:
   "data": {
     "id": "990e8400-e29b-41d4-a716-446655440000",
     "status": "Rascunho",
-    "totalAmount": 5000.00,
+    "totalAmount": 5000.0,
     "createdAt": "2026-01-12T10:30:00Z"
   },
   "errors": null
@@ -343,6 +363,7 @@ Response:
 ```
 
 ### Enviar Orçamento
+
 ```bash
 PATCH /quotes/990e8400-e29b-41d4-a716-446655440000/send HTTP/1.1
 Authorization: Bearer {token}
@@ -355,6 +376,7 @@ Content-Type: application/json
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -373,11 +395,13 @@ Response:
 ## ✅ Checklist de Implementação
 
 ### Tabelas
+
 - [ ] Adicionar colunas em `quotes`
 - [ ] Criar `quote_acceptances`
 - [ ] Criar `quote_contracts`
 
 ### Endpoints
+
 - [ ] `POST /quotes` - Criar (já existe?)
 - [ ] `GET /quotes` - Listar (já existe?)
 - [ ] `PATCH /quotes/:id/send` - NOVO
@@ -386,18 +410,21 @@ Response:
 - [ ] `POST /quotes/:id/generate-contract` - NOVO
 
 ### Email
+
 - [ ] Instalar Resend
 - [ ] Configurar API key
 - [ ] Implementar envio no `/send`
 - [ ] Template HTML bonito
 
 ### PDF
+
 - [ ] Instalar html2pdf ou Puppeteer
 - [ ] Template HTML de contrato
 - [ ] Gerar PDF em `/generate-contract`
 - [ ] Salvar em storage
 
 ### Testes
+
 - [ ] Testar fluxo completo
 - [ ] Email chega
 - [ ] PDF gerado

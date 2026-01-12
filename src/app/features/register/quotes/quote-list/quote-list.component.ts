@@ -234,4 +234,15 @@ export class QuoteListComponent implements OnInit {
       setTimeout(() => this.error = '', 5000)
     }
   }
+
+  // Método para teste de link público
+  testPublicLink(quote: Quote): void {
+    if (quote.publicLinkToken) {
+      const publicLink = `${window.location.origin}/proposal/${quote.publicLinkToken}`
+      window.open(publicLink, '_blank')
+    } else {
+      this.error = 'Este orçamento ainda não foi enviado. Clique em "Enviar" primeiro.'
+      setTimeout(() => this.error = '', 5000)
+    }
+  }
 }

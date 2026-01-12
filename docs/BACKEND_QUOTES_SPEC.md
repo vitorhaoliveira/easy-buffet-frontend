@@ -3,6 +3,7 @@
 ## 1. Visão Geral da Feature
 
 Sistema completo de orçamentos com 5 funcionalidades principais:
+
 1. ✅ **Criar Orçamento** - Formulário interno para o buffet
 2. ✅ **Link de Proposta Pública** - URL única compartilhável via email (Resend)
 3. ✅ **Aceite Digital** - Aceitação com termos e dados do cliente
@@ -18,18 +19,18 @@ Sistema completo de orçamentos com 5 funcionalidades principais:
 ```sql
 CREATE TABLE quotes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   -- Dados principais
   organizationId UUID NOT NULL REFERENCES organizations(id),
   clientId UUID NOT NULL REFERENCES clients(id),
   eventId UUID REFERENCES events(id),
   packageId UUID NOT NULL REFERENCES packages(id),
   sellerId UUID REFERENCES sellers(id),
-  
+
   -- Valores
   totalAmount DECIMAL(12, 2) NOT NULL,
   notes TEXT,
-  
+
   -- Status e datas
   status VARCHAR(20) NOT NULL DEFAULT 'Rascunho',
     -- Valores: 'Rascunho', 'Enviado', 'Visualizado', 'Aceito', 'Rejeitado', 'Expirado'
@@ -37,19 +38,19 @@ CREATE TABLE quotes (
   sentAt TIMESTAMP,
   viewedAt TIMESTAMP,
   expiresAt TIMESTAMP,
-  
+
   -- Link público
   publicLinkToken VARCHAR(255) UNIQUE,
   publicLinkTokenExpiresAt TIMESTAMP,
-  
+
   -- Timestamps
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deletedAt TIMESTAMP,
-  
+
   -- Auditoria
   createdBy UUID REFERENCES users(id),
-  
+
   CONSTRAINT check_valid_status CHECK (status IN ('Rascunho', 'Enviado', 'Visualizado', 'Aceito', 'Rejeitado', 'Expirado')),
   CONSTRAINT check_valid_until_date CHECK (validUntilDate > createdAt),
   INDEX idx_organization_client (organizationId, clientId),
@@ -63,19 +64,19 @@ CREATE TABLE quotes (
 ```sql
 CREATE TABLE quote_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   quoteId UUID NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
-  
+
   -- Item details
   description VARCHAR(255) NOT NULL,
   quantity INT NOT NULL DEFAULT 1,
   unitPrice DECIMAL(12, 2) NOT NULL,
   totalPrice DECIMAL(12, 2) NOT NULL,
-  
+
   -- Timestamps
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  
+
   CONSTRAINT check_quantity CHECK (quantity > 0),
   CONSTRAINT check_prices CHECK (unitPrice > 0 AND totalPrice > 0),
   INDEX idx_quote_items (quoteId)
@@ -87,29 +88,29 @@ CREATE TABLE quote_items (
 ```sql
 CREATE TABLE quote_acceptances (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   quoteId UUID NOT NULL UNIQUE REFERENCES quotes(id) ON DELETE CASCADE,
-  
+
   -- Dados do aceite
   clientName VARCHAR(255) NOT NULL,
   clientEmail VARCHAR(255),
   clientPhone VARCHAR(20),
   cpf VARCHAR(14), -- CPF do aceitante
-  
+
   -- Termos
   termsAccepted BOOLEAN NOT NULL DEFAULT false,
   termsAcceptedAt TIMESTAMP NOT NULL,
-  
+
   -- IP and tracking
   ipAddress VARCHAR(45), -- Suporta IPv4 e IPv6
   userAgent TEXT,
-  
+
   -- Timestamps
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  
+
   -- Auditoria
   acceptedBy UUID REFERENCES users(id),
-  
+
   INDEX idx_quote_acceptance (quoteId),
   INDEX idx_client_email (clientEmail)
 );
@@ -120,26 +121,26 @@ CREATE TABLE quote_acceptances (
 ```sql
 CREATE TABLE quote_contracts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   quoteId UUID NOT NULL UNIQUE REFERENCES quotes(id) ON DELETE CASCADE,
   contractId UUID UNIQUE REFERENCES contracts(id),
-  
+
   -- Template fixo
   contractTemplateName VARCHAR(255) NOT NULL DEFAULT 'Template Padrão EasyBuffet',
-  
+
   -- HTML salvo (para auditoria/backup)
   contractHtmlContent TEXT,
-  
+
   -- Caminho do PDF gerado
   contractPdfPath VARCHAR(255),
-  
+
   -- Status de geração
   generatedAt TIMESTAMP,
-  
+
   -- Timestamps
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  
+
   INDEX idx_quote_contract (quoteId),
   INDEX idx_contract_id (contractId)
 );
@@ -154,62 +155,62 @@ CREATE TABLE quote_contracts (
 ```typescript
 // CREATE QUOTE
 export interface CreateQuoteDto {
-  clientId: string;                    // UUID obrigatório
-  eventId?: string;                    // UUID opcional
-  packageId: string;                   // UUID obrigatório
-  sellerId?: string;                   // UUID opcional
-  
-  totalAmount: number;                 // Decimal com 2 casas
-  validUntilDate: string;              // ISO 8601: YYYY-MM-DDTHH:mm:ss
-  notes?: string;                      // Observações
-  
-  items: CreateQuoteItemDto[];         // Mínimo 1 item
+  clientId: string // UUID obrigatório
+  eventId?: string // UUID opcional
+  packageId: string // UUID obrigatório
+  sellerId?: string // UUID opcional
+
+  totalAmount: number // Decimal com 2 casas
+  validUntilDate: string // ISO 8601: YYYY-MM-DDTHH:mm:ss
+  notes?: string // Observações
+
+  items: CreateQuoteItemDto[] // Mínimo 1 item
 }
 
 export interface CreateQuoteItemDto {
-  description: string;                 // Obrigatório, max 255 chars
-  quantity: number;                    // Min: 1
-  unitPrice: number;                   // Decimal com 2 casas
-  totalPrice: number;                  // quantity * unitPrice
+  description: string // Obrigatório, max 255 chars
+  quantity: number // Min: 1
+  unitPrice: number // Decimal com 2 casas
+  totalPrice: number // quantity * unitPrice
 }
 
 // UPDATE QUOTE (Rascunho apenas)
 export interface UpdateQuoteDto {
-  clientId?: string;
-  eventId?: string;
-  packageId?: string;
-  sellerId?: string;
-  totalAmount?: number;
-  validUntilDate?: string;
-  notes?: string;
-  items?: CreateQuoteItemDto[];        // Substitui todos items
+  clientId?: string
+  eventId?: string
+  packageId?: string
+  sellerId?: string
+  totalAmount?: number
+  validUntilDate?: string
+  notes?: string
+  items?: CreateQuoteItemDto[] // Substitui todos items
 }
 
 // SEND QUOTE (Status: Rascunho → Enviado)
 export interface SendQuoteDto {
-  clientEmail: string;                 // Email para enviar link
-  clientName?: string;                 // Nome (para email personalizado)
-  customMessage?: string;              // Mensagem adicional
+  clientEmail: string // Email para enviar link
+  clientName?: string // Nome (para email personalizado)
+  customMessage?: string // Mensagem adicional
 }
 
 // ACCEPT QUOTE (Status: Enviado/Visualizado → Aceito)
 export interface AcceptQuoteDto {
-  clientName: string;                  // Obrigatório
-  clientEmail?: string;
-  clientPhone?: string;
-  cpf?: string;                        // Opcional: CPF do aceitante
-  termsAccepted: boolean;              // Deve ser true
+  clientName: string // Obrigatório
+  clientEmail?: string
+  clientPhone?: string
+  cpf?: string // Opcional: CPF do aceitante
+  termsAccepted: boolean // Deve ser true
 }
 
 // GENERATE CONTRACT FROM QUOTE
 export interface GenerateContractDto {
-  generatePdf?: boolean;               // Default: true
-  downloadImmediately?: boolean;       // Default: false
+  generatePdf?: boolean // Default: true
+  downloadImmediately?: boolean // Default: false
 }
 
 // REJECT QUOTE
 export interface RejectQuoteDto {
-  reason?: string;                     // Motivo da rejeição
+  reason?: string // Motivo da rejeição
 }
 ```
 
@@ -218,94 +219,94 @@ export interface RejectQuoteDto {
 ```typescript
 // QUOTE RESPONSE
 export interface QuoteResponseDto {
-  id: string;
-  organizationId: string;
-  
+  id: string
+  organizationId: string
+
   // References
   client: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
+    id: string
+    name: string
+    email: string
+    phone: string
+  }
   event?: {
-    id: string;
-    name: string;
-    eventDate: string;
-    guestCount: number;
-  };
+    id: string
+    name: string
+    eventDate: string
+    guestCount: number
+  }
   package: {
-    id: string;
-    name: string;
-    type: string;
-  };
+    id: string
+    name: string
+    type: string
+  }
   seller?: {
-    id: string;
-    name: string;
-  };
-  
+    id: string
+    name: string
+  }
+
   // Financial
-  totalAmount: number;
-  items: QuoteItemResponseDto[];
-  notes?: string;
-  
+  totalAmount: number
+  items: QuoteItemResponseDto[]
+  notes?: string
+
   // Status
-  status: 'Rascunho' | 'Enviado' | 'Visualizado' | 'Aceito' | 'Rejeitado' | 'Expirado';
-  
+  status: 'Rascunho' | 'Enviado' | 'Visualizado' | 'Aceito' | 'Rejeitado' | 'Expirado'
+
   // Dates
-  validUntilDate: string;              // ISO 8601
-  sentAt?: string;
-  viewedAt?: string;
-  expiresAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  
+  validUntilDate: string // ISO 8601
+  sentAt?: string
+  viewedAt?: string
+  expiresAt?: string
+  createdAt: string
+  updatedAt: string
+
   // Public link (apenas para owner/admin)
-  publicLinkUrl?: string;              // URL completa: https://app.com/proposal/TOKEN
-  publicLinkToken?: string;
-  publicLinkTokenExpiresAt?: string;
+  publicLinkUrl?: string // URL completa: https://app.com/proposal/TOKEN
+  publicLinkToken?: string
+  publicLinkTokenExpiresAt?: string
 }
 
 export interface QuoteItemResponseDto {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+  id: string
+  description: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
 }
 
 // ACCEPTANCE RESPONSE
 export interface QuoteAcceptanceResponseDto {
-  id: string;
-  quoteId: string;
-  clientName: string;
-  clientEmail?: string;
-  cpf?: string;
-  termsAccepted: true;
-  termsAcceptedAt: string;             // ISO 8601
-  createdAt: string;
+  id: string
+  quoteId: string
+  clientName: string
+  clientEmail?: string
+  cpf?: string
+  termsAccepted: true
+  termsAcceptedAt: string // ISO 8601
+  createdAt: string
 }
 
 // CONTRACT GENERATION RESPONSE
 export interface ContractGenerationResponseDto {
-  id: string;
-  quoteId: string;
-  contractId?: string;
-  contractTemplateName: string;
-  contractPdfPath?: string;
-  generatedAt: string;
-  htmlPreview?: string;                // Opcional: HTML do contrato para preview
+  id: string
+  quoteId: string
+  contractId?: string
+  contractTemplateName: string
+  contractPdfPath?: string
+  generatedAt: string
+  htmlPreview?: string // Opcional: HTML do contrato para preview
 }
 
 // LIST QUOTES RESPONSE (paginado)
 export interface ListQuotesResponseDto {
-  data: QuoteResponseDto[];
+  data: QuoteResponseDto[]
   pagination: {
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  };
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
+  }
 }
 ```
 
@@ -353,33 +354,35 @@ GET    /quotes/:id/contract/pdf          - Download PDF do contrato
 ### 5.1 Criar Orçamento - `POST /quotes`
 
 **Request:**
+
 ```json
 {
   "clientId": "550e8400-e29b-41d4-a716-446655440000",
   "eventId": "660e8400-e29b-41d4-a716-446655440000",
   "packageId": "770e8400-e29b-41d4-a716-446655440000",
   "sellerId": "880e8400-e29b-41d4-a716-446655440000",
-  "totalAmount": 5000.00,
+  "totalAmount": 5000.0,
   "validUntilDate": "2026-02-12T23:59:59Z",
   "notes": "Desconto de 10% aplicado",
   "items": [
     {
       "description": "Buffet completo - 100 pessoas",
       "quantity": 1,
-      "unitPrice": 3500.00,
-      "totalPrice": 3500.00
+      "unitPrice": 3500.0,
+      "totalPrice": 3500.0
     },
     {
       "description": "Decoração",
       "quantity": 1,
-      "unitPrice": 1500.00,
-      "totalPrice": 1500.00
+      "unitPrice": 1500.0,
+      "totalPrice": 1500.0
     }
   ]
 }
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -397,6 +400,7 @@ GET    /quotes/:id/contract/pdf          - Download PDF do contrato
 ```
 
 **Validações:**
+
 - ✅ clientId deve existir e pertencer à organização
 - ✅ packageId é obrigatório
 - ✅ validUntilDate deve ser > data atual
@@ -409,6 +413,7 @@ GET    /quotes/:id/contract/pdf          - Download PDF do contrato
 ### 5.2 Enviar Orçamento - `PATCH /quotes/:id/send`
 
 **Request:**
+
 ```json
 {
   "clientEmail": "cliente@example.com",
@@ -418,6 +423,7 @@ GET    /quotes/:id/contract/pdf          - Download PDF do contrato
 ```
 
 **Actions:**
+
 1. ✅ Validar quote existe e status = 'Rascunho'
 2. ✅ Gerar token público (UUID com expiração 7 dias em DB - Opção B)
 3. ✅ Salvar token em `quotes.publicLinkToken` e `quotes.publicLinkTokenExpiresAt`
@@ -425,6 +431,7 @@ GET    /quotes/:id/contract/pdf          - Download PDF do contrato
 5. ✅ Enviar email via **Resend**
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -441,10 +448,11 @@ GET    /quotes/:id/contract/pdf          - Download PDF do contrato
 ```
 
 **Email via Resend:**
-```typescript
-import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+```typescript
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 const result = await resend.emails.send({
   from: 'noreply@easybuffet.com',
@@ -459,16 +467,19 @@ const result = await resend.emails.send({
       <li>Evento: ${eventName}</li>
       <li>Data: ${eventDate}</li>
       <li>Pessoas: ${guestCount}</li>
-      <li><strong>Valor Total: R$ ${totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></li>
+      <li><strong>Valor Total: R$ ${totalAmount.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      })}</strong></li>
     </ul>
     <p><a href="${publicLinkUrl}" style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">Visualizar Orçamento</a></p>
     <p>Este link expira em 7 dias: ${expiresAt}</p>
-  `
-});
+  `,
+})
 
 if (result.error) {
-  logger.error('Resend email error:', result.error);
-  throw new HttpException('Erro ao enviar email', HttpStatus.INTERNAL_SERVER_ERROR);
+  logger.error('Resend email error:', result.error)
+  throw new HttpException('Erro ao enviar email', HttpStatus.INTERNAL_SERVER_ERROR)
 }
 ```
 
@@ -479,15 +490,18 @@ if (result.error) {
 **Autenticação:** Pública (sem token JWT necessário)
 
 **Validações:**
+
 1. ✅ Token deve existir em `quotes.publicLinkToken`
 2. ✅ Token não deve estar expirado (`publicLinkTokenExpiresAt > now()`)
 3. ✅ Quote status não deve ser 'Expirado'
 
 **Actions:**
+
 1. ✅ Se viewedAt é null, atualizar status → 'Visualizado' + `viewedAt` = now()
 2. ✅ Retornar dados públicos (sem campos sensíveis como seller commission)
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -501,13 +515,13 @@ if (result.error) {
       "eventDate": "2026-03-15",
       "guestCount": 120
     },
-    "totalAmount": 5000.00,
+    "totalAmount": 5000.0,
     "items": [
       {
         "description": "Buffet completo - 100 pessoas",
         "quantity": 1,
-        "unitPrice": 3500.00,
-        "totalPrice": 3500.00
+        "unitPrice": 3500.0,
+        "totalPrice": 3500.0
       }
     ],
     "validUntilDate": "2026-02-12T23:59:59Z",
@@ -524,6 +538,7 @@ if (result.error) {
 **Autenticação:** Pública, mas validar token
 
 **Request:**
+
 ```json
 {
   "clientName": "João Silva",
@@ -535,6 +550,7 @@ if (result.error) {
 ```
 
 **Actions:**
+
 1. ✅ Validar token (mesmo que visualizar)
 2. ✅ Validar termsAccepted = true
 3. ✅ Validar clientName não vazio
@@ -544,6 +560,7 @@ if (result.error) {
 7. ✅ Disparar webhook/evento interno para gerar contrato automaticamente
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -560,6 +577,7 @@ if (result.error) {
 ```
 
 **Email de confirmação ao cliente:**
+
 ```
 From: noreply@easybuffet.com
 To: clientEmail
@@ -587,6 +605,7 @@ Easy Buffet
 **Autenticação:** Privada (JWT required) OU automático via webhook após aceite
 
 **Request (opcional):**
+
 ```json
 {
   "generatePdf": true,
@@ -595,110 +614,156 @@ Easy Buffet
 ```
 
 **Template Fixo (HTML):**
+
 ```html
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</title>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
-    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; }
-    .title { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
-    .section { margin-bottom: 20px; }
-    .section-title { font-weight: bold; margin-bottom: 10px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f4f4f4; }
-    .signature-block { margin-top: 40px; display: flex; justify-content: space-between; }
-    .signature-line { text-align: center; width: 200px; border-top: 1px solid #000; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS - BUFFET</h1>
-    <p>Contrato nº: {{quoteId}}</p>
-    <p>Data: {{createdDate}}</p>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #333;
+      }
+      .title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+      .section {
+        margin-bottom: 20px;
+      }
+      .section-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f4f4f4;
+      }
+      .signature-block {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .signature-line {
+        text-align: center;
+        width: 200px;
+        border-top: 1px solid #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS - BUFFET</h1>
+      <p>Contrato nº: {{quoteId}}</p>
+      <p>Data: {{createdDate}}</p>
+    </div>
 
-  <div class="section">
-    <div class="section-title">1. PARTES CONTRATANTES</div>
-    <p><strong>Prestador de Serviços (Buffet):</strong> {{buffetName}}</p>
-    <p><strong>Cliente:</strong> {{clientName}}</p>
-  </div>
+    <div class="section">
+      <div class="section-title">1. PARTES CONTRATANTES</div>
+      <p><strong>Prestador de Serviços (Buffet):</strong> {{buffetName}}</p>
+      <p><strong>Cliente:</strong> {{clientName}}</p>
+    </div>
 
-  <div class="section">
-    <div class="section-title">2. OBJETO DO CONTRATO</div>
-    <p>Prestação de serviços de buffet conforme detalhamento abaixo:</p>
-    <table>
-      <tr>
-        <th>Descrição</th>
-        <th>Quantidade</th>
-        <th>Valor Unitário</th>
-        <th>Valor Total</th>
-      </tr>
-      {{#items}}
-      <tr>
-        <td>{{description}}</td>
-        <td>{{quantity}}</td>
-        <td>R$ {{unitPrice}}</td>
-        <td>R$ {{totalPrice}}</td>
-      </tr>
-      {{/items}}
-      <tr style="background-color: #f4f4f4; font-weight: bold;">
-        <td colspan="3">VALOR TOTAL:</td>
-        <td>R$ {{totalAmount}}</td>
-      </tr>
-    </table>
-  </div>
+    <div class="section">
+      <div class="section-title">2. OBJETO DO CONTRATO</div>
+      <p>Prestação de serviços de buffet conforme detalhamento abaixo:</p>
+      <table>
+        <tr>
+          <th>Descrição</th>
+          <th>Quantidade</th>
+          <th>Valor Unitário</th>
+          <th>Valor Total</th>
+        </tr>
+        {{#items}}
+        <tr>
+          <td>{{description}}</td>
+          <td>{{quantity}}</td>
+          <td>R$ {{unitPrice}}</td>
+          <td>R$ {{totalPrice}}</td>
+        </tr>
+        {{/items}}
+        <tr style="background-color: #f4f4f4; font-weight: bold;">
+          <td colspan="3">VALOR TOTAL:</td>
+          <td>R$ {{totalAmount}}</td>
+        </tr>
+      </table>
+    </div>
 
-  <div class="section">
-    <div class="section-title">3. DADOS DO EVENTO</div>
-    <p><strong>Nome do Evento:</strong> {{eventName}}</p>
-    <p><strong>Data do Evento:</strong> {{eventDate}}</p>
-    <p><strong>Número de Convidados:</strong> {{guestCount}}</p>
-    <p><strong>Local:</strong> {{eventLocation}}</p>
-  </div>
+    <div class="section">
+      <div class="section-title">3. DADOS DO EVENTO</div>
+      <p><strong>Nome do Evento:</strong> {{eventName}}</p>
+      <p><strong>Data do Evento:</strong> {{eventDate}}</p>
+      <p><strong>Número de Convidados:</strong> {{guestCount}}</p>
+      <p><strong>Local:</strong> {{eventLocation}}</p>
+    </div>
 
-  <div class="section">
-    <div class="section-title">4. VALOR E FORMAS DE PAGAMENTO</div>
-    <p><strong>Valor Total:</strong> R$ {{totalAmount}}</p>
-    <p><strong>Validade da Proposta:</strong> {{validUntilDate}}</p>
-    <p>Condições de pagamento conforme acordado entre as partes.</p>
-  </div>
+    <div class="section">
+      <div class="section-title">4. VALOR E FORMAS DE PAGAMENTO</div>
+      <p><strong>Valor Total:</strong> R$ {{totalAmount}}</p>
+      <p><strong>Validade da Proposta:</strong> {{validUntilDate}}</p>
+      <p>Condições de pagamento conforme acordado entre as partes.</p>
+    </div>
 
-  <div class="section">
-    <div class="section-title">5. CANCELAMENTO E REEMBOLSO</div>
-    <p>Cancelamentos realizados com até 30 dias de antecedência ao evento receberão reembolso de 80% do valor pago. Cancelamentos com menos de 30 dias não receberão reembolso.</p>
-  </div>
+    <div class="section">
+      <div class="section-title">5. CANCELAMENTO E REEMBOLSO</div>
+      <p>
+        Cancelamentos realizados com até 30 dias de antecedência ao evento receberão reembolso de
+        80% do valor pago. Cancelamentos com menos de 30 dias não receberão reembolso.
+      </p>
+    </div>
 
-  <div class="section">
-    <div class="section-title">6. RESPONSABILIDADES</div>
-    <p>O prestador de serviços é responsável pela qualidade dos alimentos e conformidade com normas de higiene e segurança alimentar.</p>
-  </div>
+    <div class="section">
+      <div class="section-title">6. RESPONSABILIDADES</div>
+      <p>
+        O prestador de serviços é responsável pela qualidade dos alimentos e conformidade com normas
+        de higiene e segurança alimentar.
+      </p>
+    </div>
 
-  <div class="section">
-    <div class="section-title">7. ASSINATURAS</div>
-    <div class="signature-block">
-      <div>
-        <div class="signature-line"></div>
-        <p>{{buffetName}}<br>Prestador de Serviços</p>
-      </div>
-      <div>
-        <div class="signature-line"></div>
-        <p>{{clientName}}<br>Cliente</p>
+    <div class="section">
+      <div class="section-title">7. ASSINATURAS</div>
+      <div class="signature-block">
+        <div>
+          <div class="signature-line"></div>
+          <p>{{buffetName}}<br />Prestador de Serviços</p>
+        </div>
+        <div>
+          <div class="signature-line"></div>
+          <p>{{clientName}}<br />Cliente</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <p style="text-align: center; font-size: 12px; color: #666; margin-top: 40px;">
-    Este contrato foi gerado automaticamente pelo Easy Buffet em {{generatedAt}}
-  </p>
-</body>
+    <p style="text-align: center; font-size: 12px; color: #666; margin-top: 40px;">
+      Este contrato foi gerado automaticamente pelo Easy Buffet em {{generatedAt}}
+    </p>
+  </body>
 </html>
 ```
 
 **Actions:**
+
 1. ✅ Validar quote existe e status = 'Aceito'
 2. ✅ Substituir placeholders {{}} com dados reais (Handlebars)
 3. ✅ Se generatePdf = true, converter HTML → PDF (html2pdf)
@@ -707,6 +772,7 @@ Easy Buffet
 6. ✅ Settar `quote_contracts.generatedAt` = now()
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -724,6 +790,7 @@ Easy Buffet
 ```
 
 **Conversão HTML → PDF (html2pdf no servidor):**
+
 ```typescript
 import * as html2pdf from 'html2pdf.js';
 
@@ -753,6 +820,7 @@ async generateContractPdf(htmlContent: string, filename: string): Promise<Buffer
 ### 5.6 Listar Orçamentos com Filtros - `GET /quotes?status=Aceito&page=1&limit=20`
 
 **Query Parameters:**
+
 ```
 status: Rascunho|Enviado|Visualizado|Aceito|Rejeitado|Expirado
 clientId: UUID
@@ -764,6 +832,7 @@ sortOrder: asc|desc (default: desc)
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -773,7 +842,7 @@ sortOrder: asc|desc (default: desc)
       "id": "990e8400-e29b-41d4-a716-446655440000",
       "status": "Aceito",
       "client": { "id": "...", "name": "João Silva" },
-      "totalAmount": 5000.00,
+      "totalAmount": 5000.0,
       "event": { "name": "Casamento", "eventDate": "2026-03-15" },
       "createdAt": "2026-01-12T10:30:00Z",
       "sentAt": "2026-01-12T10:35:00Z",
@@ -796,6 +865,7 @@ sortOrder: asc|desc (default: desc)
 ### 5.7 Rejeitar Orçamento - `PATCH /quotes/:id/reject`
 
 **Request (Público via token):**
+
 ```json
 {
   "reason": "Orçamento fora do nosso planejamento"
@@ -803,6 +873,7 @@ sortOrder: asc|desc (default: desc)
 ```
 
 **Actions:**
+
 1. ✅ Validar quote status ≠ 'Expirado' ou 'Aceito'
 2. ✅ Atualizar status → 'Rejeitado'
 3. ✅ Salvar reason
@@ -816,14 +887,14 @@ sortOrder: asc|desc (default: desc)
 
 ```typescript
 export class CreateQuoteDtoValidator {
-  @IsNotEmpty() @IsUUID() clientId: string;
-  @IsNotEmpty() @IsUUID() packageId: string;
-  @IsNotEmpty() @IsPositive() totalAmount: number;
-  @IsNotEmpty() @IsISO8601() validUntilDate: string;
-  
+  @IsNotEmpty() @IsUUID() clientId: string
+  @IsNotEmpty() @IsUUID() packageId: string
+  @IsNotEmpty() @IsPositive() totalAmount: number
+  @IsNotEmpty() @IsISO8601() validUntilDate: string
+
   @ValidateNested({ each: true })
   @Type(() => CreateQuoteItemDto)
-  items: CreateQuoteItemDto[];
+  items: CreateQuoteItemDto[]
 }
 ```
 
@@ -886,25 +957,25 @@ SENDER_EMAIL=noreply@easybuffet.com
 ### 7.2 Email Service
 
 ```typescript
-import { Resend } from 'resend';
+import { Resend } from 'resend'
 
 @Injectable()
 export class EmailService {
-  private readonly resend: Resend;
-  
+  private readonly resend: Resend
+
   constructor(private configService: ConfigService) {
-    this.resend = new Resend(configService.get('RESEND_API_KEY'));
+    this.resend = new Resend(configService.get('RESEND_API_KEY'))
   }
 
   async sendQuoteProposal(email: string, quote: Quote) {
-    const publicLink = `${this.configService.get('APP_DOMAIN')}/proposal/${quote.publicLinkToken}`;
-    
+    const publicLink = `${this.configService.get('APP_DOMAIN')}/proposal/${quote.publicLinkToken}`
+
     return this.resend.emails.send({
       from: this.configService.get('SENDER_EMAIL'),
       to: email,
       subject: `Seu orçamento de ${quote.organization.name} está pronto!`,
-      html: this.buildQuoteEmail(quote, publicLink)
-    });
+      html: this.buildQuoteEmail(quote, publicLink),
+    })
   }
 
   async sendAcceptanceConfirmation(email: string, quote: Quote, acceptance: QuoteAcceptance) {
@@ -912,8 +983,8 @@ export class EmailService {
       from: this.configService.get('SENDER_EMAIL'),
       to: email,
       subject: `Sua proposta foi aceita! ✅`,
-      html: this.buildAcceptanceEmail(quote, acceptance)
-    });
+      html: this.buildAcceptanceEmail(quote, acceptance),
+    })
   }
 
   private buildQuoteEmail(quote: Quote, publicLink: string): string {
@@ -928,7 +999,7 @@ export class EmailService {
       </ul>
       <a href="${publicLink}" style="background: #007bff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">Visualizar Orçamento</a>
       <p><small>Link válido até: ${quote.publicLinkTokenExpiresAt}</small></p>
-    `;
+    `
   }
 }
 ```
@@ -998,15 +1069,15 @@ Quote Aceito → Webhook/Event
 
 ```typescript
 interface QuoteAuditLog {
-  id: UUID;
-  quoteId: UUID;
-  action: 'CREATED' | 'UPDATED' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
-  performedBy: UUID;
-  previousStatus?: string;
-  newStatus?: string;
-  ipAddress?: string;
-  userAgent?: string;
-  createdAt: Timestamp;
+  id: UUID
+  quoteId: UUID
+  action: 'CREATED' | 'UPDATED' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED'
+  performedBy: UUID
+  previousStatus?: string
+  newStatus?: string
+  ipAddress?: string
+  userAgent?: string
+  createdAt: Timestamp
 }
 ```
 
@@ -1014,19 +1085,19 @@ interface QuoteAuditLog {
 
 ## 10. Endpoints Resumo (Rápida Referência)
 
-| Endpoint | Method | Auth | Status Transition | Integração |
-|----------|--------|------|-------------------|-----------|
-| `/quotes` | POST | JWT | - → Rascunho | - |
-| `/quotes` | GET | JWT | - | Paginação |
-| `/quotes/:id` | GET | JWT | - | - |
-| `/quotes/:id` | PUT | JWT | Rascunho → Rascunho | - |
-| `/quotes/:id` | DELETE | JWT | Rascunho → ∅ | - |
-| `/quotes/:id/send` | PATCH | JWT | Rascunho → Enviado | **Resend Email** |
-| `/quotes/public/:token` | GET | Public | Enviado → Visualizado | - |
-| `/quotes/public/:token/accept` | PATCH | Public | Enviado/Visualizado → Aceito | Resend Email, **Contrato PDF** |
-| `/quotes/:id/reject` | PATCH | Public | * → Rejeitado | Resend Email |
-| `/quotes/:id/generate-contract` | POST | JWT | Aceito → (salva PDF) | **html2pdf** |
-| `/quotes/:id/contract/pdf` | GET | JWT | - | PDF Download |
+| Endpoint                        | Method | Auth   | Status Transition            | Integração                     |
+| ------------------------------- | ------ | ------ | ---------------------------- | ------------------------------ |
+| `/quotes`                       | POST   | JWT    | - → Rascunho                 | -                              |
+| `/quotes`                       | GET    | JWT    | -                            | Paginação                      |
+| `/quotes/:id`                   | GET    | JWT    | -                            | -                              |
+| `/quotes/:id`                   | PUT    | JWT    | Rascunho → Rascunho          | -                              |
+| `/quotes/:id`                   | DELETE | JWT    | Rascunho → ∅                 | -                              |
+| `/quotes/:id/send`              | PATCH  | JWT    | Rascunho → Enviado           | **Resend Email**               |
+| `/quotes/public/:token`         | GET    | Public | Enviado → Visualizado        | -                              |
+| `/quotes/public/:token/accept`  | PATCH  | Public | Enviado/Visualizado → Aceito | Resend Email, **Contrato PDF** |
+| `/quotes/:id/reject`            | PATCH  | Public | \* → Rejeitado               | Resend Email                   |
+| `/quotes/:id/generate-contract` | POST   | JWT    | Aceito → (salva PDF)         | **html2pdf**                   |
+| `/quotes/:id/contract/pdf`      | GET    | JWT    | -                            | PDF Download                   |
 
 ---
 

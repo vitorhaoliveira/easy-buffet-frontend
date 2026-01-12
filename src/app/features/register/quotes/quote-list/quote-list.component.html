@@ -103,6 +103,12 @@
                 class="transform hover:scale-110 transition-transform">
                 <lucide-icon [img]="FileTextIcon" class="h-4 w-4"></lucide-icon>
               </button>
+              @if (quote.publicLinkToken) {
+              <button appButton variant="ghost" size="sm" (click)="testPublicLink(quote)" title="Abrir Link Público"
+                class="transform hover:scale-110 transition-transform text-green-600 hover:text-green-700">
+                <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              }
               <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/orcamentos/editar', quote.id]"
                 title="Editar" class="transform hover:scale-110 transition-transform">
                 <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
@@ -166,10 +172,19 @@
             <lucide-icon [img]="EyeIcon" class="mr-2 h-4 w-4"></lucide-icon>
             Ver
           </button>
+          @if (quote.publicLinkToken) {
+          <button appButton size="sm"
+            class="bg-green-50 hover:bg-green-100 text-green-600 border border-green-300 min-h-[44px]"
+            (click)="testPublicLink(quote)" title="Abrir proposta pública">
+            <lucide-icon [img]="EyeIcon" class="mr-2 h-4 w-4"></lucide-icon>
+            Link
+          </button>
+          } @else {
           <button appButton variant="outline" size="sm" class="min-h-[44px]" (click)="exportQuoteToPDF(quote)">
             <lucide-icon [img]="FileTextIcon" class="mr-2 h-4 w-4"></lucide-icon>
             PDF
           </button>
+          }
           <button appButton variant="outline" size="sm" class="min-h-[44px]"
             [routerLink]="['/cadastros/orcamentos/editar', quote.id]">
             <lucide-icon [img]="EditIcon" class="mr-2 h-4 w-4"></lucide-icon>
