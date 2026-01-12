@@ -432,7 +432,7 @@ export class DashboardComponent implements OnInit {
     const statusColors: Record<string, string> = {
       'Pendente': '#fef3c7', // yellow-100
       'Confirmado': '#d1fae5', // green-100
-      'Realizado': '#e9d5ff', // purple-100
+      'Concluído': '#e9d5ff', // purple-100
       'Cancelado': '#f3f4f6', // gray-100
       'Preparação': '#dbeafe' // blue-100
     }
@@ -440,7 +440,7 @@ export class DashboardComponent implements OnInit {
     const bgColor = statusColors[event.status] || '#f3f4f6'
     const textColor = event.status === 'Pendente' ? '#92400e' : 
       event.status === 'Confirmado' ? '#065f46' :
-        event.status === 'Realizado' ? '#6b21a8' :
+        event.status === 'Concluído' ? '#6b21a8' :
           event.status === 'Cancelado' ? '#374151' : '#1e40af'
     
     return `background-color: ${bgColor}; color: ${textColor};`

@@ -19,7 +19,7 @@ export class InstallmentService {
   constructor(private http: HttpClient) {}
 
   getInstallments(): Observable<ApiResponse<Installment[]>> {
-    return this.http.get<ApiResponse<Installment[]>>(`${this.apiUrl}/installments`)
+    return this.http.get<ApiResponse<Installment[]>>(`${this.apiUrl}/installments?limit=1000`)
   }
 
   getInstallmentById(id: string): Observable<ApiResponse<Installment>> {

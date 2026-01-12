@@ -188,7 +188,7 @@ export interface Event {
   eventTime: string
   location: string
   guestCount: number
-  status: 'Pendente' | 'Confirmado' | 'Realizado' | 'Cancelado'
+  status: 'Pendente' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
   createdAt: string
   updatedAt?: string
@@ -513,7 +513,7 @@ export interface CreateEventRequest {
   eventTime: string
   location: string
   guestCount: number
-  status: 'Pendente' | 'Confirmado' | 'Realizado' | 'Cancelado'
+  status: 'Pendente' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
 }
 
@@ -526,7 +526,7 @@ export interface UpdateEventRequest {
   eventTime?: string
   location?: string
   guestCount?: number
-  status?: 'Pendente' | 'Agendado' | 'Confirmado' | 'Realizado' | 'Cancelado'
+  status?: 'Pendente' | 'Agendado' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
 }
 

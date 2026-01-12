@@ -134,7 +134,7 @@ export class EventChecklistPageComponent implements OnInit {
     const colors: Record<string, string> = {
       'Pendente': 'bg-yellow-100 text-yellow-800',
       'Confirmado': 'bg-green-100 text-green-800',
-      'Realizado': 'bg-blue-100 text-blue-800',
+      'Concluído': 'bg-blue-100 text-blue-800',
       'Cancelado': 'bg-gray-100 text-gray-600'
     }
     return colors[status] || 'bg-gray-100 text-gray-600'

@@ -352,7 +352,7 @@ export class EventDetailModalComponent {
       'Atrasado': 'bg-red-100 text-red-800',
       'Confirmado': 'bg-green-100 text-green-800',
       'Preparação': 'bg-blue-100 text-blue-800',
-      'Realizado': 'bg-purple-100 text-purple-800',
+      'Concluído': 'bg-purple-100 text-purple-800',
       'Cancelado': 'bg-gray-100 text-gray-800'
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
