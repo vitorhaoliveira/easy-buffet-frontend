@@ -36,15 +36,23 @@ import { trigger, transition, style, animate } from '@angular/animations'
           ></lucide-icon>
         </div>
 
-        <!-- Message -->
+        <!-- Message and Action -->
         <div class="flex-1">
           <p class="text-sm font-medium text-gray-900">{{ toast.message }}</p>
+          @if (toast.action) {
+            <button
+              (click)="handleAction(toast)"
+              class="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700 underline"
+            >
+              {{ toast.action.label }}
+            </button>
+          }
         </div>
 
         <!-- Close Button -->
         <button
           (click)="removeToast(toast.id)"
-          class="text-gray-400 hover:text-gray-600 transition-colors"
+          class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
         >
           <lucide-icon [img]="XIcon" class="h-4 w-4"></lucide-icon>
         </button>
@@ -79,6 +87,13 @@ export class ToastComponent implements OnInit, OnDestroy {
 
   removeToast(id: string): void {
     this.toastService.remove(id)
+  }
+
+  handleAction(toast: Toast): void {
+    if (toast.action) {
+      toast.action.onClick()
+      this.removeToast(toast.id)
+    }
   }
 
   getToastClasses(toast: Toast): string {

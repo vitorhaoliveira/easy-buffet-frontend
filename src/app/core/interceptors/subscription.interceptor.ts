@@ -4,6 +4,7 @@ import { Router } from '@angular/router'
 import { catchError } from 'rxjs/operators'
 import { throwError } from 'rxjs'
 import { ToastService } from '../services/toast.service'
+import { environment } from '@environments/environment'
 
 /**
  * Interceptor que captura erros 402 (Payment Required) do backend
@@ -25,7 +26,7 @@ export const subscriptionInterceptor: HttpInterceptorFn = (req, next) => {
         // Não mostrar toast se já estiver na página de payment-required
         const currentUrl = router.url
         if (!currentUrl.includes('/payment-required') && !currentUrl.includes('/checkout')) {
-          toastService.error(errorMessage)
+          toastService.errorWithSupport(errorMessage, environment.supportUrl)
           
           // Redirecionar para página de payment-required apenas se não estiver em rotas de pagamento
           router.navigate(['/payment-required'], {

@@ -5,6 +5,7 @@ import { RouterLink, Router } from '@angular/router'
 import { DashboardService } from '@core/services/dashboard.service'
 import { EventService } from '@core/services/event.service'
 import { UnitService } from '@core/services/unit.service'
+import { InstallmentService } from '@core/services/installment.service'
 import { firstValueFrom } from 'rxjs'
 import type { DashboardStats, DashboardInstallment, DashboardEvent, Event, Unit } from '@shared/models/api.types'
 import { parseDateIgnoringTimezone, formatDateBR, getDaysUntil, isSameDayAsDate } from '@shared/utils/date.utils'
@@ -30,6 +31,7 @@ export class DashboardComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService)
   private readonly eventService = inject(EventService)
   private readonly unitService = inject(UnitService)
+  private readonly installmentService = inject(InstallmentService)
   private readonly router = inject(Router)
 
   stats: DashboardStats | null = null
@@ -99,6 +101,17 @@ export class DashboardComponent implements OnInit {
       )
       if (installmentsResponse.success && installmentsResponse.data) {
         this.upcomingInstallments = installmentsResponse.data
+      }
+
+      // Load overdue installments count
+      const overdueResponse = await firstValueFrom(
+        this.installmentService.getOverdueInstallments()
+      )
+      if (overdueResponse.success && overdueResponse.data) {
+        const overdueCount = (overdueResponse.data as any[]).length
+        if (this.stats) {
+          this.stats.overdueInstallments = overdueCount
+        }
       }
 
       // Load upcoming events for list

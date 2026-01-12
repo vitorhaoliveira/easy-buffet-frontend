@@ -1,11 +1,17 @@
 import { Injectable } from '@angular/core'
 import { BehaviorSubject, Observable } from 'rxjs'
 
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
+
 export interface Toast {
   id: string
   type: 'success' | 'error' | 'info' | 'warning'
   message: string
   duration?: number
+  action?: ToastAction
 }
 
 @Injectable({
@@ -32,9 +38,28 @@ export class ToastService {
     this.show('warning', message, duration)
   }
 
+  errorWithSupport(message: string, supportUrl: string = 'https://wa.me/seu-numero'): void {
+    const action: ToastAction = {
+      label: 'Contatar Suporte',
+      onClick: () => {
+        window.open(supportUrl, '_blank')
+      }
+    }
+    this.showWithAction('error', message, 0, action)
+  }
+
   private show(type: Toast['type'], message: string, duration: number): void {
+    this.showWithAction(type, message, duration)
+  }
+
+  private showWithAction(
+    type: Toast['type'],
+    message: string,
+    duration: number,
+    action?: ToastAction
+  ): void {
     const id = this.generateId()
-    const toast: Toast = { id, type, message, duration }
+    const toast: Toast = { id, type, message, duration, action }
 
     const currentToasts = this.toastsSubject.value
     

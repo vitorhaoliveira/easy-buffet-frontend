@@ -7,6 +7,7 @@ import { NgApexchartsModule } from 'ng-apexcharts'
 import type { ApexOptions } from 'ng-apexcharts'
 
 import { DashboardService } from '@core/services/dashboard.service'
+import { InstallmentService } from '@core/services/installment.service'
 import { 
   TableComponent,
   TableHeaderComponent,
@@ -158,7 +159,8 @@ export class FinancialDashboardComponent implements OnInit {
   }
 
   constructor(
-    private readonly dashboardService: DashboardService
+    private readonly dashboardService: DashboardService,
+    private readonly installmentService: InstallmentService
   ) {}
 
   /**
@@ -194,6 +196,17 @@ export class FinancialDashboardComponent implements OnInit {
       )
       if (installmentsResponse.success && installmentsResponse.data) {
         this.upcomingInstallments = installmentsResponse.data
+      }
+
+      // Load overdue installments count
+      const overdueResponse = await firstValueFrom(
+        this.installmentService.getOverdueInstallments()
+      )
+      if (overdueResponse.success && overdueResponse.data) {
+        const overdueCount = (overdueResponse.data as any[]).length
+        if (this.stats) {
+          this.stats.overdueInstallments = overdueCount
+        }
       }
 
       // Load monthly evolution
