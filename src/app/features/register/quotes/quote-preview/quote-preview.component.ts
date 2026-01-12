@@ -140,21 +140,42 @@ export class QuotePreviewComponent implements OnInit {
   async sendQuote(): Promise<void> {
     if (!this.quote || !this.quoteId) return
 
+    const clientEmail = this.quote.client?.email
+    const clientName = this.quote.client?.name
+
+    if (!clientEmail) {
+      this.errorMessage = 'Cliente não possui email cadastrado'
+      return
+    }
+
     try {
       this.isProcessing = true
       this.errorMessage = ''
       
-      const response = await firstValueFrom(this.quoteService.sendQuote(this.quoteId))
+      const response = await firstValueFrom(this.quoteService.sendQuote(this.quoteId, {
+        clientEmail,
+        clientName,
+        customMessage: ''
+      }))
       
       if (response.success) {
-        this.successMessage = 'Orçamento enviado com sucesso!'
+        this.successMessage = 'Orçamento enviado com sucesso! Um link foi enviado para o cliente.'
         await this.loadQuote(this.quoteId)
         setTimeout(() => this.successMessage = '', 3000)
       } else {
+        this.errorMessage = response.message || 'Erro ao enviar orçamento'
+      }
+    } catch (err: unknown) {
+      const error = err as { error?: { error?: { message: string }; message?: string }; message: string }
+      if (error.error?.error?.message) {
+        this.errorMessage = error.error.error.message
+      } else if (error.error?.message) {
+        this.errorMessage = error.error.message
+      } else if (error.message) {
+        this.errorMessage = error.message
+      } else {
         this.errorMessage = 'Erro ao enviar orçamento'
       }
-    } catch {
-      this.errorMessage = 'Erro ao enviar orçamento'
     } finally {
       this.isProcessing = false
     }
@@ -167,7 +188,14 @@ export class QuotePreviewComponent implements OnInit {
       this.isProcessing = true
       this.errorMessage = ''
       
-      const response = await firstValueFrom(this.quoteService.acceptQuote(this.quoteId))
+      const clientName = this.quote.client?.name || 'Cliente'
+      const response = await firstValueFrom(this.quoteService.acceptQuote(this.quoteId, {
+        clientName,
+        clientEmail: this.quote.client?.email,
+        clientPhone: this.quote.client?.phone,
+        cpf: this.quote.client?.cpf,
+        termsAccepted: true
+      }))
       
       if (response.success) {
         this.successMessage = 'Orçamento aceito com sucesso!'
@@ -176,8 +204,17 @@ export class QuotePreviewComponent implements OnInit {
       } else {
         this.errorMessage = 'Erro ao aceitar orçamento'
       }
-    } catch {
-      this.errorMessage = 'Erro ao aceitar orçamento'
+    } catch (err: unknown) {
+      const error = err as { error?: { error?: { message: string }; message?: string }; message: string }
+      if (error.error?.error?.message) {
+        this.errorMessage = error.error.error.message
+      } else if (error.error?.message) {
+        this.errorMessage = error.error.message
+      } else if (error.message) {
+        this.errorMessage = error.message
+      } else {
+        this.errorMessage = 'Erro ao aceitar orçamento'
+      }
     } finally {
       this.isProcessing = false
     }
@@ -190,7 +227,9 @@ export class QuotePreviewComponent implements OnInit {
       this.isProcessing = true
       this.errorMessage = ''
       
-      const response = await firstValueFrom(this.quoteService.rejectQuote(this.quoteId))
+      const response = await firstValueFrom(this.quoteService.rejectQuote(this.quoteId, {
+        reason: 'Rejeitado via sistema'
+      }))
       
       if (response.success) {
         this.successMessage = 'Orçamento rejeitado'
@@ -199,8 +238,17 @@ export class QuotePreviewComponent implements OnInit {
       } else {
         this.errorMessage = 'Erro ao rejeitar orçamento'
       }
-    } catch {
-      this.errorMessage = 'Erro ao rejeitar orçamento'
+    } catch (err: unknown) {
+      const error = err as { error?: { error?: { message: string }; message?: string }; message: string }
+      if (error.error?.error?.message) {
+        this.errorMessage = error.error.error.message
+      } else if (error.error?.message) {
+        this.errorMessage = error.error.message
+      } else if (error.message) {
+        this.errorMessage = error.message
+      } else {
+        this.errorMessage = 'Erro ao rejeitar orçamento'
+      }
     } finally {
       this.isProcessing = false
     }

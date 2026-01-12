@@ -1072,9 +1072,13 @@ export interface ToggleChecklistItemRequest {
   notes?: string
 }
 
+// Quote Status Type
+export type QuoteStatus = 'Rascunho' | 'Enviado' | 'Visualizado' | 'Aceito' | 'Rejeitado' | 'Expirado'
+
 // Quote Types
 export interface Quote {
   id: string
+  organizationId: string
   clientId: string
   eventId?: string
   packageId: string
@@ -1082,14 +1086,20 @@ export interface Quote {
   totalAmount: number
   items: QuoteItem[]
   validUntilDate: string
-  status: 'Rascunho' | 'Enviado' | 'Aceito' | 'Rejeitado' | 'Expirado'
+  status: QuoteStatus
   notes?: string
   createdAt: string
   updatedAt?: string
   sentAt?: string
+  viewedAt?: string
+  expiresAt?: string
+  publicLinkToken?: string
+  publicLinkTokenExpiresAt?: string
   client?: Client
   event?: Event
   package?: Package
+  seller?: Seller
+  acceptance?: QuoteAcceptance
 }
 
 export interface QuoteItem {
@@ -1101,6 +1111,35 @@ export interface QuoteItem {
   totalPrice: number
 }
 
+// Quote Acceptance Types
+export interface QuoteAcceptance {
+  id: string
+  quoteId: string
+  clientName: string
+  clientEmail?: string
+  clientPhone?: string
+  cpf?: string
+  termsAccepted: boolean
+  termsAcceptedAt: string
+  ipAddress?: string
+  userAgent?: string
+  createdAt: string
+  acceptedBy?: string
+}
+
+export interface QuoteContract {
+  id: string
+  quoteId: string
+  contractId?: string
+  contractTemplateName: string
+  contractHtmlContent?: string
+  contractPdfPath?: string
+  generatedAt?: string
+  createdAt: string
+  updatedAt?: string
+}
+
+// Quote Request Types
 export interface CreateQuoteRequest {
   clientId: string
   eventId?: string
@@ -1126,6 +1165,90 @@ export interface UpdateQuoteRequest {
   items?: CreateQuoteItemRequest[]
   validUntilDate?: string
   notes?: string
-  status?: 'Rascunho' | 'Enviado' | 'Aceito' | 'Rejeitado' | 'Expirado'
+  status?: QuoteStatus
+}
+
+export interface SendQuoteRequest {
+  clientEmail: string
+  clientName?: string
+  customMessage?: string
+}
+
+export interface AcceptQuoteRequest {
+  clientName: string
+  clientEmail?: string
+  clientPhone?: string
+  cpf?: string
+  termsAccepted: boolean
+}
+
+export interface RejectQuoteRequest {
+  reason?: string
+}
+
+export interface GenerateContractRequest {
+  generatePdf?: boolean
+  downloadImmediately?: boolean
+}
+
+// Quote Response Types
+export interface QuoteResponse {
+  id: string
+  organizationId: string
+  client: {
+    id: string
+    name: string
+    email?: string
+    phone?: string
+  }
+  event?: {
+    id: string
+    name: string
+    eventDate: string
+    guestCount?: number
+  }
+  package: {
+    id: string
+    name: string
+    type?: string
+  }
+  seller?: {
+    id: string
+    name: string
+  }
+  totalAmount: number
+  items: QuoteItem[]
+  notes?: string
+  status: QuoteStatus
+  validUntilDate: string
+  sentAt?: string
+  viewedAt?: string
+  expiresAt?: string
+  createdAt: string
+  updatedAt?: string
+  publicLinkUrl?: string
+  publicLinkToken?: string
+  publicLinkTokenExpiresAt?: string
+}
+
+export interface QuoteAcceptanceResponse {
+  id: string
+  quoteId: string
+  clientName: string
+  clientEmail?: string
+  cpf?: string
+  termsAccepted: boolean
+  termsAcceptedAt: string
+  createdAt: string
+}
+
+export interface ContractGenerationResponse {
+  id: string
+  quoteId: string
+  contractId?: string
+  contractTemplateName: string
+  contractPdfPath?: string
+  generatedAt: string
+  htmlPreview?: string
 }
 

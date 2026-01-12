@@ -40,6 +40,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/payments/payment-required/payment-required.component').then(m => m.PaymentRequiredComponent)
   },
+
+  // Public proposal page (no auth required)
+  {
+    path: 'proposal/:token',
+    loadComponent: () => import('./features/register/quotes/proposal-page/proposal-page.component').then(m => m.ProposalPageComponent)
+  },
   
   // Protected routes (with auth guard)
   {
