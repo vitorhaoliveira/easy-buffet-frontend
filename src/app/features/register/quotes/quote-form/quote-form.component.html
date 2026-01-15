@@ -87,9 +87,10 @@
 
         <div class="space-y-2">
           <label for="validUntilDate" class="text-sm font-medium">Data de Validade *</label>
-          <input id="validUntilDate" type="date" formControlName="validUntilDate"
+          <input id="validUntilDate" type="date" formControlName="validUntilDate" [min]="minValidUntilDate"
             class="w-full min-h-[44px] px-3 py-2 border border-input bg-background rounded-lg text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
             [class.border-red-500]="hasError('validUntilDate')" />
+          <p class="text-xs text-muted-foreground">Mínimo: 7 dias a partir de hoje</p>
           @if (hasError('validUntilDate')) {
           <p class="text-xs text-red-600">{{ getFieldError('validUntilDate') }}</p>
           }

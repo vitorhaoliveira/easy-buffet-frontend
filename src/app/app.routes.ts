@@ -310,6 +310,12 @@ export const routes: Routes = [
         path: 'assinatura',
         loadComponent: () => import('./features/payments/billing/billing.component').then(m => m.BillingComponent)
       },
+
+      // Settings routes
+      {
+        path: 'configuracoes/contrato',
+        loadComponent: () => import('./features/settings/contract-settings/contract-settings.component').then(m => m.ContractSettingsComponent)
+      },
       
       // {
       //   path: 'configuracoes/permissoes',

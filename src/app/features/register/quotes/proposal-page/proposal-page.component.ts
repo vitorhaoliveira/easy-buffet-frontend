@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core'
+import { Component, OnInit, OnDestroy, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { ActivatedRoute, Router } from '@angular/router'
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
@@ -9,6 +9,7 @@ import { QuoteService } from '@core/services/quote.service'
 import { ToastService } from '@core/services/toast.service'
 import type { Quote, AcceptQuoteRequest } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
+import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 
 @Component({
   selector: 'app-proposal-page',
@@ -16,12 +17,13 @@ import { formatDateBR } from '@shared/utils/date.utils'
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    LucideAngularModule
+    LucideAngularModule,
+    ConfirmationModalComponent
   ],
   templateUrl: './proposal-page.component.html',
   styleUrls: ['./proposal-page.component.css']
 })
-export class ProposalPageComponent implements OnInit {
+export class ProposalPageComponent implements OnInit, OnDestroy {
   readonly CheckCircleIcon = CheckCircle
   readonly AlertCircleIcon = AlertCircle
   readonly CalendarIcon = Calendar
@@ -45,6 +47,12 @@ export class ProposalPageComponent implements OnInit {
   acceptanceForm!: FormGroup
   showAcceptanceForm: boolean = false
   acceptanceSubmitted: boolean = false
+  showRejectConfirmation: boolean = false
+  isRejectingQuote: boolean = false
+  isDownloadingPdf: boolean = false
+  contractReady: boolean = false
+  
+  private contractCheckInterval?: any
 
   constructor() {
     this.acceptanceForm = this.fb.group({
@@ -68,6 +76,13 @@ export class ProposalPageComponent implements OnInit {
     await this.loadProposal()
   }
 
+  ngOnDestroy(): void {
+    // Limpar interval ao sair do componente
+    if (this.contractCheckInterval) {
+      clearInterval(this.contractCheckInterval)
+    }
+  }
+
   async loadProposal(): Promise<void> {
     try {
       this.isLoading = true
@@ -76,6 +91,15 @@ export class ProposalPageComponent implements OnInit {
       
       if (response.success && response.data) {
         this.quote = response.data
+        
+        // Verificar se contrato foi gerado (se status é Aceito e existe PDF)
+        const wasReady = this.contractReady
+        this.contractReady = this.quote.status === 'Aceito' && !!this.quote.contract?.contractPdfPath
+        
+        // Log para debug
+        if (this.contractCheckInterval) {
+          console.log(`[loadProposal] Status: ${this.quote.status}, HasContract: ${!!this.quote.contract}, HasPDF: ${!!this.quote.contract?.contractPdfPath}, contractReady: ${this.contractReady}`)
+        }
         
         // Pré-preencher nome do cliente se disponível
         if (this.quote.client?.name) {
@@ -142,13 +166,33 @@ export class ProposalPageComponent implements OnInit {
   }
 
   async downloadProposalPdf(): Promise<void> {
+    // Verificar se contrato foi gerado (apenas para propostas aceitas)
+    if (this.quote?.status === 'Aceito') {
+      if (!this.contractReady) {
+        this.error = 'O contrato está sendo gerado. Tente novamente em alguns instantes.'
+        this.toastService.error('Contrato ainda não está pronto. Aguarde...')
+        return
+      }
+    }
+
     try {
+      this.isDownloadingPdf = true
+      this.error = ''
       const pdf = await firstValueFrom(this.quoteService.downloadPublicQuotePdf(this.token))
-      this.triggerDownload(pdf, 'proposta.pdf')
+      const filename = this.quote?.status === 'Aceito' 
+        ? `contrato-${this.quote?.id.slice(0, 8)}.pdf`
+        : `proposta-${this.quote?.id.slice(0, 8)}.pdf`
+      this.triggerDownload(pdf, filename)
       this.toastService.success('PDF baixado com sucesso!')
     } catch (err: unknown) {
-      const error = err as { error?: { error?: { message: string }; message?: string }; message: string }
-      if (error.error?.error?.message) {
+      const error = err as { error?: { error?: { code?: string; message: string }; message?: string }; message: string }
+      
+      // Verificar se é erro de contrato não gerado
+      if (error.error?.error?.code === 'CONTRACT_NOT_FOUND') {
+        this.error = 'Contrato ainda não foi gerado. Aguarde alguns instantes e tente novamente.'
+        this.toastService.error('Contrato em processamento...')
+        this.contractReady = false
+      } else if (error.error?.error?.message) {
         this.error = error.error.error.message
       } else if (error.error?.message) {
         this.error = error.error.message
@@ -157,6 +201,8 @@ export class ProposalPageComponent implements OnInit {
       } else {
         this.error = 'Erro ao baixar PDF'
       }
+    } finally {
+      this.isDownloadingPdf = false
     }
   }
 
@@ -190,10 +236,32 @@ export class ProposalPageComponent implements OnInit {
         this.successMessage = 'Proposta aceita com sucesso! Seu contrato está sendo gerado.'
         this.showAcceptanceForm = false
         
-        // Recarregar proposta para atualizar status
-        setTimeout(() => {
-          this.loadProposal()
-        }, 2000)
+        // Parar qualquer verificação anterior
+        if (this.contractCheckInterval) {
+          clearInterval(this.contractCheckInterval)
+        }
+        
+        // Recarregar proposta e verificar contrato a cada 3 segundos
+        let attempts = 0
+        const maxAttempts = 20 // 60 segundos de tentativas
+        this.contractCheckInterval = setInterval(async () => {
+          attempts++
+          await this.loadProposal()
+          
+          console.log(`Verificação ${attempts}: contractReady=${this.contractReady}`)
+          
+          if (this.contractReady || attempts >= maxAttempts) {
+            if (this.contractCheckInterval) {
+              clearInterval(this.contractCheckInterval)
+              this.contractCheckInterval = undefined
+            }
+            if (this.contractReady) {
+              this.toastService.success('Contrato gerado com sucesso!')
+            } else if (attempts >= maxAttempts) {
+              this.toastService.warning('Timeout na geração do contrato. Tente recarregar a página.')
+            }
+          }
+        }, 3000)
       } else {
         this.error = response.message || response.errors?.[0] || 'Erro ao aceitar proposta'
       }
@@ -213,12 +281,28 @@ export class ProposalPageComponent implements OnInit {
     }
   }
 
-  async handleRejectQuote(): Promise<void> {
-    if (!confirm('Tem certeza que deseja rejeitar esta proposta?')) {
-      return
-    }
+  openRejectConfirmation(): void {
+    this.showRejectConfirmation = true
+  }
 
+  closeRejectConfirmation(): void {
+    this.showRejectConfirmation = false
+  }
+
+  async confirmRejectQuote(): Promise<void> {
+    await this.performRejectQuote()
+    this.closeRejectConfirmation()
+  }
+
+  async handleRejectQuote(): Promise<void> {
+    this.openRejectConfirmation()
+  }
+
+  private async performRejectQuote(): Promise<void> {
     try {
+      this.isRejectingQuote = true
+      this.error = ''
+      
       const response = await firstValueFrom(
         this.quoteService.rejectPublicQuote(this.token, {
           reason: 'Rejeitado via link público'
@@ -244,6 +328,8 @@ export class ProposalPageComponent implements OnInit {
       } else {
         this.error = 'Erro ao rejeitar proposta'
       }
+    } finally {
+      this.isRejectingQuote = false
     }
   }
 
@@ -256,6 +342,23 @@ export class ProposalPageComponent implements OnInit {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
+  }
+
+  isContractPending(): boolean {
+    return this.quote?.status === 'Aceito' && !this.contractReady
+  }
+
+  isBtnDownloadDisabled(): boolean {
+    return this.isDownloadingPdf || this.isContractPending()
+  }
+
+  dismissContractLoading(): void {
+    // Usuário pode descartar o aviso manualmente
+    if (this.contractCheckInterval) {
+      clearInterval(this.contractCheckInterval)
+      this.contractCheckInterval = undefined
+    }
+    this.successMessage = ''
   }
 
   getFieldError(fieldName: string): string {

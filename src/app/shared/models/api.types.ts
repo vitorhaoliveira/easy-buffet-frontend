@@ -1100,6 +1100,7 @@ export interface Quote {
   package?: Package
   seller?: Seller
   acceptance?: QuoteAcceptance
+  contract?: QuoteContract
 }
 
 export interface QuoteItem {
@@ -1250,5 +1251,23 @@ export interface ContractGenerationResponse {
   contractPdfPath?: string
   generatedAt: string
   htmlPreview?: string
+}
+
+// Contract Configuration
+export interface ContractClause {
+  id: string
+  title: string
+  content: string
+  order: number
+  isRequired: boolean
+  isActive: boolean
+}
+
+export interface ContractConfiguration {
+  id: string
+  organizationId: string
+  clauses: ContractClause[]
+  createdAt: string
+  updatedAt: string
 }
 

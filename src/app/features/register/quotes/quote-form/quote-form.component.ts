@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute } from '@angular/router'
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray } from '@angular/forms'
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, AbstractControl, ValidationErrors } from '@angular/forms'
 import { LucideAngularModule, ArrowLeft, Save, Plus, Trash2 } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
@@ -47,6 +47,7 @@ export class QuoteFormComponent implements OnInit {
   clients: Client[] = []
   packages: PackageType[] = []
   events: Event[] = []
+  minValidUntilDate: string
 
   private readonly fb = inject(FormBuilder)
   private readonly quoteService = inject(QuoteService)
@@ -57,12 +58,18 @@ export class QuoteFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute)
 
   constructor() {
+    // Calcular data mínima: hoje + 7 dias
+    const today = new Date()
+    const minDate = new Date(today)
+    minDate.setDate(minDate.getDate() + 7)
+    this.minValidUntilDate = minDate.toISOString().split('T')[0]
+
     this.quoteForm = this.fb.group({
       clientId: ['', [Validators.required]],
       eventId: [''],
       packageId: ['', [Validators.required]],
       items: this.fb.array([], [Validators.required]),
-      validUntilDate: ['', [Validators.required]],
+      validUntilDate: ['', [Validators.required, this.validUntilDateValidator.bind(this)]],
       notes: ['']
     })
   }
@@ -82,6 +89,33 @@ export class QuoteFormComponent implements OnInit {
     } else {
       this.addItem()
     }
+  }
+
+  /**
+   * Validador customizado: validUntilDate deve ser no mínimo 7 dias no futuro
+   */
+  validUntilDateValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null // Deixa o required cuidar disso
+    }
+
+    const selectedDate = new Date(control.value)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Zerar horas para comparação de data
+
+    const minDate = new Date(today)
+    minDate.setDate(minDate.getDate() + 7)
+
+    if (selectedDate < minDate) {
+      return {
+        minFutureDays: {
+          requiredDays: 7,
+          message: 'A data de validade deve ser no mínimo 7 dias no futuro'
+        }
+      }
+    }
+
+    return null
   }
 
   async loadLookupData(): Promise<void> {
@@ -240,7 +274,11 @@ export class QuoteFormComponent implements OnInit {
 
   getFieldError(fieldName: string): string {
     const field = this.quoteForm.get(fieldName)
-    if (field?.hasError('required') && field.touched) {
+    if (!field || !field.touched) {
+      return ''
+    }
+
+    if (field.hasError('required')) {
       const fieldLabels: Record<string, string> = {
         clientId: 'Cliente',
         packageId: 'Pacote',
@@ -248,6 +286,11 @@ export class QuoteFormComponent implements OnInit {
       }
       return `${fieldLabels[fieldName] || 'Campo'} é obrigatório`
     }
+
+    if (field.hasError('minFutureDays')) {
+      return field.errors?.['minFutureDays'].message
+    }
+
     return ''
   }
 

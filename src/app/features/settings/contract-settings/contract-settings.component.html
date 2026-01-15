@@ -1,0 +1,138 @@
+<div class="max-w-5xl mx-auto p-6">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Configuração de Contrato</h1>
+    <p class="text-gray-600">
+      Personalize as cláusulas que aparecerão nos contratos gerados quando uma proposta for aceita.
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!isLoading" [formGroup]="contractForm" (ngSubmit)="onSave()">
+    <div class="space-y-6" formArrayName="clauses">
+      <!-- Clauses -->
+      <div *ngFor="let clauseGroup of clausesArray.controls; let i = index" [formGroupName]="i"
+        class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Título da Cláusula
+              <span *ngIf="clauseGroup.get('isRequired')?.value" class="text-red-500">*</span>
+            </label>
+            <input type="text" formControlName="title"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="Ex: Objeto do Contrato" />
+          </div>
+
+          <div class="ml-4 flex items-center">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="isActive" class="sr-only peer" />
+              <div
+                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500">
+              </div>
+              <span class="ml-3 text-sm font-medium text-gray-700">Ativa</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Conteúdo
+            <span *ngIf="clauseGroup.get('isRequired')?.value" class="text-red-500">*</span>
+          </label>
+          <textarea formControlName="content" rows="4"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-y"
+            placeholder="Digite o conteúdo da cláusula..."></textarea>
+          <p class="mt-1 text-sm text-gray-500">
+            <span *ngIf="clauseGroup.get('isRequired')?.value" class="text-orange-600 font-medium">
+              Obrigatória
+            </span>
+            <span *ngIf="!clauseGroup.get('isRequired')?.value">
+              Opcional - pode ser desativada ou deixada em branco
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+      <button type="button" (click)="onResetToDefaults()"
+        class="w-full sm:w-auto px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        [disabled]="isLoading || isSaving">
+        Restaurar Padrão
+      </button>
+
+      <div class="flex gap-3 w-full sm:w-auto">
+        <button type="button" (click)="togglePreview()"
+          class="flex-1 sm:flex-none px-6 py-2.5 text-orange-700 bg-orange-50 border border-orange-300 rounded-lg hover:bg-orange-100 transition-colors">
+          {{ showPreview ? 'Ocultar' : 'Visualizar' }} Preview
+        </button>
+
+        <button type="submit"
+          class="flex-1 sm:flex-none px-6 py-2.5 text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          [disabled]="isSaving || contractForm.invalid">
+          {{ isSaving ? 'Salvando...' : 'Salvar Alterações' }}
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal [isOpen]="showResetConfirmation" title="Restaurar Cláusulas Padrão?"
+    message="Tem certeza que deseja restaurar as cláusulas padrão? Todas as personalizações serão perdidas."
+    variant="warning" confirmText="Restaurar" cancelText="Cancelar" (onConfirm)="confirmReset()"
+    (onClose)="closeResetConfirmation()">
+  </app-confirmation-modal>
+
+  <!-- Preview -->
+  <div *ngIf="showPreview" class="mt-8 bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+      Preview do Contrato
+    </h2>
+
+    <div class="prose max-w-none">
+      <div *ngFor="let clause of getActiveClausesForPreview(); let i = index" class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+          Cláusula {{ i + 1 }} - {{ clause.title }}
+        </h3>
+        <p class="text-gray-700 whitespace-pre-line">
+          {{ clause.content || '(conteúdo não definido)' }}
+        </p>
+      </div>
+
+      <div *ngIf="getActiveClausesForPreview().length === 0" class="text-center py-8">
+        <p class="text-gray-500">Nenhuma cláusula ativa para visualizar</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Box -->
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-blue-800">Informações Importantes</h3>
+        <div class="mt-2 text-sm text-blue-700">
+          <ul class="list-disc list-inside space-y-1">
+            <li>As cláusulas obrigatórias não podem ser desativadas</li>
+            <li>Alterações afetarão apenas novos contratos gerados</li>
+            <li>Contratos já aceitos não serão modificados</li>
+            <li>Valores, datas e informações específicas do evento são preenchidos automaticamente</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

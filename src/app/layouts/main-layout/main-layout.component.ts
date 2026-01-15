@@ -123,6 +123,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       items: [
         { title: 'Minha Conta', url: '/conta' },
         { title: 'Assinatura', url: '/assinatura' },
+        { title: 'Contrato', url: '/configuracoes/contrato' },
       ]
     }
   ]
