@@ -1,16 +1,16 @@
 import { Component, OnInit, OnDestroy } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms'
-import { LucideAngularModule, User, Building2, Clock, Save, X, Search, Filter } from 'lucide-angular'
+import { LucideAngularModule, User, Building2, Clock, Save, X, Search, Filter, Shield } from 'lucide-angular'
 import { firstValueFrom, Subject, takeUntil } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
-import { PhoneMaskDirective } from '@shared/directives/phone-mask.directive'
 import { phoneValidator } from '@shared/validators'
 import { AuthStateService } from '@core/services/auth-state.service'
 import { UserService } from '@core/services/user.service'
 import { SettingsService } from '@core/services/settings.service'
+import { ChangePasswordComponent } from '../change-password/change-password.component'
 import type {
   User as UserType,
   CompanyData,
@@ -19,7 +19,7 @@ import type {
   PaginationInfo
 } from '@shared/models/api.types'
 
-type TabType = 'profile' | 'company' | 'logs'
+type TabType = 'profile' | 'company' | 'logs' | 'security'
 
 @Component({
   selector: 'app-account-settings',
@@ -31,6 +31,7 @@ type TabType = 'profile' | 'company' | 'logs'
     LucideAngularModule,
     ButtonComponent,
     LabelComponent,
+    ChangePasswordComponent
   ],
   templateUrl: './account-settings.component.html'
 })
@@ -39,6 +40,7 @@ export class AccountSettingsComponent implements OnInit, OnDestroy {
   readonly UserIcon = User
   readonly BuildingIcon = Building2
   readonly ClockIcon = Clock
+  readonly ShieldIcon = Shield
   readonly SaveIcon = Save
   readonly XIcon = X
   readonly SearchIcon = Search

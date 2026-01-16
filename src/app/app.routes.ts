@@ -13,6 +13,18 @@ export const routes: Routes = [
     path: 'cadastrar',
     loadComponent: () => import('./features/auth/pages/signup/signup.component').then(m => m.SignupComponent)
   },
+  {
+    path: 'esqueci-senha',
+    loadComponent: () => import('./features/auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password/:token',
+    loadComponent: () => import('./features/auth/pages/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
+    path: 'redefinir-senha',
+    loadComponent: () => import('./features/auth/pages/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
 
   // Payment routes (with auth guard only)
   {

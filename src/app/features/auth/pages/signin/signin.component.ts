@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
-import { Router } from '@angular/router'
+import { Router, RouterModule } from '@angular/router'
 import { AuthStateService } from '@core/services/auth-state.service'
 import { AuthService } from '@core/services/auth.service'
 
 @Component({
   selector: 'app-signin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './signin.component.html',
   styles: []
 })

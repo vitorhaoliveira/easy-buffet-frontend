@@ -98,6 +98,66 @@ export class AuthService {
   }
 
   /**
+   * @Function - forgotPassword
+   * @description - Request password reset by email
+   * @author - EasyBuffet Team
+   * @param - email: string - User's email address
+   * @returns - Observable<ApiResponse<any>> - Response from server
+   */
+  forgotPassword(email: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/auth/forgot-password`,
+      { email }
+    ).pipe(
+      catchError(this.handleError)
+    )
+  }
+
+  /**
+   * @Function - resetPassword
+   * @description - Reset password with token
+   * @author - EasyBuffet Team
+   * @param - token: string - Password reset token
+   * @param - newPassword: string - New password
+   * @param - confirmPassword: string - Password confirmation
+   * @returns - Observable<ApiResponse<any>> - Response from server
+   */
+  resetPassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/auth/reset-password`,
+      { token, newPassword, confirmPassword }
+    ).pipe(
+      catchError(this.handleError)
+    )
+  }
+
+  /**
+   * @Function - changePassword
+   * @description - Change password for authenticated user
+   * @author - EasyBuffet Team
+   * @param - currentPassword: string - Current password
+   * @param - newPassword: string - New password
+   * @param - confirmPassword: string - Password confirmation
+   * @returns - Observable<ApiResponse<any>> - Response from server
+   */
+  changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/auth/change-password`,
+      { currentPassword, newPassword, confirmPassword }
+    ).pipe(
+      catchError(this.handleError)
+    )
+  }
+
+  /**
    * @Function - wakeUpServer
    * @description - Pings the server to wake it up from cold start
    * @author - EasyBuffet Team
