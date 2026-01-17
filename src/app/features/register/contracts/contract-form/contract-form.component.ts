@@ -167,7 +167,14 @@ export class ContractFormComponent implements OnInit {
         if (response.success) {
           this.router.navigate(['/cadastros/contratos'])
         } else {
-          this.errorMessage = 'Erro ao atualizar contrato'
+          // Extract error message from response
+          if ((response as any).error?.message) {
+            this.errorMessage = (response as any).error.message
+          } else if (response.message) {
+            this.errorMessage = response.message
+          } else {
+            this.errorMessage = 'Erro ao atualizar contrato'
+          }
         }
       } else {
         const createData: CreateContractRequest = {
@@ -188,11 +195,27 @@ export class ContractFormComponent implements OnInit {
         if (response.success) {
           this.router.navigate(['/cadastros/contratos'])
         } else {
-          this.errorMessage = 'Erro ao criar contrato'
+          // Extract error message from response
+          if ((response as any).error?.message) {
+            this.errorMessage = (response as any).error.message
+          } else if (response.message) {
+            this.errorMessage = response.message
+          } else {
+            this.errorMessage = 'Erro ao criar contrato'
+          }
         }
       }
     } catch (error: any) {
-      this.errorMessage = error.message || 'Erro ao salvar contrato'
+      // Handle HTTP errors (4xx, 5xx)
+      if (error.error?.error?.message) {
+        this.errorMessage = error.error.error.message
+      } else if (error.error?.message) {
+        this.errorMessage = error.error.message
+      } else if (error.message) {
+        this.errorMessage = error.message
+      } else {
+        this.errorMessage = 'Erro ao salvar contrato'
+      }
     } finally {
       this.isLoading = false
     }
