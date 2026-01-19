@@ -1271,3 +1271,19 @@ export interface ContractConfiguration {
   updatedAt: string
 }
 
+// User Limit Types
+export interface UserLimit {
+  limit: number
+  current: number
+  available: number
+}
+
+export interface AddUsersRequest {
+  quantity: number
+}
+
+export interface AddUsersResponse {
+  message: string
+  newLimit: number
+}
+

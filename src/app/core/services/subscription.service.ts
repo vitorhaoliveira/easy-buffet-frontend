@@ -1,7 +1,10 @@
-import { Injectable, inject } from '@angular/core'
+import { Injectable, inject, NgZone } from '@angular/core'
+import { HttpErrorResponse } from '@angular/common/http'
 import { BehaviorSubject, Observable, map, combineLatest } from 'rxjs'
 import { PaymentService } from './payment.service'
 import { AuthStateService } from './auth-state.service'
+import { ToastService } from './toast.service'
+import { environment } from '@environments/environment'
 import type { SubscriptionResponse } from '@shared/models/subscription.model'
 
 @Injectable({
@@ -10,6 +13,8 @@ import type { SubscriptionResponse } from '@shared/models/subscription.model'
 export class SubscriptionService {
   private readonly paymentService = inject(PaymentService)
   private readonly authStateService = inject(AuthStateService)
+  private readonly toastService = inject(ToastService)
+  private readonly ngZone = inject(NgZone)
   
   private readonly subscription$ = new BehaviorSubject<SubscriptionResponse | null>(null)
   private readonly loading$ = new BehaviorSubject<boolean>(true)
@@ -110,7 +115,10 @@ export class SubscriptionService {
   }
 
   /**
-   * Abre o portal de gerenciamento de assinatura do Stripe
+   * @Function - openPortal
+   * @description - Opens the Stripe customer portal for subscription management
+   * @author - Vitor Hugo
+   * @returns - void
    */
   openPortal(): void {
     console.log('🌐 SubscriptionService: Chamando openPortal...')
@@ -122,12 +130,60 @@ export class SubscriptionService {
           window.location.href = response.data.url
         } else {
           console.error('❌ Resposta inválida do portal:', response)
-          alert('Erro ao abrir portal de pagamento. Por favor, tente novamente.')
+          this.toastService.error('Erro ao abrir portal de pagamento. Por favor, tente novamente.')
         }
       },
-      error: (error) => {
-        console.error('❌ Erro ao abrir portal:', error)
-        alert('Erro ao abrir portal de pagamento. Por favor, tente novamente.')
+      error: (error: HttpErrorResponse | any) => {
+        console.error('❌ Erro ao abrir portal - Tipo:', typeof error)
+        console.error('❌ Erro ao abrir portal - Objeto completo:', error)
+        console.error('❌ Erro ao abrir portal - error.error:', error?.error)
+        console.error('❌ Erro ao abrir portal - error.error?.error:', error?.error?.error)
+        
+        let errorMessage = ''
+        let errorCode = null
+        
+        // HttpErrorResponse structure: error.error contains the response body
+        const errorBody = error?.error || error
+        
+        // Structure 1: {success: false, error: {code: "LIFETIME_SUBSCRIPTION", message: "..."}}
+        if (errorBody?.error?.code === 'LIFETIME_SUBSCRIPTION') {
+          errorCode = 'LIFETIME_SUBSCRIPTION'
+          errorMessage = errorBody.error.message || 
+            'Organizações com plano lifetime não podem acessar o portal do Stripe. Entre em contato com o suporte para alterações.'
+        }
+        // Structure 2: errorBody.error.message (nested error object)
+        else if (errorBody?.error?.message) {
+          errorMessage = errorBody.error.message
+          errorCode = errorBody.error.code
+        }
+        // Structure 3: errorBody.message (direct message)
+        else if (errorBody?.message) {
+          errorMessage = errorBody.message
+          errorCode = errorBody.code
+        }
+        // Structure 4: error.message (HttpErrorResponse message)
+        else if (error?.message) {
+          errorMessage = error.message
+        }
+        // Structure 5: errorBody is a string
+        else if (typeof errorBody === 'string') {
+          errorMessage = errorBody
+        }
+        
+        // Default message if nothing was found
+        if (!errorMessage || errorMessage.trim() === '') {
+          errorMessage = 'Erro ao abrir portal de pagamento. Por favor, tente novamente.'
+        }
+        
+        // Use NgZone to ensure toast is displayed in Angular context
+        this.ngZone.run(() => {
+          // Show appropriate toast based on error code
+          if (errorCode === 'LIFETIME_SUBSCRIPTION') {
+            this.toastService.errorWithSupport(errorMessage, environment.supportUrl)
+          } else {
+            this.toastService.error(errorMessage)
+          }
+        })
       },
     })
   }

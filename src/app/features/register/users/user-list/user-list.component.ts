@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Shield, UserCircle } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Shield, UserCircle, Users } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { AddUsersModalComponent } from '@shared/components/ui/add-users-modal/add-users-modal.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
@@ -20,6 +21,9 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { UserService } from '@core/services/user.service'
+import { UserLimitService } from '@core/services/user-limit.service'
+import { SubscriptionService } from '@core/services/subscription.service'
+import { ToastService } from '@core/services/toast.service'
 import type { User } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -34,6 +38,7 @@ import { formatDateBR } from '@shared/utils/date.utils'
     ButtonComponent,
     SearchBarComponent,
     ConfirmationModalComponent,
+    AddUsersModalComponent,
     SkeletonComponent,
     MobileCardComponent,
     EmptyStateComponent,
@@ -52,6 +57,7 @@ export class UserListComponent implements OnInit {
   readonly Trash2Icon = Trash2
   readonly ShieldIcon = Shield
   readonly UserCircleIcon = UserCircle
+  readonly UsersIcon = Users
 
   users: User[] = []
   searchTerm: string = ''
@@ -60,20 +66,37 @@ export class UserListComponent implements OnInit {
   showDeleteModal: boolean = false
   userToDelete: User | null = null
   isDeleting: boolean = false
+  showAddUsersModal: boolean = false
+  isAddingUsers: boolean = false
+  userLimit: { limit: number; current: number; available: number } | null = null
+  isLifetimePlan: boolean = false
 
   constructor(
     private userService: UserService,
+    private userLimitService: UserLimitService,
+    private subscriptionService: SubscriptionService,
+    private toastService: ToastService,
     public router: Router
   ) {}
 
   /**
    * @Function - ngOnInit
-   * @description - Lifecycle hook that runs when component initializes, loads users
+   * @description - Lifecycle hook that runs when component initializes, loads users and limit
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
   async ngOnInit(): Promise<void> {
-    await this.loadUsers()
+    await Promise.all([this.loadUsers(), this.loadUserLimit(), this.checkLifetimePlan()])
+  }
+
+  /**
+   * @Function - checkLifetimePlan
+   * @description - Checks if current subscription is lifetime plan
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async checkLifetimePlan(): Promise<void> {
+    this.isLifetimePlan = await this.checkIsLifetimePlan()
   }
 
   /**
@@ -149,6 +172,7 @@ export class UserListComponent implements OnInit {
         this.users = this.users.filter(user => user.id !== this.userToDelete!.id)
         this.showDeleteModal = false
         this.userToDelete = null
+        await this.loadUserLimit()
       } else {
         this.error = response.message || response.errors?.[0] || 'Erro ao excluir usuário'
         this.showDeleteModal = false
@@ -217,6 +241,106 @@ export class UserListComponent implements OnInit {
     return status === 'Ativo'
       ? 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-100 text-green-800'
       : 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-gray-100 text-gray-800'
+  }
+
+  /**
+   * @Function - loadUserLimit
+   * @description - Loads user limit information from the API
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async loadUserLimit(): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.userLimitService.getUserLimit())
+      if (response.success && response.data) {
+        this.userLimit = response.data
+      }
+    } catch (error) {
+      console.error('Erro ao carregar limite de usuários:', error)
+    }
+  }
+
+  /**
+   * @Function - checkIsLifetimePlan
+   * @description - Checks if the current subscription is a lifetime plan
+   * @author - Vitor Hugo
+   * @returns - Promise<boolean> - True if lifetime plan
+   */
+  async checkIsLifetimePlan(): Promise<boolean> {
+    try {
+      const subscription = await firstValueFrom(this.subscriptionService.getSubscription())
+      if (!subscription?.plan) return false
+      
+      const planName = subscription.plan.name.toLowerCase()
+      return planName.includes('lifetime') || planName.includes('vitalício')
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * @Function - handleAddUsers
+   * @description - Handles adding extra users via modal
+   * @author - Vitor Hugo
+   * @param - quantity: number - Number of users to add
+   * @returns - Promise<void>
+   */
+  async handleAddUsers(quantity: number): Promise<void> {
+    try {
+      this.isAddingUsers = true
+      
+      // Check if it's a lifetime plan
+      const isLifetime = await this.checkIsLifetimePlan()
+      
+      if (!isLifetime) {
+        // For non-lifetime plans, show a message that payment is required
+        this.toastService.info('Redirecionando para o pagamento via Stripe...')
+        // The backend will handle the Stripe checkout
+      }
+      
+      const response = await firstValueFrom(
+        this.userLimitService.addUsers({ quantity })
+      )
+      
+      if (response.success && response.data) {
+        // Check if the response indicates lifetime plan
+        const isLifetimeResponse = response.data.message?.toLowerCase().includes('lifetime') || 
+                                   response.data.message?.toLowerCase().includes('vitalício')
+        
+        if (isLifetimeResponse) {
+          this.toastService.success(
+            `${quantity} usuário(s) adicionado(s) com sucesso! Seu novo limite é de ${response.data.newLimit} usuários.`
+          )
+        } else {
+          this.toastService.success(
+            `${quantity} usuário(s) adicionado(s) com sucesso! Seu novo limite é de ${response.data.newLimit} usuários.`
+          )
+        }
+        
+        this.showAddUsersModal = false
+        await this.loadUserLimit()
+      }
+    } catch (error: any) {
+      if (error.error?.error?.message) {
+        this.toastService.error(error.error.error.message)
+      } else if (error.error?.message) {
+        this.toastService.error(error.error.message)
+      } else {
+        this.toastService.error('Erro ao adicionar usuários. Verifique se sua assinatura está ativa.')
+      }
+    } finally {
+      this.isAddingUsers = false
+    }
+  }
+
+  /**
+   * @Function - handleCloseAddUsersModal
+   * @description - Closes the add users modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCloseAddUsersModal(): void {
+    this.showAddUsersModal = false
   }
 }
 

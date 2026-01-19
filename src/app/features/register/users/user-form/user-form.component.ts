@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute } from '@angular/router'
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
-import { LucideAngularModule, ArrowLeft, Save, X } from 'lucide-angular'
+import { LucideAngularModule, ArrowLeft, Save, X, Eye, EyeOff } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -11,6 +11,10 @@ import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.compo
 import { PhoneMaskDirective } from '@shared/directives/phone-mask.directive'
 import { phoneValidator } from '@shared/validators'
 import { UserService } from '@core/services/user.service'
+import { UserLimitService } from '@core/services/user-limit.service'
+import { SubscriptionService } from '@core/services/subscription.service'
+import { ToastService } from '@core/services/toast.service'
+import { AddUsersModalComponent } from '@shared/components/ui/add-users-modal/add-users-modal.component'
 import type { CreateUserRequest, UpdateUserRequest, UserPermissions } from '@shared/models/api.types'
 
 @Component({
@@ -23,7 +27,8 @@ import type { CreateUserRequest, UpdateUserRequest, UserPermissions } from '@sha
     ButtonComponent,
     LabelComponent,
     SkeletonComponent,
-    PhoneMaskDirective
+    PhoneMaskDirective,
+    AddUsersModalComponent
   ],
   templateUrl: './user-form.component.html'
 })
@@ -31,18 +36,27 @@ export class UserFormComponent implements OnInit {
   readonly ArrowLeftIcon = ArrowLeft
   readonly SaveIcon = Save
   readonly XIcon = X
+  readonly EyeIcon = Eye
+  readonly EyeOffIcon = EyeOff
 
   userForm!: FormGroup
+  showPassword: boolean = false
   permissionsForm!: FormGroup
   isEditing: boolean = false
   userId: string | null = null
   isLoading: boolean = false
   isLoadingData: boolean = false
   errorMessage: string = ''
+  showAddUsersModal: boolean = false
+  userLimit: { limit: number; current: number; available: number } | null = null
+  isLifetimePlan: boolean = false
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
+    private userLimitService: UserLimitService,
+    private subscriptionService: SubscriptionService,
+    private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -86,6 +100,12 @@ export class UserFormComponent implements OnInit {
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
+  /**
+   * @Function - ngOnInit
+   * @description - Lifecycle hook that runs when component initializes
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
   async ngOnInit(): Promise<void> {
     this.userId = this.route.snapshot.paramMap.get('id')
     this.isEditing = !!this.userId
@@ -97,6 +117,35 @@ export class UserFormComponent implements OnInit {
     } else {
       this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)])
       this.userForm.get('password')?.updateValueAndValidity()
+      await this.checkUserLimit()
+      await this.checkLifetimePlan()
+    }
+  }
+
+  /**
+   * @Function - checkLifetimePlan
+   * @description - Checks if current subscription is lifetime plan
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async checkLifetimePlan(): Promise<void> {
+    this.isLifetimePlan = await this.checkIsLifetimePlan()
+  }
+
+  /**
+   * @Function - checkUserLimit
+   * @description - Checks if there are available slots for new users
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async checkUserLimit(): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.userLimitService.getUserLimit())
+      if (response.success && response.data) {
+        this.userLimit = response.data
+      }
+    } catch (error) {
+      console.error('Erro ao verificar limite de usuários:', error)
     }
   }
 
@@ -217,6 +266,13 @@ export class UserFormComponent implements OnInit {
           this.errorMessage = 'Erro ao atualizar usuário'
         }
       } else {
+        // Check user limit before creating
+        if (this.userLimit && this.userLimit.available === 0) {
+          this.errorMessage = `Limite de usuários atingido (${this.userLimit.limit} usuários). Deseja adicionar mais usuários?`
+          this.showAddUsersModal = true
+          return
+        }
+
         const createData: CreateUserRequest = {
           name: formValue.name,
           email: formValue.email,
@@ -231,13 +287,20 @@ export class UserFormComponent implements OnInit {
         )
         
         if (response.success) {
+          this.toastService.success('Usuário criado com sucesso!')
+          await this.checkUserLimit()
           this.router.navigate(['/cadastros/usuarios'])
         } else {
           this.errorMessage = 'Erro ao criar usuário'
         }
       }
     } catch (error: any) {
-      if (error.error?.error?.message) {
+      // Handle USER_LIMIT_EXCEEDED error
+      if (error.error?.error?.code === 'USER_LIMIT_EXCEEDED') {
+        const limit = error.error.error.message.match(/\d+/)?.[0] || '3'
+        this.errorMessage = `Limite de usuários atingido (${limit} usuários). Deseja adicionar mais usuários?`
+        this.showAddUsersModal = true
+      } else if (error.error?.error?.message) {
         this.errorMessage = error.error.error.message
       } else if (error.error?.message) {
         this.errorMessage = error.error.message
@@ -247,6 +310,94 @@ export class UserFormComponent implements OnInit {
     } finally {
       this.isLoading = false
     }
+  }
+
+  /**
+   * @Function - checkIsLifetimePlan
+   * @description - Checks if the current subscription is a lifetime plan
+   * @author - Vitor Hugo
+   * @returns - Promise<boolean> - True if lifetime plan
+   */
+  async checkIsLifetimePlan(): Promise<boolean> {
+    try {
+      const subscription = await firstValueFrom(this.subscriptionService.getSubscription())
+      if (!subscription?.plan) return false
+      
+      const planName = subscription.plan.name.toLowerCase()
+      return planName.includes('lifetime') || planName.includes('vitalício')
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * @Function - handleAddUsers
+   * @description - Handles adding extra users via modal
+   * @author - Vitor Hugo
+   * @param - quantity: number - Number of users to add
+   * @returns - Promise<void>
+   */
+  async handleAddUsers(quantity: number): Promise<void> {
+    try {
+      this.isLoading = true
+      
+      // Check if it's a lifetime plan
+      const isLifetime = await this.checkIsLifetimePlan()
+      
+      if (!isLifetime) {
+        // For non-lifetime plans, show a message that payment is required
+        this.toastService.info('Redirecionando para o pagamento via Stripe...')
+        // The backend will handle the Stripe checkout
+      }
+      
+      const response = await firstValueFrom(
+        this.userLimitService.addUsers({ quantity })
+      )
+      
+      if (response.success && response.data) {
+        // Check if the response indicates lifetime plan
+        const isLifetimeResponse = response.data.message?.toLowerCase().includes('lifetime') || 
+                                   response.data.message?.toLowerCase().includes('vitalício')
+        
+        if (isLifetimeResponse) {
+          this.toastService.success(
+            `${quantity} usuário(s) adicionado(s) com sucesso! Seu novo limite é de ${response.data.newLimit} usuários.`
+          )
+        } else {
+          this.toastService.success(
+            `${quantity} usuário(s) adicionado(s) com sucesso! Seu novo limite é de ${response.data.newLimit} usuários.`
+          )
+        }
+        
+        this.showAddUsersModal = false
+        await this.checkUserLimit()
+        // Retry creating the user if form is still valid
+        if (this.userForm.valid && !this.isEditing) {
+          this.errorMessage = ''
+          await this.handleSubmit()
+        }
+      }
+    } catch (error: any) {
+      if (error.error?.error?.message) {
+        this.toastService.error(error.error.error.message)
+      } else if (error.error?.message) {
+        this.toastService.error(error.error.message)
+      } else {
+        this.toastService.error('Erro ao adicionar usuários. Verifique se sua assinatura está ativa.')
+      }
+    } finally {
+      this.isLoading = false
+    }
+  }
+
+  /**
+   * @Function - handleCloseAddUsersModal
+   * @description - Closes the add users modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCloseAddUsersModal(): void {
+    this.showAddUsersModal = false
   }
 
   /**
@@ -303,6 +454,16 @@ export class UserFormComponent implements OnInit {
   hasError(fieldName: string): boolean {
     const field = this.userForm.get(fieldName)
     return !!(field?.invalid && field.touched)
+  }
+
+  /**
+   * @Function - togglePasswordVisibility
+   * @description - Toggles password visibility
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword
   }
 
   /**

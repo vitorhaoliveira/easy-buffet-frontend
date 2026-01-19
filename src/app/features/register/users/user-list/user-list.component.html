@@ -10,12 +10,46 @@
       </p>
     </div>
     <button appButton
-      class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]"
-      routerLink="/cadastros/usuarios/novo">
+      [class]="'w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]' + (userLimit && userLimit.available === 0 ? ' opacity-50 cursor-not-allowed' : '')"
+      [routerLink]="userLimit && userLimit.available === 0 ? null : '/cadastros/usuarios/novo'"
+      [disabled]="!!(userLimit && userLimit.available === 0)"
+      (click)="userLimit && userLimit.available === 0 ? showAddUsersModal = true : null">
       <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
       Novo Usuário
     </button>
   </div>
+
+  <!-- User Limit Info -->
+  @if (userLimit) {
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2 rounded-lg bg-blue-100">
+          <lucide-icon [img]="UsersIcon" class="h-5 w-5 text-blue-600"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600">Limite de Usuários</p>
+          <p class="text-lg font-semibold text-gray-900">
+            {{ userLimit.current }} / {{ userLimit.limit }}
+            @if (userLimit.available > 0) {
+              <span class="text-sm font-normal text-green-600 ml-2">({{ userLimit.available }} disponível{{ userLimit.available > 1 ? 'eis' : '' }})</span>
+            } @else {
+              <span class="text-sm font-normal text-red-600 ml-2">(Limite atingido)</span>
+            }
+          </p>
+        </div>
+      </div>
+      @if (userLimit.available === 0) {
+        <button appButton
+          (click)="showAddUsersModal = true"
+          class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]">
+          <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
+          Adicionar Mais Usuários
+        </button>
+      }
+    </div>
+  </div>
+  }
 
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -167,4 +201,13 @@
     (onConfirm)="handleConfirmDelete()" title="Excluir Usuário"
     [message]="'Tem certeza que deseja excluir o usuário &quot;' + (userToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
     confirmText="Excluir" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
+
+  <!-- Add Users Modal -->
+  <app-add-users-modal
+    [isOpen]="showAddUsersModal"
+    [loading]="isAddingUsers"
+    [isLifetimePlan]="isLifetimePlan"
+    (onClose)="handleCloseAddUsersModal()"
+    (onAdd)="handleAddUsers($event)"
+  ></app-add-users-modal>
 </div>
