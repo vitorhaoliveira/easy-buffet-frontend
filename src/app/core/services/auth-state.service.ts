@@ -352,5 +352,18 @@ export class AuthStateService {
       return false
     }
   }
+
+  /**
+   * @Function - clearAuthState
+   * @description - Clears all authentication state and storage
+   * @author - EasyBuffet Team
+   * @returns - void
+   */
+  clearAuthState(): void {
+    this.storageService.clearAll()
+    this.tokenSubject.next(null)
+    this.userSubject.next(null)
+    this.organizationSubject.next(null)
+  }
 }
 

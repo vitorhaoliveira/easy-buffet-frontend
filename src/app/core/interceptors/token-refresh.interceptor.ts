@@ -1,56 +1,95 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http'
 import { inject } from '@angular/core'
+import { Router } from '@angular/router'
 import { catchError, switchMap, throwError } from 'rxjs'
 import { HttpClient } from '@angular/common/http'
 import { StorageService } from '../services/storage.service'
+import { ToastService } from '../services/toast.service'
+import { AuthStateService } from '../services/auth-state.service'
 import { environment } from '@environments/environment'
 
 export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
   const storageService = inject(StorageService)
   const http = inject(HttpClient)
+  const router = inject(Router)
+  const toastService = inject(ToastService)
+  const authStateService = inject(AuthStateService)
   
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // If error is 401 and we haven't already tried to refresh
-      if (error.status === 401 && !(req as any)._retry) {
-        const refreshToken = storageService.getRefreshToken()
+      // Check if error is 401
+      if (error.status === 401) {
+        const errorCode = error.error?.error?.code
+        const errorMessage = error.error?.error?.message || error.error?.message
         
-        if (refreshToken) {
-          // Mark request as retried
-          const clonedReq = req.clone();
-          (clonedReq as any)._retry = true
+        // Check if it's a session expired error (INVALID_TOKEN)
+        const isSessionExpired = 
+          errorCode === 'INVALID_TOKEN' || 
+          errorMessage?.includes('Sessão expirada') ||
+          errorMessage?.includes('sessão expirada')
+        
+        if (isSessionExpired) {
+          // Session expired - clear tokens and redirect to login
+          authStateService.clearAuthState()
           
-          // Try to refresh the token
-          return http.post<any>(`${environment.apiBaseUrl}/auth/refresh-token`, {
-            refreshToken
-          }).pipe(
-            switchMap((response) => {
-              const { accessToken, refreshToken: newRefreshToken } = response.data
-              
-              // Update tokens
-              storageService.setTokens({ 
-                accessToken, 
-                refreshToken: newRefreshToken 
+          // Show toast message
+          toastService.error('Sessão expirada. Por favor, faça login novamente.')
+          
+          // Redirect to login page
+          router.navigate(['/entrar'])
+          
+          // Return error without retrying
+          return throwError(() => error)
+        }
+        
+        // If error is 401 but not session expired, try to refresh token
+        if (!(req as any)._retry) {
+          const refreshToken = storageService.getRefreshToken()
+          
+          if (refreshToken) {
+            // Mark request as retried
+            const clonedReq = req.clone()
+            ;(clonedReq as any)._retry = true
+            
+            // Try to refresh the token
+            return http.post<any>(`${environment.apiBaseUrl}/auth/refresh-token`, {
+              refreshToken
+            }).pipe(
+              switchMap((response) => {
+                const { accessToken, refreshToken: newRefreshToken } = response.data
+                
+                // Update tokens
+                storageService.setTokens({ 
+                  accessToken, 
+                  refreshToken: newRefreshToken 
+                })
+                
+                // Retry the original request with new token
+                const retryReq = clonedReq.clone({
+                  setHeaders: {
+                    Authorization: `Bearer ${accessToken}`
+                  }
+                })
+                
+                return next(retryReq)
+              }),
+              catchError((refreshError) => {
+                // Refresh failed, clear tokens
+                authStateService.clearAuthState()
+                
+                // Redirect to login
+                router.navigate(['/entrar'])
+                
+                return throwError(() => refreshError)
               })
-              
-              // Retry the original request with new token
-              const retryReq = clonedReq.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${accessToken}`
-                }
-              })
-              
-              return next(retryReq)
-            }),
-            catchError((refreshError) => {
-              // Refresh failed, clear tokens
-              storageService.clearAll()
-              return throwError(() => refreshError)
-            })
-          )
-        } else {
-          // No refresh token, clear all data
-          storageService.clearAll()
+            )
+          } else {
+            // No refresh token, clear all data
+            authStateService.clearAuthState()
+            
+            // Redirect to login
+            router.navigate(['/entrar'])
+          }
         }
       }
       
