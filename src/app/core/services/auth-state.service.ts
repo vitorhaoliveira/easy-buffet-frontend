@@ -72,9 +72,21 @@ export class AuthStateService {
         // Verify token with API
         try {
           const response = await firstValueFrom(this.authService.getMe())
-          if (response.success && response.data?.user) {
-            const user = response.data.user
-            
+          
+          // Handle different response formats
+          let user: User | null = null
+          if (response.success && response.data) {
+            // Try response.data.user first (expected format)
+            if (response.data.user) {
+              user = response.data.user
+            } 
+            // Fallback: response.data might be the user directly
+            else if ((response.data as any).id && (response.data as any).email) {
+              user = response.data as unknown as User
+            }
+          }
+          
+          if (user) {
             const organization = user.currentOrganization ? {
               id: user.currentOrganization.id,
               name: user.currentOrganization.name,
@@ -94,14 +106,39 @@ export class AuthStateService {
               this.organizationSubject.next(organization)
               this.storageService.setUser(user)
               this.storageService.setOrganization(organization)
+            } else {
+              // User exists but no organization - keep current state, don't clear
+              console.warn('User authenticated but no organization found')
             }
+          } else {
+            // Response successful but no user data - keep current state
+            console.warn('getMe response successful but no user data found')
           }
-        } catch (error) {
-          // Clear invalid auth data
-          this.storageService.clearAll()
-          this.tokenSubject.next(null)
-          this.userSubject.next(null)
-          this.organizationSubject.next(null)
+        } catch (error: any) {
+          // Only clear if it's a session expired error (INVALID_TOKEN)
+          // Otherwise, keep the stored data and let the interceptor handle token refresh
+          const errorCode = error?.error?.error?.code
+          const errorMessage = error?.error?.error?.message || error?.error?.message || ''
+          
+          const isSessionExpired = 
+            errorCode === 'INVALID_TOKEN' || 
+            errorMessage.includes('Sessão expirada') ||
+            errorMessage.includes('sessão expirada')
+          
+          if (isSessionExpired) {
+            // Session expired - clear everything
+            this.storageService.clearAll()
+            this.tokenSubject.next(null)
+            this.userSubject.next(null)
+            this.organizationSubject.next(null)
+          } else if (error?.status === 401) {
+            // Other 401 errors - let interceptor handle token refresh
+            // Don't clear data here, interceptor will try to refresh
+            console.warn('Token may need refresh, interceptor will handle it')
+          } else {
+            // Other errors (network, etc.) - keep stored data
+            console.warn('Error verifying token, keeping stored auth data:', error)
+          }
         }
       } else {
         this.storageService.clearAll()
