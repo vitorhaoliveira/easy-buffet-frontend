@@ -227,6 +227,124 @@
     }
   </div>
 
+  <!-- Checklists dos Próximos Eventos -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
+    <div class="flex items-center gap-2 mb-6">
+      <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+      <h2 class="text-lg sm:text-xl font-bold text-gray-900">Checklists dos Próximos Eventos</h2>
+    </div>
+
+    @if (isLoadingChecklists) {
+    <div class="space-y-4">
+      <app-skeleton class="h-32"></app-skeleton>
+      <app-skeleton class="h-32"></app-skeleton>
+    </div>
+    } @else if (upcomingChecklists.length > 0) {
+    <div class="space-y-4">
+      @for (checklist of upcomingChecklists; track checklist.id) {
+      <div
+        class="border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-primary-200">
+        <div class="flex flex-col gap-4">
+          <!-- Header -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex-1 w-full sm:w-auto">
+              <h3 class="font-semibold text-gray-900 text-base sm:text-lg">
+                {{ checklist.event?.name || 'Evento sem nome' }}
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 mt-1">
+                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Cliente: {{ checklist.event?.client?.name || 'Não informado' }}
+              </p>
+              @if (checklist.event?.eventDate) {
+              <div class="flex items-center gap-1 mt-2 text-xs sm:text-sm text-gray-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>{{ formatDate(checklist.event?.eventDate || '') }}</span>
+                <span class="text-gray-400">•</span>
+                <span>Em {{ getDaysUntil(checklist.event?.eventDate || '') }} dias</span>
+              </div>
+              }
+            </div>
+            <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getChecklistStatusColor(checklist.status)">
+              {{ getChecklistStatusLabel(checklist.status) }}
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs sm:text-sm">
+              <span class="text-gray-600">Progresso</span>
+              <span class="font-medium text-gray-900">
+                {{ checklist.completedItems }}/{{ checklist.totalItems }} concluídos
+                ({{ checklist.completionPercentage }}%)
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-300"
+                [style.width.%]="checklist.completionPercentage"></div>
+            </div>
+          </div>
+
+          <!-- Indicators -->
+          <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
+            @if (getPendingItemsCount(checklist) > 0) {
+            <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-yellow-50 text-yellow-700">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ getPendingItemsCount(checklist) }} pendente{{ getPendingItemsCount(checklist) > 1 ? 's' : '' }}</span>
+            </div>
+            }
+            @if (getOverdueItemsCount(checklist) > 0) {
+            <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-50 text-red-700">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>{{ getOverdueItemsCount(checklist) }} atrasado{{ getOverdueItemsCount(checklist) > 1 ? 's' : '' }}</span>
+            </div>
+            }
+            @if (getCriticalItemsCount(checklist) > 0) {
+            <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-orange-50 text-orange-700">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>{{ getCriticalItemsCount(checklist) }} crítico{{ getCriticalItemsCount(checklist) > 1 ? 's' : '' }}</span>
+            </div>
+            }
+          </div>
+
+          <!-- Action Button -->
+          <button (click)="navigateToChecklist(checklist.eventId)"
+            class="mt-2 w-full sm:w-auto sm:self-end min-h-[44px] px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 touch-manipulation flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Ver Checklist Completo
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <app-empty-state title="Nenhum checklist próximo"
+      message="Os checklists de eventos dos próximos 30 dias aparecerão aqui">
+    </app-empty-state>
+    }
+  </div>
+
   <!-- Installments and Events Section -->
   <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
     <!-- Próximas Parcelas -->

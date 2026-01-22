@@ -6,8 +6,9 @@ import { DashboardService } from '@core/services/dashboard.service'
 import { EventService } from '@core/services/event.service'
 import { UnitService } from '@core/services/unit.service'
 import { InstallmentService } from '@core/services/installment.service'
+import { ChecklistService } from '@core/services/checklist.service'
 import { firstValueFrom } from 'rxjs'
-import type { DashboardStats, DashboardInstallment, DashboardEvent, Event, Unit } from '@shared/models/api.types'
+import type { DashboardStats, DashboardInstallment, DashboardEvent, Event, Unit, EventChecklist } from '@shared/models/api.types'
 import { parseDateIgnoringTimezone, formatDateBR, getDaysUntil, isSameDayAsDate } from '@shared/utils/date.utils'
 import { EventDetailModalComponent } from '@shared/components/ui/event-detail-modal/event-detail-modal.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
@@ -32,6 +33,7 @@ export class DashboardComponent implements OnInit {
   private readonly eventService = inject(EventService)
   private readonly unitService = inject(UnitService)
   private readonly installmentService = inject(InstallmentService)
+  private readonly checklistService = inject(ChecklistService)
   private readonly router = inject(Router)
 
   stats: DashboardStats | null = null
@@ -39,7 +41,9 @@ export class DashboardComponent implements OnInit {
   upcomingEvents: DashboardEvent[] = []
   allEventsForCalendar: DashboardEvent[] = []
   units: Unit[] = []
+  upcomingChecklists: EventChecklist[] = []
   isLoading = true
+  isLoadingChecklists = false
   error = ''
   
   // Calendar properties
@@ -100,7 +104,11 @@ export class DashboardComponent implements OnInit {
         this.dashboardService.getUpcomingInstallments(this.installmentsLimit)
       )
       if (installmentsResponse.success && installmentsResponse.data) {
-        this.upcomingInstallments = installmentsResponse.data
+        this.upcomingInstallments = Array.isArray(installmentsResponse.data) 
+          ? installmentsResponse.data 
+          : []
+      } else {
+        this.upcomingInstallments = []
       }
 
       // Load overdue installments count
@@ -120,7 +128,8 @@ export class DashboardComponent implements OnInit {
       )
       const upcomingEventsList: DashboardEvent[] = []
       if (eventsResponse.success && eventsResponse.data) {
-        upcomingEventsList.push(...eventsResponse.data as DashboardEvent[])
+        const data = Array.isArray(eventsResponse.data) ? eventsResponse.data : []
+        upcomingEventsList.push(...(data as DashboardEvent[]))
       }
 
       // Load all events for calendar (including past events)
@@ -129,7 +138,8 @@ export class DashboardComponent implements OnInit {
       )
       if (allEventsResponse.success && allEventsResponse.data) {
         // Convert Event[] to DashboardEvent[] for calendar
-        const allEvents = allEventsResponse.data.map(event => ({
+        const eventsData = Array.isArray(allEventsResponse.data) ? allEventsResponse.data : []
+        const allEvents = eventsData.map(event => ({
           id: event.id,
           clientName: event.client?.name || 'Cliente não informado',
           eventName: event.name,
@@ -150,12 +160,19 @@ export class DashboardComponent implements OnInit {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         this.upcomingEvents = this.allEventsForCalendar.filter(event => {
+          if (!event.eventDate) return false
           const eventDate = parseDateIgnoringTimezone(event.eventDate)
           return eventDate >= today
         })
       } else {
         // Fallback to upcoming events only if all events request fails
-        this.upcomingEvents = upcomingEventsList
+        this.upcomingEvents = upcomingEventsList.filter(event => {
+          if (!event.eventDate) return false
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          const eventDate = parseDateIgnoringTimezone(event.eventDate)
+          return eventDate >= today
+        })
       }
 
       // Load units for legend
@@ -165,6 +182,9 @@ export class DashboardComponent implements OnInit {
       if (unitsResponse.success && unitsResponse.data) {
         this.units = unitsResponse.data
       }
+
+      // Load upcoming checklists
+      await this.loadUpcomingChecklists()
 
     } catch (err: unknown) {
       console.error('Error loading dashboard:', err)
@@ -403,10 +423,15 @@ export class DashboardComponent implements OnInit {
         this.dashboardService.getUpcomingInstallments(this.installmentsLimit)
       )
       if (response.success && response.data) {
-        this.upcomingInstallments = response.data
+        this.upcomingInstallments = Array.isArray(response.data) 
+          ? response.data 
+          : []
+      } else {
+        this.upcomingInstallments = []
       }
     } catch (err: unknown) {
       console.error('Error loading installments:', err)
+      this.upcomingInstallments = []
     }
   }
 
@@ -539,5 +564,173 @@ export class DashboardComponent implements OnInit {
       this.router.navigate(['/cadastros/eventos/editar', this.selectedEvent.id])
       this.closeEventModal()
     }
+  }
+
+  /**
+   * @Function - loadUpcomingChecklists
+   * @description - Load checklists for upcoming events (next 30 days) and enrich with event data
+   * @author - Vitor Hugo
+   * @param - void
+   * @returns - Promise<void>
+   */
+  private async loadUpcomingChecklists(): Promise<void> {
+    this.isLoadingChecklists = true
+    try {
+      const response = await firstValueFrom(
+        this.checklistService.getUpcomingChecklists(30)
+      )
+      if (response.success && response.data) {
+        this.upcomingChecklists = Array.isArray(response.data) ? response.data : []
+        
+        // Ensure items array exists for each checklist
+        this.upcomingChecklists = this.upcomingChecklists.map(checklist => ({
+          ...checklist,
+          items: checklist.items || []
+        }))
+        
+        const enrichmentPromises = this.upcomingChecklists.map(async (checklist) => {
+          if (!checklist.event && checklist.eventId) {
+            // Try to find event in already loaded events first
+            const event = this.allEventsForCalendar.find(e => e.id === checklist.eventId)
+            if (event) {
+              checklist.event = {
+                id: event.id,
+                name: event.eventName,
+                eventDate: event.eventDate,
+                client: {
+                  name: event.clientName
+                }
+              }
+            } else {
+              // If not found, try to fetch from API
+              try {
+                const eventResponse = await firstValueFrom(
+                  this.eventService.getEventById(checklist.eventId)
+                )
+                if (eventResponse.success && eventResponse.data) {
+                  const eventData = eventResponse.data
+                  checklist.event = {
+                    id: eventData.id,
+                    name: eventData.name,
+                    eventDate: eventData.eventDate,
+                    client: eventData.client ? {
+                      name: eventData.client.name
+                    } : undefined
+                  }
+                }
+              } catch (err: unknown) {
+                console.error(`Error loading event ${checklist.eventId}:`, err)
+              }
+            }
+          }
+        })
+        
+        // Wait for all enrichments to complete
+        await Promise.all(enrichmentPromises)
+      } else {
+        this.upcomingChecklists = []
+      }
+    } catch (err: unknown) {
+      console.error('Error loading upcoming checklists:', err)
+      this.upcomingChecklists = []
+      // Don't show error to user, just log it - checklists are optional
+    } finally {
+      this.isLoadingChecklists = false
+    }
+  }
+
+  /**
+   * @Function - getPendingItemsCount
+   * @description - Count pending (not completed) items in a checklist
+   * @author - Vitor Hugo
+   * @param - checklist: EventChecklist
+   * @returns - number - Count of pending items
+   */
+  getPendingItemsCount(checklist: EventChecklist): number {
+    if (!checklist.items || !Array.isArray(checklist.items)) {
+      return 0
+    }
+    return checklist.items.filter(item => !item.isCompleted).length
+  }
+
+  /**
+   * @Function - getOverdueItemsCount
+   * @description - Count overdue items in a checklist
+   * @author - Vitor Hugo
+   * @param - checklist: EventChecklist
+   * @returns - number - Count of overdue items
+   */
+  getOverdueItemsCount(checklist: EventChecklist): number {
+    if (!checklist.items || !Array.isArray(checklist.items)) {
+      return 0
+    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    return checklist.items.filter(item => {
+      if (item.isCompleted || !item.scheduledDate) return false
+      const scheduled = new Date(item.scheduledDate)
+      scheduled.setHours(0, 0, 0, 0)
+      return scheduled < today
+    }).length
+  }
+
+  /**
+   * @Function - getCriticalItemsCount
+   * @description - Count critical priority items that are pending
+   * @author - Vitor Hugo
+   * @param - checklist: EventChecklist
+   * @returns - number - Count of critical pending items
+   */
+  getCriticalItemsCount(checklist: EventChecklist): number {
+    if (!checklist.items || !Array.isArray(checklist.items)) {
+      return 0
+    }
+    return checklist.items.filter(item => 
+      !item.isCompleted && item.priority === 'critical'
+    ).length
+  }
+
+  /**
+   * @Function - navigateToChecklist
+   * @description - Navigate to the checklist page for an event
+   * @author - Vitor Hugo
+   * @param - eventId: string
+   * @returns - void
+   */
+  navigateToChecklist(eventId: string): void {
+    this.router.navigate(['/cadastros/eventos', eventId, 'checklist'])
+  }
+
+  /**
+   * @Function - getChecklistStatusLabel
+   * @description - Get Portuguese label for checklist status
+   * @author - Vitor Hugo
+   * @param - status: string
+   * @returns - string - Translated status label
+   */
+  getChecklistStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      'not_started': 'Não Iniciado',
+      'in_progress': 'Em Progresso',
+      'completed': 'Concluído'
+    }
+    return labels[status] || status
+  }
+
+  /**
+   * @Function - getChecklistStatusColor
+   * @description - Get CSS classes for checklist status badge
+   * @author - Vitor Hugo
+   * @param - status: string
+   * @returns - string - CSS classes for status
+   */
+  getChecklistStatusColor(status: string): string {
+    const colors: Record<string, string> = {
+      'not_started': 'bg-gray-100 text-gray-800',
+      'in_progress': 'bg-blue-100 text-blue-800',
+      'completed': 'bg-green-100 text-green-800'
+    }
+    return colors[status] || 'bg-gray-100 text-gray-800'
   }
 }
