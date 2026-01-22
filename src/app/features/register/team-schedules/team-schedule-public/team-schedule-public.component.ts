@@ -9,7 +9,7 @@ import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-m
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { TeamScheduleService } from '@core/services/team-schedule.service'
 import type { TeamSchedule, ConfirmationStatus } from '@shared/models/api.types'
-import { formatDateBR } from '@shared/utils/date.utils'
+import { formatDateBR, formatTime as formatTimeUtil } from '@shared/utils/date.utils'
 
 @Component({
   selector: 'app-team-schedule-public',
@@ -111,8 +111,7 @@ export class TeamSchedulePublicComponent implements OnInit {
   }
 
   formatTime(dateString: string): string {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    return formatTimeUtil(dateString)
   }
 
   formatDate(dateString: string): string {

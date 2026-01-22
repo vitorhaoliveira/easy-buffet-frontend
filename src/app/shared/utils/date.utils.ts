@@ -74,3 +74,43 @@ export function isSameDayAsDate(dateString: string, date: Date): boolean {
   return parsedDate.toDateString() === date.toDateString()
 }
 
+/**
+ * @Function - formatTime
+ * @description - Format time string to HH:mm format without timezone conversion
+ * @author - Vitor Hugo
+ * @param - timeString: string - ISO time string (e.g., "1970-01-01T18:00:00.000Z") or HH:mm format
+ * @returns - string - Formatted time in HH:mm format
+ */
+export function formatTime(timeString: string): string {
+  if (!timeString) return 'Não informado'
+  
+  // If it's already in HH:mm format
+  if (/^\d{2}:\d{2}$/.test(timeString)) {
+    return timeString
+  }
+  
+  // If it's an ISO date string, extract the time using UTC to avoid timezone conversion
+  if (timeString.includes('T')) {
+    const date = new Date(timeString)
+    const hours = date.getUTCHours().toString().padStart(2, '0')
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0')
+    return `${hours}:${minutes}`
+  }
+  
+  // Try to parse as date
+  try {
+    const date = new Date(timeString)
+    if (!isNaN(date.getTime())) {
+      // Use UTC to avoid timezone conversion issues
+      const hours = date.getUTCHours().toString().padStart(2, '0')
+      const minutes = date.getUTCMinutes().toString().padStart(2, '0')
+      return `${hours}:${minutes}`
+    }
+  } catch (error) {
+    // If parsing fails, return as is
+    console.warn('⚠️ formatTime: Unable to parse time string:', error)
+  }
+  
+  return timeString
+}
+

@@ -9,7 +9,7 @@ import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.compo
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { TeamScheduleService } from '@core/services/team-schedule.service'
 import type { TeamScheduleDayView, ConfirmationStatus } from '@shared/models/api.types'
-import { formatDateBR } from '@shared/utils/date.utils'
+import { formatDateBR, formatTime as formatTimeUtil } from '@shared/utils/date.utils'
 
 @Component({
   selector: 'app-event-day-view',
@@ -99,8 +99,7 @@ export class EventDayViewComponent implements OnInit {
   }
 
   formatTime(dateString: string): string {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    return formatTimeUtil(dateString)
   }
 
   formatDate(dateString: string): string {

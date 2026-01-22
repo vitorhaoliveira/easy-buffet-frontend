@@ -32,9 +32,14 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
           // Session expired - clear tokens and redirect to login
           authStateService.clearAuthState()
           
-          // Show toast message only if not already on login page
+          // Show toast message only if not already on login page or public routes
           const currentUrl = router.url
-          if (!currentUrl.includes('/entrar') && !currentUrl.includes('/cadastrar')) {
+          const isPublicRoute = currentUrl.includes('/team-schedules/public/') || 
+                               currentUrl.includes('/proposal/') ||
+                               currentUrl.includes('/entrar') || 
+                               currentUrl.includes('/cadastrar')
+          
+          if (!isPublicRoute) {
             toastService.error('Sessão expirada. Por favor, faça login novamente.')
             router.navigate(['/entrar'])
           }
@@ -80,9 +85,14 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
                 return next(retryReq)
               }),
               catchError((refreshError) => {
-                // Refresh failed - only clear and redirect if not already on login page
+                // Refresh failed - only clear and redirect if not already on login page or public routes
                 const currentUrl = router.url
-                if (!currentUrl.includes('/entrar') && !currentUrl.includes('/cadastrar')) {
+                const isPublicRoute = currentUrl.includes('/team-schedules/public/') || 
+                                     currentUrl.includes('/proposal/') ||
+                                     currentUrl.includes('/entrar') || 
+                                     currentUrl.includes('/cadastrar')
+                
+                if (!isPublicRoute) {
                   authStateService.clearAuthState()
                   router.navigate(['/entrar'])
                 }
@@ -91,9 +101,14 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
               })
             )
           } else {
-            // No refresh token - only clear and redirect if not already on login page
+            // No refresh token - only clear and redirect if not already on login page or public routes
             const currentUrl = router.url
-            if (!currentUrl.includes('/entrar') && !currentUrl.includes('/cadastrar')) {
+            const isPublicRoute = currentUrl.includes('/team-schedules/public/') || 
+                                 currentUrl.includes('/proposal/') ||
+                                 currentUrl.includes('/entrar') || 
+                                 currentUrl.includes('/cadastrar')
+            
+            if (!isPublicRoute) {
               authStateService.clearAuthState()
               router.navigate(['/entrar'])
             }
