@@ -109,6 +109,10 @@
           </td>
           <td appTableCell class="text-right">
             <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/eventos', event.id, 'equipe']"
+                title="Gerenciar equipe">
+                <lucide-icon [img]="UsersIcon" class="h-4 w-4"></lucide-icon>
+              </button>
               <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/eventos', event.id, 'checklist']"
                 title="Checklist do evento">
                 <lucide-icon [img]="ClipboardCheckIcon" class="h-4 w-4"></lucide-icon>
@@ -163,6 +167,11 @@
           </div>
         </div>
         <div class="flex gap-2 pt-3 border-t border-gray-200">
+          <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+            [routerLink]="['/cadastros/eventos', event.id, 'equipe']">
+            <lucide-icon [img]="UsersIcon" class="mr-2 h-4 w-4"></lucide-icon>
+            Equipe
+          </button>
           <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
             [routerLink]="['/cadastros/eventos', event.id, 'checklist']">
             <lucide-icon [img]="ClipboardCheckIcon" class="mr-2 h-4 w-4"></lucide-icon>

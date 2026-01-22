@@ -1,0 +1,185 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+        Confirmação de Presença
+      </h1>
+      <p class="text-gray-600">
+        Confirme ou cancele sua participação no evento
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading) {
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+      <app-skeleton class="h-8 mb-4"></app-skeleton>
+      <app-skeleton class="h-32 mb-4"></app-skeleton>
+      <app-skeleton class="h-16"></app-skeleton>
+    </div>
+    }
+
+    <!-- Error Message -->
+    @if (error && !isLoading) {
+    <div class="bg-white rounded-xl shadow-lg border border-red-200 p-6 mb-6">
+      <div class="flex items-start gap-3">
+        <lucide-icon [img]="AlertCircleIcon" class="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0"></lucide-icon>
+        <div>
+          <h3 class="font-semibold text-red-900 mb-1">Erro</h3>
+          <p class="text-red-700">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Success Message -->
+    @if (successMessage) {
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center gap-2">
+        <lucide-icon [img]="CheckCircleIcon" class="h-5 w-5 text-green-600"></lucide-icon>
+        <p class="text-green-800 font-medium">{{ successMessage }}</p>
+      </div>
+    </div>
+    }
+
+    <!-- Schedule Details -->
+    @if (!isLoading && schedule) {
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 sm:p-8 space-y-6">
+      <!-- Status Badge -->
+      <div class="flex justify-center">
+        <span [class]="'px-4 py-2 text-sm font-medium rounded-full border ' + getStatusBadgeClass(schedule.confirmationStatus)">
+          {{ getStatusLabel(schedule.confirmationStatus) }}
+        </span>
+      </div>
+
+      <!-- Team Member Info -->
+      <div class="text-center border-b pb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ schedule.teamMember.name }}</h2>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-600">
+          <div class="flex items-center gap-2">
+            <lucide-icon [img]="PhoneIcon" class="h-4 w-4"></lucide-icon>
+            <span>{{ schedule.teamMember.phone }}</span>
+          </div>
+          @if (schedule.teamMember.email) {
+          <div class="flex items-center gap-2">
+            <lucide-icon [img]="MailIcon" class="h-4 w-4"></lucide-icon>
+            <span>{{ schedule.teamMember.email }}</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Schedule Details -->
+      <div class="space-y-4">
+        <div class="flex items-start gap-3">
+          <lucide-icon [img]="ClockIcon" class="h-5 w-5 text-gray-500 mt-0.5"></lucide-icon>
+          <div>
+            <p class="text-sm text-gray-500">Função</p>
+            <p class="font-medium text-gray-900">{{ schedule.role }}</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <lucide-icon [img]="ClockIcon" class="h-5 w-5 text-gray-500 mt-0.5"></lucide-icon>
+          <div>
+            <p class="text-sm text-gray-500">Horário de Chegada</p>
+            <p class="font-medium text-gray-900">{{ formatTime(schedule.arrivalTime) }}</p>
+          </div>
+        </div>
+        @if (schedule.notes) {
+        <div class="flex items-start gap-3">
+          <lucide-icon [img]="AlertCircleIcon" class="h-5 w-5 text-gray-500 mt-0.5"></lucide-icon>
+          <div>
+            <p class="text-sm text-gray-500">Observações</p>
+            <p class="font-medium text-gray-900">{{ schedule.notes }}</p>
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Event Info -->
+      <div class="bg-gray-50 rounded-lg p-4 space-y-4">
+        <h3 class="font-semibold text-gray-900">Informações do Evento</h3>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3">
+            <lucide-icon [img]="CalendarIcon" class="h-5 w-5 text-gray-500 mt-0.5"></lucide-icon>
+            <div>
+              <p class="text-sm text-gray-500">Data do Evento</p>
+              <p class="font-medium text-gray-900">{{ formatDate(schedule.event.eventDate) }}</p>
+              <p class="text-sm text-gray-600">{{ formatTime(schedule.event.eventTime) }}</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <lucide-icon [img]="MapPinIcon" class="h-5 w-5 text-gray-500 mt-0.5"></lucide-icon>
+            <div>
+              <p class="text-sm text-gray-500">Evento</p>
+              <p class="font-medium text-gray-900">{{ schedule.event.name }}</p>
+              @if (schedule.event.location) {
+              <p class="text-sm text-gray-600">{{ schedule.event.location }}</p>
+              }
+            </div>
+          </div>
+          @if (schedule.event.client) {
+          <div class="flex items-start gap-3">
+            <lucide-icon [img]="UsersIcon" class="h-5 w-5 text-gray-500 mt-0.5"></lucide-icon>
+            <div>
+              <p class="text-sm text-gray-500">Cliente</p>
+              <p class="font-medium text-gray-900">{{ schedule.event.client.name }}</p>
+            </div>
+          </div>
+          }
+          @if (schedule.event.organization) {
+          <div class="flex items-start gap-3">
+            <lucide-icon [img]="UsersIcon" class="h-5 w-5 text-gray-500 mt-0.5"></lucide-icon>
+            <div>
+              <p class="text-sm text-gray-500">Organização</p>
+              <p class="font-medium text-gray-900">{{ schedule.event.organization.name }}</p>
+              @if (schedule.event.organization.phone) {
+              <p class="text-sm text-gray-600">{{ schedule.event.organization.phone }}</p>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      @if (canConfirm() || canCancel()) {
+      <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t">
+        @if (canConfirm()) {
+        <button appButton (click)="handleConfirmClick()"
+          class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0">
+          <lucide-icon [img]="CheckCircleIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          Confirmar Presença
+        </button>
+        }
+        @if (canCancel()) {
+        <button appButton variant="outline" (click)="handleCancelClick()"
+          class="flex-1 border-red-300 text-red-700 hover:bg-red-50">
+          <lucide-icon [img]="XCircleIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          Cancelar Presença
+        </button>
+        }
+      </div>
+      } @else {
+      <div class="pt-6 border-t">
+        <p class="text-center text-gray-600">
+          Esta escala já foi {{ schedule.confirmationStatus === 'confirmado' ? 'confirmada' : 'cancelada' }}.
+        </p>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Confirmation Modal -->
+    <app-confirmation-modal [isOpen]="showConfirmModal" (onClose)="handleCloseConfirmModal()"
+      (onConfirm)="handleConfirmPresence()" title="Confirmar Presença"
+      message="Tem certeza que deseja confirmar sua presença neste evento?"
+      confirmText="Confirmar" cancelText="Cancelar" variant="info" [loading]="isConfirming"></app-confirmation-modal>
+
+    <!-- Cancel Modal -->
+    <app-confirmation-modal [isOpen]="showCancelModal" (onClose)="handleCloseCancelModal()"
+      (onConfirm)="handleCancelPresence()" title="Cancelar Presença"
+      message="Tem certeza que deseja cancelar sua presença neste evento?"
+      confirmText="Cancelar Presença" cancelText="Voltar" variant="danger" [loading]="isCancelling"></app-confirmation-modal>
+  </div>
+</div>

@@ -59,6 +59,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/register/quotes/proposal-page/proposal-page.component').then(m => m.ProposalPageComponent)
   },
   
+  // Public team schedule confirmation (no auth required)
+  {
+    path: 'team-schedules/public/:token',
+    loadComponent: () => import('./features/register/team-schedules/team-schedule-public/team-schedule-public.component').then(m => m.TeamSchedulePublicComponent)
+  },
+  
   // Protected routes (with auth guard)
   {
     path: '',
@@ -267,6 +273,52 @@ export const routes: Routes = [
       {
         path: 'cadastros/eventos/:eventId/checklist',
         loadComponent: () => import('./features/checklists/event-checklist-page/event-checklist-page.component').then(m => m.EventChecklistPageComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      
+      // Team Members routes
+      {
+        path: 'cadastros/equipe',
+        loadComponent: () => import('./features/register/team-members/team-member-list/team-member-list.component').then(m => m.TeamMemberListComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/equipe/novo',
+        loadComponent: () => import('./features/register/team-members/team-member-form/team-member-form.component').then(m => m.TeamMemberFormComponent),
+        data: { module: 'cadastros', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/equipe/editar/:id',
+        loadComponent: () => import('./features/register/team-members/team-member-form/team-member-form.component').then(m => m.TeamMemberFormComponent),
+        data: { module: 'cadastros', action: 'edit' },
+        canActivate: [permissionGuard]
+      },
+      
+      // Team Schedules routes
+      {
+        path: 'cadastros/eventos/:eventId/equipe',
+        loadComponent: () => import('./features/register/team-schedules/team-schedule-list/team-schedule-list.component').then(m => m.TeamScheduleListComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/eventos/:eventId/equipe/adicionar',
+        loadComponent: () => import('./features/register/team-schedules/team-schedule-form/team-schedule-form.component').then(m => m.TeamScheduleFormComponent),
+        data: { module: 'cadastros', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/eventos/:eventId/equipe/editar/:scheduleId',
+        loadComponent: () => import('./features/register/team-schedules/team-schedule-form/team-schedule-form.component').then(m => m.TeamScheduleFormComponent),
+        data: { module: 'cadastros', action: 'edit' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'cadastros/eventos/:eventId/equipe/dia',
+        loadComponent: () => import('./features/register/team-schedules/event-day-view/event-day-view.component').then(m => m.EventDayViewComponent),
         data: { module: 'cadastros', action: 'view' },
         canActivate: [permissionGuard]
       },

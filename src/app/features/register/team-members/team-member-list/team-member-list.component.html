@@ -1,0 +1,179 @@
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1
+        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Equipe</h1>
+      <p class="text-muted-foreground text-sm sm:text-base">
+        Gerencie os membros da sua equipe
+      </p>
+    </div>
+    <button routerLink="/cadastros/equipe/novo"
+      class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
+      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
+      Novo Membro
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <div class="flex-1 w-full">
+        <app-search-bar placeholder="Buscar por nome, email ou telefone..."
+          [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"></app-search-bar>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ error }}
+  </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16"></app-skeleton>
+  </div>
+  }
+
+  <!-- Desktop Table -->
+  @if (!isLoading) {
+  <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <app-table>
+      <thead appTableHeader>
+        <tr appTableRow>
+          <th appTableHead>
+            <button (click)="onSortChange('name')" class="flex items-center gap-1 hover:text-primary-600">
+              Nome {{ getSortIcon('name') }}
+            </button>
+          </th>
+          <th appTableHead>
+            <button (click)="onSortChange('email')" class="flex items-center gap-1 hover:text-primary-600">
+              Email {{ getSortIcon('email') }}
+            </button>
+          </th>
+          <th appTableHead>
+            <button (click)="onSortChange('phone')" class="flex items-center gap-1 hover:text-primary-600">
+              Telefone {{ getSortIcon('phone') }}
+            </button>
+          </th>
+          <th appTableHead>Observações</th>
+          <th appTableHead>
+            <button (click)="onSortChange('createdAt')" class="flex items-center gap-1 hover:text-primary-600">
+              Data Cadastro {{ getSortIcon('createdAt') }}
+            </button>
+          </th>
+          <th appTableHead class="text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody appTableBody>
+        @for (member of teamMembers; track member.id) {
+        <tr appTableRow>
+          <td appTableCell class="font-medium">{{ member.name }}</td>
+          <td appTableCell>{{ member.email || '-' }}</td>
+          <td appTableCell>{{ member.phone }}</td>
+          <td appTableCell>{{ member.notes || '-' }}</td>
+          <td appTableCell>{{ formatDate(member.createdAt) }}</td>
+          <td appTableCell class="text-right">
+            <div class="flex items-center justify-end space-x-2">
+              <button appButton variant="ghost" size="sm" [routerLink]="['/cadastros/equipe/editar', member.id]">
+                <lucide-icon [img]="EditIcon" class="h-4 w-4"></lucide-icon>
+              </button>
+              <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(member)">
+                <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </app-table>
+  </div>
+  }
+  <!-- Mobile Cards -->
+  <div class="lg:hidden">
+    @for (member of teamMembers; track member.id) {
+    <app-mobile-card class="hover:shadow-md mb-4">
+      <div class="space-y-3">
+        <div class="flex justify-between items-start gap-3">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-gray-900 text-base truncate">{{ member.name }}</h3>
+            <div class="mt-1 space-y-1">
+              <p class="text-sm text-gray-600 truncate">
+                <span class="font-medium">Email:</span> {{ member.email || '-' }}
+              </p>
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">Telefone:</span> {{ member.phone }}
+              </p>
+              @if (member.notes) {
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">Observações:</span> {{ member.notes }}
+              </p>
+              }
+              <p class="text-sm text-gray-500">
+                <span class="font-medium">Cadastro:</span> {{ formatDate(member.createdAt) }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 pt-3 border-t border-gray-200">
+          <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+            [routerLink]="['/cadastros/equipe/editar', member.id]">
+            <lucide-icon [img]="EditIcon" class="mr-2 h-4 w-4"></lucide-icon>
+            Editar
+          </button>
+          <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+            (click)="handleDeleteClick(member)">
+            <lucide-icon [img]="Trash2Icon" class="mr-2 h-4 w-4"></lucide-icon>
+            Excluir
+          </button>
+        </div>
+      </div>
+    </app-mobile-card>
+    }
+  </div>
+
+  <!-- Pagination -->
+  @if (!isLoading && totalPages > 1) {
+  <div class="flex items-center justify-center gap-2">
+    <button appButton variant="outline" size="sm" [disabled]="currentPage === 1"
+      (click)="onPageChange(currentPage - 1)">
+      Anterior
+    </button>
+    <span class="text-sm text-gray-600">
+      Página {{ currentPage }} de {{ totalPages }} ({{ totalItems }} total)
+    </span>
+    <button appButton variant="outline" size="sm" [disabled]="currentPage === totalPages"
+      (click)="onPageChange(currentPage + 1)">
+      Próxima
+    </button>
+  </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading && teamMembers.length === 0) {
+  <app-empty-state [title]="searchTerm ? 'Nenhum membro encontrado' : 'Nenhum membro cadastrado'"
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece adicionando seu primeiro membro da equipe'">
+    @if (!searchTerm) {
+    <button routerLink="/cadastros/equipe/novo"
+      class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2">
+      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
+      Novo Membro
+    </button>
+    }
+  </app-empty-state>
+  }
+
+  <!-- Confirmation Modal -->
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Excluir Membro da Equipe"
+    [message]="'Tem certeza que deseja excluir o membro &quot;' + (memberToDelete?.name || '') + '&quot;? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
+</div>

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye, Calendar, MapPin, ClipboardCheck } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Eye, Calendar, MapPin, ClipboardCheck, Users } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -57,6 +57,7 @@ export class EventsListComponent implements OnInit {
   readonly CalendarIcon = Calendar
   readonly MapPinIcon = MapPin
   readonly ClipboardCheckIcon = ClipboardCheck
+  readonly UsersIcon = Users
 
   events: Event[] = []
   clients: Client[] = []

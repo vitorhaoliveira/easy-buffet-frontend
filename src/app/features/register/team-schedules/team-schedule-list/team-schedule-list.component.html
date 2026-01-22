@@ -1,0 +1,132 @@
+<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <button appButton variant="ghost" size="sm" (click)="goBack()">
+        <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4"></lucide-icon>
+      </button>
+      <div>
+        <h1
+          class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+          Equipe do Evento</h1>
+        @if (event) {
+        <p class="text-muted-foreground text-sm sm:text-base">
+          {{ event.name }} - {{ formatDate(event.eventDate) }}
+        </p>
+        }
+      </div>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-2">
+      <button appButton variant="outline" (click)="goToDayView()" class="w-full sm:w-auto">
+        <lucide-icon [img]="CalendarIcon" class="h-4 w-4 mr-2"></lucide-icon>
+        Visualizar Dia do Evento
+      </button>
+      <button [routerLink]="['/cadastros/eventos', eventId, 'equipe', 'adicionar']"
+        class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
+        <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
+        Adicionar Membro
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (error) {
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+    {{ error }}
+  </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16 mb-3"></app-skeleton>
+    <app-skeleton class="h-16"></app-skeleton>
+  </div>
+  }
+
+  <!-- Schedules List or Empty State -->
+  @if (!isLoading) {
+    @if (schedules.length > 0) {
+    <div class="space-y-4">
+      @for (schedule of schedules; track schedule.id) {
+      <app-mobile-card class="hover:shadow-md">
+        <div class="space-y-3">
+          <div class="flex justify-between items-start gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-2">
+                <h3 class="font-semibold text-gray-900 text-base">{{ schedule.teamMember.name }}</h3>
+                <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getStatusBadgeClass(schedule.confirmationStatus)">
+                  {{ getStatusLabel(schedule.confirmationStatus) }}
+                </span>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Função:</span> {{ schedule.role }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Horário de Chegada:</span> {{ formatTime(schedule.arrivalTime) }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Telefone:</span> {{ schedule.teamMember.phone }}
+                </p>
+                @if (schedule.teamMember.email) {
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Email:</span> {{ schedule.teamMember.email }}
+                </p>
+                }
+                @if (schedule.notes) {
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Observações:</span> {{ schedule.notes }}
+                </p>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 pt-3 border-t border-gray-200">
+            <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+              [routerLink]="['/cadastros/eventos', eventId, 'equipe', 'editar', schedule.id]">
+              <lucide-icon [img]="EditIcon" class="mr-2 h-4 w-4"></lucide-icon>
+              Editar
+            </button>
+          <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+            (click)="handleSendConfirmationClick(schedule)"
+            [disabled]="sendingConfirmationId === schedule.id">
+            <lucide-icon [img]="SendIcon" class="mr-2 h-4 w-4"></lucide-icon>
+            {{ sendingConfirmationId === schedule.id ? 'Enviando...' : 'Enviar Link' }}
+          </button>
+            <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
+              (click)="handleDeleteClick(schedule)">
+              <lucide-icon [img]="Trash2Icon" class="mr-2 h-4 w-4"></lucide-icon>
+              Remover
+            </button>
+          </div>
+        </div>
+      </app-mobile-card>
+      }
+    </div>
+    } @else {
+    <app-empty-state [icon]="UsersIcon" title="Nenhum membro escalado"
+      message="Adicione membros da equipe para este evento">
+      <button [routerLink]="['/cadastros/eventos', eventId, 'equipe', 'adicionar']"
+        class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2">
+        <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
+        Adicionar Primeiro Membro
+      </button>
+    </app-empty-state>
+    }
+  }
+
+  <!-- Delete Confirmation Modal -->
+  <app-confirmation-modal [isOpen]="showDeleteModal" (onClose)="handleCancelDelete()"
+    (onConfirm)="handleConfirmDelete()" title="Remover da Escala"
+    [message]="'Tem certeza que deseja remover &quot;' + (scheduleToDelete?.teamMember?.name || '') + '&quot; da escala? Esta ação não pode ser desfeita.'"
+    confirmText="Remover" cancelText="Cancelar" variant="danger" [loading]="isDeleting"></app-confirmation-modal>
+
+  <!-- Send Confirmation Modal -->
+  <app-confirmation-modal [isOpen]="showSendConfirmationModal" (onClose)="handleCancelSendConfirmation()"
+    (onConfirm)="handleSendConfirmation()" title="Enviar Link de Confirmação"
+    [message]="'Deseja enviar o link de confirmação para &quot;' + (scheduleToSend?.teamMember?.name || '') + '&quot;? O link será enviado via WhatsApp. Atenção: se o link já foi enviado anteriormente, será gerado um novo link.'"
+    confirmText="Enviar" cancelText="Cancelar" variant="info" [loading]="isSending"></app-confirmation-modal>
+</div>

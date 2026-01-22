@@ -1287,3 +1287,124 @@ export interface AddUsersResponse {
   newLimit: number
 }
 
+// Team Management Types
+export type ConfirmationStatus = 'pendente' | 'confirmado' | 'cancelado'
+
+export interface TeamMember {
+  id: string
+  name: string
+  phone: string
+  email?: string | null
+  notes?: string | null
+  organizationId?: string
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TeamSchedule {
+  id: string
+  eventId: string
+  teamMemberId: string
+  role: string
+  arrivalTime: string
+  notes?: string | null
+  confirmationStatus: ConfirmationStatus
+  confirmationToken?: string | null
+  confirmationTokenExpiresAt?: string | null
+  confirmedAt?: string | null
+  cancelledAt?: string | null
+  teamMember: {
+    id: string
+    name: string
+    phone: string
+    email?: string | null
+    notes?: string | null
+  }
+  event: {
+    id: string
+    name: string
+    eventDate: string
+    eventTime: string
+    location?: string
+    client?: {
+      id: string
+      name: string
+    }
+    organization?: {
+      id: string
+      name: string
+      fantasyName?: string
+      phone?: string
+    }
+  }
+}
+
+export interface CreateTeamMemberRequest {
+  name: string
+  phone: string
+  email?: string
+  notes?: string
+}
+
+export interface UpdateTeamMemberRequest {
+  name?: string
+  phone?: string
+  email?: string | null
+  notes?: string
+}
+
+export interface CreateTeamScheduleRequest {
+  teamMemberId: string
+  role: string
+  arrivalTime: string // Format: HH:MM
+  notes?: string
+}
+
+export interface UpdateTeamScheduleRequest {
+  role?: string
+  arrivalTime?: string // Format: HH:MM
+  notes?: string
+}
+
+export interface TeamScheduleDayView {
+  event: {
+    id: string
+    name: string
+    eventDate: string
+    eventTime: string
+    location?: string
+    guestCount?: number
+    client: {
+      id: string
+      name: string
+      phone?: string
+    }
+    unit?: {
+      id: string
+      name: string
+      color?: string
+    }
+  }
+  schedules: Record<string, TeamSchedule[]> | TeamSchedule[]
+  statusCounts: {
+    pendente: number
+    confirmado: number
+    cancelado: number
+  }
+  total: number
+}
+
+export interface SendConfirmationResponse {
+  confirmationUrl: string
+  whatsappUrl: string
+  emailSent: boolean
+}
+
+export interface PaginatedTeamMemberResponse {
+  success: boolean
+  data: TeamMember[]
+  pagination: PaginationInfo
+  message?: string
+}
+
