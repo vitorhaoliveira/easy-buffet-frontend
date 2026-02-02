@@ -11,22 +11,22 @@
           </div>
           <div>
             <h1 class="font-bold text-gray-900">Easy Buffet</h1>
-            <p class="text-xs text-gray-500">Sua Proposta</p>
+            <p class="text-xs text-gray-500">Seu Orçamento</p>
           </div>
         </div>
-        <!-- Botão Baixar PDF -->
+        <!-- Botão Baixar PDF (apenas orçamento; oculto após aceite) -->
+        @if (quote?.status !== 'Aceito') {
         <button (click)="downloadProposalPdf()" [disabled]="isBtnDownloadDisabled()" [class]="'px-4 py-2 text-sm font-medium rounded-lg transition-colors ' +
                    (isBtnDownloadDisabled() 
                      ? 'text-gray-500 bg-gray-100 cursor-not-allowed opacity-60' 
                      : 'text-gray-700 bg-gray-100 hover:bg-gray-200')">
           @if (isDownloadingPdf) {
           <span class="inline-block animate-spin mr-2">⏳</span> Baixando...
-          } @else if (isContractPending()) {
-          ⏳ Contrato em geração...
           } @else {
           📥 Baixar PDF
           }
         </button>
+        }
       </div>
     </div>
   </div>
@@ -61,8 +61,8 @@
       <div class="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 flex items-start gap-4">
         <lucide-icon [img]="CheckCircleIcon" class="h-6 w-6 text-green-600 flex-shrink-0 mt-1"></lucide-icon>
         <div>
-          <h3 class="font-bold text-green-900 mb-1">Proposta Aceita! ✅</h3>
-          <p class="text-sm text-green-700">Seu contrato foi gerado e será enviado em breve por email.</p>
+          <h3 class="font-bold text-green-900 mb-1">Orçamento Aceito! ✅</h3>
+          <p class="text-sm text-green-700">Seu orçamento foi aceito. Entraremos em contato em breve.</p>
         </div>
       </div>
       }
@@ -92,32 +92,6 @@
       @if (successMessage) {
       <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
         <p class="text-sm text-blue-800">{{ successMessage }}</p>
-      </div>
-      }
-
-      <!-- Contract Being Generated -->
-      @if (isContractPending()) {
-      <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 sm:p-6">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex items-start gap-4 flex-1">
-            <div class="text-2xl animate-spin">⏳</div>
-            <div>
-              <h3 class="font-bold text-yellow-900 mb-1">Contrato em Geração</h3>
-              <p class="text-sm text-yellow-700 mb-3">Seu contrato está sendo gerado automaticamente. Este processo pode
-                levar alguns minutos. Ele será enviado para seu email e você também poderá baixá-lo aqui.</p>
-              <div class="flex flex-wrap gap-2">
-                <button (click)="loadProposal()"
-                  class="px-3 py-1 text-xs bg-yellow-200 hover:bg-yellow-300 text-yellow-900 rounded font-medium whitespace-nowrap">
-                  🔄 Recarregar Agora
-                </button>
-                <button (click)="dismissContractLoading()"
-                  class="px-3 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-900 rounded font-medium whitespace-nowrap">
-                  ✕ Descartar Aviso
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
       }
 
@@ -227,7 +201,7 @@
           @if (quote.status !== 'Aceito' && quote.status !== 'Rejeitado' && quote.status !== 'Expirado') {
           <button (click)="toggleAcceptanceForm()"
             class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 shadow-md">
-            ✅ Aceitar Proposta
+            ✅ Aceitar Orçamento
           </button>
           <button (click)="handleRejectQuote()"
             class="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold rounded-lg transition-all">
@@ -239,7 +213,7 @@
         <!-- Acceptance Form -->
         @if (showAcceptanceForm && quote.status !== 'Aceito') {
         <div class="bg-white rounded-xl border border-gray-200 shadow-lg p-6 sm:p-8">
-          <h3 class="text-xl font-bold text-gray-900 mb-6">Confirmar Aceite</h3>
+          <h3 class="text-xl font-bold text-gray-900 mb-6">Confirmar aceite do orçamento</h3>
 
           <form [formGroup]="acceptanceForm" (ngSubmit)="handleAcceptance()" class="space-y-4">
             <!-- Nome Completo -->
@@ -324,14 +298,11 @@
 
         <!-- Informações adicionais -->
         <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 text-sm text-gray-600">
-          <p class="mb-2">💡 <strong>Dica:</strong> Você pode baixar um PDF desta proposta para referência.</p>
           @if (quote.status !== 'Aceito') {
-          <p class="mb-2">✅ Após aceitar a proposta, o contrato será gerado automaticamente e você poderá baixá-lo aqui.
-          </p>
-          } @else {
-          <p class="mb-2">📧 Um contrato foi gerado automaticamente e foi enviado para seu email.</p>
+          <p class="mb-2">💡 <strong>Dica:</strong> Você pode baixar o PDF do orçamento para referência.</p>
+          <p class="mb-2">✅ Ao aceitar o orçamento, ele fica registrado e entraremos em contato.</p>
           }
-          <p>❓ Dúvidas? Entre em contato conosco através do telefone ou email.</p>
+          <p class="mb-0">❓ Dúvidas? Entre em contato conosco através do telefone ou email.</p>
         </div>
       </div>
     </div>

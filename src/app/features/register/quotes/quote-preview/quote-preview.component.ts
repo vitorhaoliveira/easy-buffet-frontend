@@ -1,14 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute, RouterModule } from '@angular/router'
-import { LucideAngularModule, ArrowLeft, FileDown, Send, CheckCircle, XCircle } from 'lucide-angular'
+import { LucideAngularModule, ArrowLeft, FileDown, Send, CheckCircle, XCircle, FileText } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { QuoteService } from '@core/services/quote.service'
 import { ExportService } from '@shared/utils/export.service'
 import type { Quote } from '@shared/models/api.types'
-import { formatDateBR } from '@shared/utils/date.utils'
+import { formatDateBR, formatTime as formatTimeUtil } from '@shared/utils/date.utils'
 
 @Component({
   selector: 'app-quote-preview',
@@ -27,6 +27,7 @@ export class QuotePreviewComponent implements OnInit {
   readonly SendIcon = Send
   readonly CheckCircleIcon = CheckCircle
   readonly XCircleIcon = XCircle
+  readonly FileTextIcon = FileText
 
   private readonly quoteService = inject(QuoteService)
   private readonly exportService = inject(ExportService)
@@ -277,20 +278,7 @@ export class QuotePreviewComponent implements OnInit {
 
   formatTime(timeString: string): string {
     if (!timeString) return '-'
-    
-    try {
-      // Parse the ISO timestamp
-      const date = new Date(timeString)
-      
-      // Format as HH:MM
-      return date.toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      })
-    } catch {
-      return timeString
-    }
+    return formatTimeUtil(timeString)
   }
 
   getStatusColor(status: string): string {
@@ -320,6 +308,19 @@ export class QuotePreviewComponent implements OnInit {
 
   canReject(): boolean {
     return this.quote?.status === 'Enviado'
+  }
+
+  canConvertToContract(): boolean {
+    if (!this.quote || this.quote.status !== 'Aceito') return false
+    const hasClient = !!(this.quote.clientId ?? this.quote.client?.id)
+    return hasClient
+  }
+
+  convertToContract(): void {
+    if (!this.quote || !this.quoteId) return
+    this.router.navigate(['/cadastros/contratos/novo'], {
+      queryParams: { fromQuote: this.quoteId }
+    })
   }
 
   canEdit(): boolean {

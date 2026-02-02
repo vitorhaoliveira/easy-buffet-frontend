@@ -73,6 +73,10 @@ export interface UserWithData {
   data: User
 }
 
+export interface SwitchOrganizationResponse {
+  currentOrganization: NonNullable<User['currentOrganization']>
+}
+
 export interface Organization {
   id: string
   name: string
@@ -536,9 +540,11 @@ export interface CreateContractRequest {
   totalAmount: number
   installmentCount: number
   firstDueDate: string
-  periodicity: 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual'
+  periodicity: 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual' | 'Semanal' | 'Quinzenal'
   sellerId?: string | null
   notes?: string
+  /** When creating contract from an accepted quote, link to the quote */
+  quoteId?: string
 }
 
 export interface UpdateContractRequest {

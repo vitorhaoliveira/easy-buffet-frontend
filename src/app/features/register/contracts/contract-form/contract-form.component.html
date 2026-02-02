@@ -10,7 +10,11 @@
         {{ isEditing ? 'Editar Contrato' : 'Novo Contrato' }}
       </h1>
       <p class="text-muted-foreground">
-        {{ isEditing ? 'Atualize as informações do contrato' : 'Preencha os dados do novo contrato' }}
+        @if (quoteIdFromConversion) {
+          Contrato a partir do orçamento aceito. Valor e dados do evento/cliente já preenchidos. Informe as condições de pagamento.
+        } @else {
+          {{ isEditing ? 'Atualize as informações do contrato' : 'Preencha os dados do novo contrato' }}
+        }
       </p>
     </div>
   </div>
@@ -111,6 +115,8 @@
             <label appLabel htmlFor="periodicity">Periodicidade *</label>
             <select id="periodicity" formControlName="periodicity"
               class="flex min-h-[44px] w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
+              <option value="Semanal">Semanal</option>
+              <option value="Quinzenal">Quinzenal</option>
               <option value="Mensal">Mensal</option>
               <option value="Bimestral">Bimestral</option>
               <option value="Trimestral">Trimestral</option>

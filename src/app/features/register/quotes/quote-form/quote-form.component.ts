@@ -87,8 +87,28 @@ export class QuoteFormComponent implements OnInit {
     if (this.isEditing && this.quoteId) {
       await this.loadQuote(this.quoteId)
     } else {
-      this.addItem()
+      this.quoteForm.get('packageId')?.valueChanges.subscribe(packageId => this.onPackageChange(packageId))
     }
+  }
+
+  /**
+   * When user selects a package (new quote only), pre-fill items with package name and price
+   */
+  onPackageChange(packageId: string): void {
+    if (this.isEditing || !packageId) return
+    const pkg = this.packages.find(p => p.id === packageId)
+    if (!pkg) return
+    const price = typeof pkg.price === 'string' ? parseFloat(pkg.price) : Number(pkg.price)
+    if (isNaN(price)) return
+    while (this.items.length > 0) this.items.removeAt(0)
+    this.items.push(
+      this.fb.group({
+        description: [`${pkg.name}${pkg.type ? ' - ' + pkg.type : ''}`.trim(), [Validators.required]],
+        quantity: [1, [Validators.required, Validators.min(1)]],
+        unitPrice: [price, [Validators.required, Validators.min(0)]],
+        totalPrice: [price, [Validators.required, Validators.min(0)]]
+      })
+    )
   }
 
   /**

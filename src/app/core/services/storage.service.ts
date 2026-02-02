@@ -156,48 +156,63 @@ export class StorageService {
 
   /**
    * @Function - switchOrganization
-   * @description - Switches the current active organization
+   * @description - Switches the current active organization using data from API response
+   * @author - EasyBuffet Team
+   * @param - currentOrganization: { id, name, role?, permissions? } - Current organization from switch API
+   * @returns - boolean - True if switch was successful
+   */
+  switchOrganizationWithApiResponse(currentOrganization: {
+    id: string
+    name: string
+    role?: string
+    permissions?: UserPermissions
+  }): boolean {
+    const user = this.getUser()
+    if (!user) {
+      return false
+    }
+
+    const updatedUser: User = {
+      ...user,
+      currentOrganization: {
+        id: currentOrganization.id,
+        name: currentOrganization.name,
+        role: currentOrganization.role ?? 'Administrador',
+        permissions: (currentOrganization.permissions ?? user.currentOrganization?.permissions ?? {}) as UserPermissions
+      }
+    }
+
+    const organization: Organization = {
+      id: currentOrganization.id,
+      name: currentOrganization.name,
+      createdAt: new Date().toISOString()
+    }
+
+    this.setUser(updatedUser)
+    this.setOrganization(organization)
+    this.setCurrentOrganizationId(currentOrganization.id)
+    return true
+  }
+
+  /**
+   * @Function - switchOrganization
+   * @description - Switches the current active organization by ID (falls back to user.organizations)
    * @author - EasyBuffet Team
    * @param - organizationId: string - ID of the organization to switch to
    * @returns - boolean - True if switch was successful
    */
   switchOrganization(organizationId: string): boolean {
     const user = this.getUser()
-    
     if (!user || !user.organizations) {
       return false
     }
 
     const targetOrg = user.organizations.find(org => org.id === organizationId)
-    
     if (!targetOrg) {
       return false
     }
 
-    // Update current organization in user data
-    const updatedUser = {
-      ...user,
-      currentOrganization: {
-        id: targetOrg.id,
-        name: targetOrg.name,
-        role: targetOrg.role,
-        permissions: targetOrg.permissions
-      }
-    }
-
-    // Create organization object
-    const organization = {
-      id: targetOrg.id,
-      name: targetOrg.name,
-      createdAt: new Date().toISOString()
-    }
-
-    // Update stored data
-    this.setUser(updatedUser)
-    this.setOrganization(organization)
-    this.setCurrentOrganizationId(organizationId)
-
-    return true
+    return this.switchOrganizationWithApiResponse(targetOrg)
   }
 
   // Clear all data

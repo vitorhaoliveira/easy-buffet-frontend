@@ -7,6 +7,7 @@ import type {
   Organization,
   CreateOrganizationRequest,
   UpdateOrganizationRequest,
+  SwitchOrganizationResponse,
 } from '@shared/models/api.types'
 
 @Injectable({
@@ -42,8 +43,8 @@ export class OrganizationService {
     )
   }
 
-  switchOrganization(id: string): Observable<ApiResponse<{ message: string }>> {
-    return this.http.post<ApiResponse<{ message: string }>>(
+  switchOrganization(id: string): Observable<ApiResponse<SwitchOrganizationResponse>> {
+    return this.http.post<ApiResponse<SwitchOrganizationResponse>>(
       `${this.apiUrl}/organizations/${id}/switch`,
       {}
     )

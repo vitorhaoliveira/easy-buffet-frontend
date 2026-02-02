@@ -28,6 +28,9 @@ export class ContractSettingsComponent implements OnInit {
   showPreview = false
   showResetConfirmation = false
 
+  /** Temporarily hide clauses configuration; focus is on quote acceptance only */
+  readonly clausesPaused = true
+
   ngOnInit(): void {
     this.initForm()
     this.loadContractConfig()

@@ -8,10 +8,11 @@ import { firstValueFrom } from 'rxjs'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { ContractService } from '@core/services/contract.service'
+import { QuoteService } from '@core/services/quote.service'
 import { EventService } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
 import { SellerService } from '@core/services/seller.service'
-import type { Event, Client, Seller, CreateContractRequest, UpdateContractRequest } from '@shared/models/api.types'
+import type { Event, Client, Seller, CreateContractRequest, UpdateContractRequest, QuoteItem } from '@shared/models/api.types'
 
 @Component({
   selector: 'app-contract-form',
@@ -37,6 +38,8 @@ export class ContractFormComponent implements OnInit {
   sellers: Seller[] = []
   isEditing: boolean = false
   contractId: string | null = null
+  quoteIdFromConversion: string | null = null
+  quoteItemsFromConversion: QuoteItem[] = []
   isLoading: boolean = false
   isLoadingData: boolean = true
   errorMessage: string = ''
@@ -44,6 +47,7 @@ export class ContractFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private contractService: ContractService,
+    private quoteService: QuoteService,
     private eventService: EventService,
     private clientService: ClientService,
     private sellerService: SellerService,
@@ -67,14 +71,40 @@ export class ContractFormComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.contractId = this.route.snapshot.paramMap.get('id')
     this.isEditing = !!this.contractId
+    const fromQuoteId = this.route.snapshot.queryParamMap.get('fromQuote')
 
     await this.loadData()
 
     if (this.isEditing && this.contractId) {
       await this.loadContract(this.contractId)
+    } else if (fromQuoteId) {
+      await this.prefillFromQuote(fromQuoteId)
     }
-    
+
     this.isLoadingData = false
+  }
+
+  /**
+   * Pre-fill contract form from an accepted quote (convert orçamento em contrato)
+   */
+  async prefillFromQuote(quoteId: string): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.quoteService.getQuoteById(quoteId))
+      if (!response.success || !response.data) return
+      const quote = response.data
+      const clientId = quote.clientId ?? quote.client?.id
+      if (quote.status !== 'Aceito' || !clientId) return
+      this.quoteIdFromConversion = quoteId
+      this.quoteItemsFromConversion = quote.items?.length ? [...quote.items] : []
+      const eventId = quote.eventId ?? quote.event?.id ?? ''
+      this.contractForm.patchValue({
+        eventId,
+        clientId,
+        totalAmount: quote.totalAmount
+      })
+    } catch {
+      this.errorMessage = 'Erro ao carregar orçamento para conversão'
+    }
   }
 
   /**
@@ -185,14 +215,27 @@ export class ContractFormComponent implements OnInit {
           firstDueDate: formValue.firstDueDate,
           periodicity: formValue.periodicity,
           notes: formValue.notes || undefined,
-          ...(formValue.sellerId ? { sellerId: formValue.sellerId } : {})
+          ...(formValue.sellerId ? { sellerId: formValue.sellerId } : {}),
+          ...(this.quoteIdFromConversion ? { quoteId: this.quoteIdFromConversion } : {})
         }
         
         const response = await firstValueFrom(
           this.contractService.createContract(createData)
         )
         
-        if (response.success) {
+        if (response.success && response.data?.contract) {
+          const newContractId = response.data.contract.id
+          if (this.quoteItemsFromConversion.length > 0) {
+            for (const item of this.quoteItemsFromConversion) {
+              await firstValueFrom(
+                this.contractService.addContractItem(newContractId, {
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice
+                })
+              )
+            }
+          }
           this.router.navigate(['/cadastros/contratos'])
         } else {
           // Extract error message from response

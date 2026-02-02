@@ -124,7 +124,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       items: [
         { title: 'Minha Conta', url: '/conta' },
         { title: 'Assinatura', url: '/assinatura' },
-        { title: 'Contrato', url: '/configuracoes/contrato' },
       ]
     }
   ]
@@ -410,15 +409,37 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.organizationService.switchOrganization(orgId)
       )
 
-      if (response.success) {
-        // Update local storage
+      if (response.success && response.data?.currentOrganization) {
+        const currentOrganization = response.data.currentOrganization
+        // Use in-memory currentUser so we don't depend on localStorage having the user
+        const userToUpdate = this.currentUser ?? this.storageService.getUser()
+        if (!userToUpdate) {
+          this.errorMessage = 'Erro ao trocar organização localmente'
+          this.isSwitchingOrg = false
+          return
+        }
+        const updatedUser = {
+          ...userToUpdate,
+          currentOrganization: {
+            id: currentOrganization.id,
+            name: currentOrganization.name,
+            role: currentOrganization.role ?? 'Administrador',
+            permissions: currentOrganization.permissions ?? {}
+          }
+        }
+        this.storageService.setUser(updatedUser)
+        this.storageService.setOrganization({
+          id: currentOrganization.id,
+          name: currentOrganization.name,
+          createdAt: new Date().toISOString()
+        })
+        this.storageService.setCurrentOrganizationId(currentOrganization.id)
+        window.location.reload()
+      } else if (response.success && !response.data?.currentOrganization) {
         const switchSuccess = this.storageService.switchOrganization(orgId)
-        
         if (switchSuccess) {
-          // Reload the page to refresh all data
           window.location.reload()
         } else {
-          console.error('❌ Failed to switch organization locally')
           this.errorMessage = 'Erro ao trocar organização localmente'
           this.isSwitchingOrg = false
         }

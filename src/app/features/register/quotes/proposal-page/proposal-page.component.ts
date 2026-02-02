@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core'
+import { Component, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { ActivatedRoute, Router } from '@angular/router'
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
@@ -23,7 +23,7 @@ import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-m
   templateUrl: './proposal-page.component.html',
   styleUrls: ['./proposal-page.component.css']
 })
-export class ProposalPageComponent implements OnInit, OnDestroy {
+export class ProposalPageComponent implements OnInit {
   readonly CheckCircleIcon = CheckCircle
   readonly AlertCircleIcon = AlertCircle
   readonly CalendarIcon = Calendar
@@ -50,9 +50,6 @@ export class ProposalPageComponent implements OnInit, OnDestroy {
   showRejectConfirmation: boolean = false
   isRejectingQuote: boolean = false
   isDownloadingPdf: boolean = false
-  contractReady: boolean = false
-  
-  private contractCheckInterval?: any
 
   constructor() {
     this.acceptanceForm = this.fb.group({
@@ -76,13 +73,6 @@ export class ProposalPageComponent implements OnInit, OnDestroy {
     await this.loadProposal()
   }
 
-  ngOnDestroy(): void {
-    // Limpar interval ao sair do componente
-    if (this.contractCheckInterval) {
-      clearInterval(this.contractCheckInterval)
-    }
-  }
-
   async loadProposal(): Promise<void> {
     try {
       this.isLoading = true
@@ -91,15 +81,6 @@ export class ProposalPageComponent implements OnInit, OnDestroy {
       
       if (response.success && response.data) {
         this.quote = response.data
-        
-        // Verificar se contrato foi gerado (se status é Aceito e existe PDF)
-        const wasReady = this.contractReady
-        this.contractReady = this.quote.status === 'Aceito' && !!this.quote.contract?.contractPdfPath
-        
-        // Log para debug
-        if (this.contractCheckInterval) {
-          console.log(`[loadProposal] Status: ${this.quote.status}, HasContract: ${!!this.quote.contract}, HasPDF: ${!!this.quote.contract?.contractPdfPath}, contractReady: ${this.contractReady}`)
-        }
         
         // Pré-preencher nome do cliente se disponível
         if (this.quote.client?.name) {
@@ -166,33 +147,17 @@ export class ProposalPageComponent implements OnInit, OnDestroy {
   }
 
   async downloadProposalPdf(): Promise<void> {
-    // Verificar se contrato foi gerado (apenas para propostas aceitas)
-    if (this.quote?.status === 'Aceito') {
-      if (!this.contractReady) {
-        this.error = 'O contrato está sendo gerado. Tente novamente em alguns instantes.'
-        this.toastService.error('Contrato ainda não está pronto. Aguarde...')
-        return
-      }
-    }
-
     try {
       this.isDownloadingPdf = true
       this.error = ''
       const pdf = await firstValueFrom(this.quoteService.downloadPublicQuotePdf(this.token))
-      const filename = this.quote?.status === 'Aceito' 
-        ? `contrato-${this.quote?.id.slice(0, 8)}.pdf`
-        : `proposta-${this.quote?.id.slice(0, 8)}.pdf`
+      const filename = `orçamento-${this.quote?.id.slice(0, 8)}.pdf`
       this.triggerDownload(pdf, filename)
       this.toastService.success('PDF baixado com sucesso!')
     } catch (err: unknown) {
       const error = err as { error?: { error?: { code?: string; message: string }; message?: string }; message: string }
       
-      // Verificar se é erro de contrato não gerado
-      if (error.error?.error?.code === 'CONTRACT_NOT_FOUND') {
-        this.error = 'Contrato ainda não foi gerado. Aguarde alguns instantes e tente novamente.'
-        this.toastService.error('Contrato em processamento...')
-        this.contractReady = false
-      } else if (error.error?.error?.message) {
+      if (error.error?.error?.message) {
         this.error = error.error.error.message
       } else if (error.error?.message) {
         this.error = error.error.message
@@ -233,35 +198,11 @@ export class ProposalPageComponent implements OnInit, OnDestroy {
 
       if (response.success) {
         this.acceptanceSubmitted = true
-        this.successMessage = 'Proposta aceita com sucesso! Seu contrato está sendo gerado.'
+        this.successMessage = 'Orçamento aceito com sucesso! Entraremos em contato em breve.'
         this.showAcceptanceForm = false
         
-        // Parar qualquer verificação anterior
-        if (this.contractCheckInterval) {
-          clearInterval(this.contractCheckInterval)
-        }
-        
-        // Recarregar proposta e verificar contrato a cada 3 segundos
-        let attempts = 0
-        const maxAttempts = 20 // 60 segundos de tentativas
-        this.contractCheckInterval = setInterval(async () => {
-          attempts++
-          await this.loadProposal()
-          
-          console.log(`Verificação ${attempts}: contractReady=${this.contractReady}`)
-          
-          if (this.contractReady || attempts >= maxAttempts) {
-            if (this.contractCheckInterval) {
-              clearInterval(this.contractCheckInterval)
-              this.contractCheckInterval = undefined
-            }
-            if (this.contractReady) {
-              this.toastService.success('Contrato gerado com sucesso!')
-            } else if (attempts >= maxAttempts) {
-              this.toastService.warning('Timeout na geração do contrato. Tente recarregar a página.')
-            }
-          }
-        }, 3000)
+        // Recarregar proposta para atualizar status (sem aguardar geração de contrato)
+        await this.loadProposal()
       } else {
         this.error = response.message || response.errors?.[0] || 'Erro ao aceitar proposta'
       }
@@ -344,21 +285,8 @@ export class ProposalPageComponent implements OnInit, OnDestroy {
     window.URL.revokeObjectURL(url)
   }
 
-  isContractPending(): boolean {
-    return this.quote?.status === 'Aceito' && !this.contractReady
-  }
-
   isBtnDownloadDisabled(): boolean {
-    return this.isDownloadingPdf || this.isContractPending()
-  }
-
-  dismissContractLoading(): void {
-    // Usuário pode descartar o aviso manualmente
-    if (this.contractCheckInterval) {
-      clearInterval(this.contractCheckInterval)
-      this.contractCheckInterval = undefined
-    }
-    this.successMessage = ''
+    return this.isDownloadingPdf
   }
 
   getFieldError(fieldName: string): string {
