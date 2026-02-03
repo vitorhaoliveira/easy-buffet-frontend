@@ -225,9 +225,10 @@ export class EventsListComponent implements OnInit {
     return client?.name || 'Cliente não encontrado'
   }
 
-  getPackageName(packageId: string): string {
+  getPackageName(packageId: string | undefined): string {
+    if (!packageId) return '-'
     const pkg = this.packages.find(p => p.id === packageId)
-    return pkg?.name || 'Pacote não encontrado'
+    return pkg?.name || '-'
   }
 
   formatDate(dateString: string): string {

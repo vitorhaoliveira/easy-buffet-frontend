@@ -185,7 +185,7 @@ export interface Unit {
 export interface Event {
   id: string
   clientId: string
-  packageId: string
+  packageId?: string
   unitId?: string
   name: string
   eventDate: string
@@ -510,7 +510,7 @@ export interface UpdatePackageRequest {
 
 export interface CreateEventRequest {
   clientId: string
-  packageId: string
+  packageId?: string
   unitId?: string
   name: string
   eventDate: string
