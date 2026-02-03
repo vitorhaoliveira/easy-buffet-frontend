@@ -51,7 +51,7 @@ export class EventsFormComponent implements OnInit {
   ) {
     this.eventForm = this.fb.group({
       clientId: ['', [Validators.required]],
-      packageId: ['', [Validators.required]],
+      packageId: [''],
       unitId: [''],
       name: ['', [Validators.required]],
       eventDate: ['', [Validators.required]],
@@ -156,7 +156,7 @@ export class EventsFormComponent implements OnInit {
       const formValue = this.eventForm.value
       const eventData = {
         clientId: formValue.clientId,
-        packageId: formValue.packageId,
+        packageId: formValue.packageId || undefined,
         unitId: formValue.unitId || undefined,
         name: formValue.name,
         eventDate: formValue.eventDate,
