@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { ContractService } from '@core/services/contract.service'
+import { ToastService } from '@core/services/toast.service'
 import { QuoteService } from '@core/services/quote.service'
 import { EventService } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
@@ -43,6 +44,8 @@ export class ContractFormComponent implements OnInit {
   isLoading: boolean = false
   isLoadingData: boolean = true
   errorMessage: string = ''
+  /** When editing, minimum installment count allowed (number of already paid installments) */
+  paidInstallmentsCount: number = 0
 
   constructor(
     private fb: FormBuilder,
@@ -51,6 +54,7 @@ export class ContractFormComponent implements OnInit {
     private eventService: EventService,
     private clientService: ClientService,
     private sellerService: SellerService,
+    private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -141,16 +145,19 @@ export class ContractFormComponent implements OnInit {
 
   /**
    * @Function - loadContract
-   * @description - Loads contract data for editing
+   * @description - Loads contract data for editing, including installments to enforce min installment count
    * @author - Vitor Hugo
    * @param - id: string - Contract ID
    * @returns - Promise<void>
    */
   async loadContract(id: string): Promise<void> {
     try {
-      const response = await firstValueFrom(this.contractService.getContractById(id))
-      if (response.success && response.data) {
-        const contract = response.data
+      const [contractResponse, installmentsResponse] = await Promise.all([
+        firstValueFrom(this.contractService.getContractById(id)),
+        firstValueFrom(this.contractService.getContractInstallments(id))
+      ])
+      if (contractResponse.success && contractResponse.data) {
+        const contract = contractResponse.data
         this.contractForm.patchValue({
           eventId: contract.eventId,
           clientId: contract.clientId,
@@ -163,6 +170,17 @@ export class ContractFormComponent implements OnInit {
           status: contract.status,
           signedAt: contract.signedAt || ''
         })
+        if (installmentsResponse.success && Array.isArray(installmentsResponse.data)) {
+          this.paidInstallmentsCount = installmentsResponse.data.filter(
+            i => (i.status?.toLowerCase() === 'paid' || i.status?.toLowerCase() === 'pago')
+          ).length
+          const minCount = Math.max(1, this.paidInstallmentsCount)
+          this.contractForm.get('installmentCount')?.setValidators([
+            Validators.required,
+            Validators.min(minCount)
+          ])
+          this.contractForm.get('installmentCount')?.updateValueAndValidity()
+        }
       }
     } catch (error: any) {
       this.errorMessage = error.message || 'Erro ao carregar contrato'
@@ -187,7 +205,11 @@ export class ContractFormComponent implements OnInit {
         const updateData: UpdateContractRequest = {
           status: formValue.status,
           ...(formValue.status === 'Assinado' && formValue.signedAt && { signedAt: formValue.signedAt }),
-          ...(formValue.sellerId ? { sellerId: formValue.sellerId } : { sellerId: null })
+          ...(formValue.sellerId ? { sellerId: formValue.sellerId } : { sellerId: null }),
+          totalAmount: parseFloat(formValue.totalAmount),
+          installmentCount: parseInt(formValue.installmentCount),
+          firstDueDate: formValue.firstDueDate,
+          periodicity: formValue.periodicity
         }
         
         const response = await firstValueFrom(
@@ -195,6 +217,7 @@ export class ContractFormComponent implements OnInit {
         )
         
         if (response.success) {
+          this.toastService.success('Contrato atualizado com sucesso')
           this.router.navigate(['/cadastros/contratos'])
         } else {
           // Extract error message from response
@@ -250,7 +273,10 @@ export class ContractFormComponent implements OnInit {
       }
     } catch (error: any) {
       // Handle HTTP errors (4xx, 5xx)
-      if (error.error?.error?.message) {
+      const code = error.error?.error?.code
+      if (code === 'INSTALLMENT_COUNT_BELOW_PAID' && error.error?.error?.message) {
+        this.errorMessage = error.error.error.message
+      } else if (error.error?.error?.message) {
         this.errorMessage = error.error.error.message
       } else if (error.error?.message) {
         this.errorMessage = error.error.message
@@ -279,6 +305,9 @@ export class ContractFormComponent implements OnInit {
       return 'Campo obrigatório'
     }
     if (field?.hasError('min') && field.touched) {
+      if (fieldName === 'installmentCount' && this.paidInstallmentsCount > 0) {
+        return 'O número de parcelas não pode ser menor que a quantidade de parcelas já pagas'
+      }
       return 'Valor mínimo não atendido'
     }
     if (field?.hasError('max') && field.touched) {

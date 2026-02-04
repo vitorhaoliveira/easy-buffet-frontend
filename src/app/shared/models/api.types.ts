@@ -551,6 +551,11 @@ export interface UpdateContractRequest {
   status?: 'Pendente' | 'Assinado' | 'Cancelado'
   signedAt?: string
   sellerId?: string | null
+  /** When sent, backend validates and syncs installments (new count must be >= paid count) */
+  totalAmount?: number
+  installmentCount?: number
+  firstDueDate?: string
+  periodicity?: 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual' | 'Semanal' | 'Quinzenal'
 }
 
 export interface CreateContractResponse {

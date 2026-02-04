@@ -21,6 +21,7 @@ import {
   TableCellComponent
 } from '@shared/components/ui/table/table.component'
 import { InstallmentService } from '@core/services/installment.service'
+import { ToastService } from '@core/services/toast.service'
 import type { Installment, PaymentMethod } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -101,6 +102,7 @@ export class InstallmentsListComponent implements OnInit {
 
   constructor(
     private installmentService: InstallmentService,
+    private toastService: ToastService,
     private fb: FormBuilder
   ) {
     this.paymentForm = this.fb.group({
@@ -344,7 +346,7 @@ export class InstallmentsListComponent implements OnInit {
       )
       
       if (response.success) {
-        // Reload installments to get updated data
+        this.toastService.success('Parcela paga com sucesso')
         await this.loadInstallments()
         this.showPaymentModal = false
         this.installmentToPay = null

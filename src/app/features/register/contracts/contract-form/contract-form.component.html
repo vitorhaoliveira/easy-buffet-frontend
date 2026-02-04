@@ -94,7 +94,11 @@
           <div class="space-y-2">
             <label appLabel htmlFor="installmentCount">Número de Parcelas *</label>
             <input type="number" min="1" id="installmentCount" formControlName="installmentCount" placeholder="1"
+              [attr.min]="isEditing && paidInstallmentsCount > 0 ? paidInstallmentsCount : 1"
               [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('installmentCount') ? 'border-red-500' : '')" />
+            @if (isEditing && paidInstallmentsCount > 0) {
+            <p class="text-xs text-muted-foreground">Mínimo: {{ paidInstallmentsCount }} parcela(s) (já pagas)</p>
+            }
             @if (hasError('installmentCount')) {
             <p class="text-sm text-red-500">{{ getFieldError('installmentCount') }}</p>
             }
