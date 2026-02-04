@@ -205,6 +205,7 @@ export class ContractFormComponent implements OnInit {
         const updateData: UpdateContractRequest = {
           status: formValue.status,
           ...(formValue.status === 'Assinado' && formValue.signedAt && { signedAt: formValue.signedAt }),
+          clientId: formValue.clientId,
           ...(formValue.sellerId ? { sellerId: formValue.sellerId } : { sellerId: null }),
           totalAmount: parseFloat(formValue.totalAmount),
           installmentCount: parseInt(formValue.installmentCount),

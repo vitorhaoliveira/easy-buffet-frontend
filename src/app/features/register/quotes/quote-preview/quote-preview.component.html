@@ -143,10 +143,10 @@
               <p class="font-medium">{{ formatTime(quote.event.eventTime) }}</p>
             </div>
             }
-            @if (quote.event.location) {
+            @if (quote.event.unit?.name) {
             <div>
               <p class="text-sm text-gray-500">Local</p>
-              <p class="font-medium">{{ quote.event.location }}</p>
+              <p class="font-medium">{{ quote.event.unit?.name }}</p>
             </div>
             }
           </div>

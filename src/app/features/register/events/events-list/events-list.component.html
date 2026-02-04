@@ -20,7 +20,7 @@
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
       <div class="flex-1 w-full">
-        <app-search-bar placeholder="Buscar por cliente, pacote ou local..." [(ngModel)]="searchTerm"></app-search-bar>
+        <app-search-bar placeholder="Buscar por cliente, pacote ou unidade..." [(ngModel)]="searchTerm"></app-search-bar>
       </div>
       <select [(ngModel)]="filterUnitId" (ngModelChange)="onUnitFilterChange()"
         class="flex min-h-[44px] w-full sm:w-48 items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
@@ -68,7 +68,6 @@
           <th appTableHead>Pacote</th>
           <th appTableHead>Unidade</th>
           <th appTableHead>Data</th>
-          <th appTableHead>Local</th>
           <th appTableHead>Status</th>
           <th appTableHead class="text-right">Ações</th>
         </tr>
@@ -93,12 +92,6 @@
             <div class="flex items-center space-x-2">
               <lucide-icon [img]="CalendarIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
               <span>{{ formatDate(event.eventDate) }}</span>
-            </div>
-          </td>
-          <td appTableCell>
-            <div class="flex items-center space-x-2">
-              <lucide-icon [img]="MapPinIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-              <span class="max-w-xs truncate">{{ event.location || 'Não informado' }}</span>
             </div>
           </td>
           <td appTableCell>

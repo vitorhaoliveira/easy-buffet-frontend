@@ -52,10 +52,10 @@
           <span>{{ formatTime(event.eventTime) }}</span>
         </div>
 
-        <!-- Location -->
+        <!-- Location (unit) -->
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <lucide-icon [img]="MapPinIcon" class="w-4 h-4"></lucide-icon>
-          <span class="truncate">{{ event.location || 'Não informado' }}</span>
+          <span class="truncate">{{ event.unit?.name || 'Não informado' }}</span>
         </div>
 
         <!-- Guests -->

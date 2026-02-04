@@ -113,8 +113,8 @@
             <div>
               <p class="text-sm text-gray-500">Evento</p>
               <p class="font-medium text-gray-900">{{ schedule.event.name }}</p>
-              @if (schedule.event.location) {
-              <p class="text-sm text-gray-600">{{ schedule.event.location }}</p>
+              @if (schedule.event.unit?.name) {
+              <p class="text-sm text-gray-600">{{ schedule.event.unit?.name }}</p>
               }
             </div>
           </div>

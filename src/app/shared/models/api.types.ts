@@ -185,12 +185,11 @@ export interface Unit {
 export interface Event {
   id: string
   clientId: string
-  packageId: string
+  packageId?: string
   unitId?: string
   name: string
   eventDate: string
   eventTime: string
-  location: string
   guestCount: number
   status: 'Pendente' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
@@ -510,12 +509,11 @@ export interface UpdatePackageRequest {
 
 export interface CreateEventRequest {
   clientId: string
-  packageId: string
+  packageId?: string
   unitId?: string
   name: string
   eventDate: string
   eventTime: string
-  location: string
   guestCount: number
   status: 'Pendente' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
@@ -528,7 +526,6 @@ export interface UpdateEventRequest {
   name?: string
   eventDate?: string
   eventTime?: string
-  location?: string
   guestCount?: number
   status?: 'Pendente' | 'Agendado' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
@@ -550,6 +547,7 @@ export interface CreateContractRequest {
 export interface UpdateContractRequest {
   status?: 'Pendente' | 'Assinado' | 'Cancelado'
   signedAt?: string
+  clientId?: string
   sellerId?: string | null
   /** When sent, backend validates and syncs installments (new count must be >= paid count) */
   totalAmount?: number
@@ -572,8 +570,12 @@ export interface CreateInstallmentRequest {
 export interface UpdateInstallmentRequest {
   amount?: number
   dueDate?: string
-  status?: 'Pendente' | 'Pago' | 'Atrasado'
-  paidAt?: string
+  /** API expects 'pending' | 'paid' | 'overdue'. When status is pending/overdue, backend clears payment fields. */
+  status?: 'pending' | 'paid' | 'overdue'
+  paymentDate?: string | null
+  paymentAmount?: number | null
+  paymentMethod?: PaymentMethod | null
+  notes?: string | null
 }
 
 export interface PayInstallmentRequest {
@@ -1217,7 +1219,14 @@ export interface QuoteResponse {
     id: string
     name: string
     eventDate: string
+    eventTime?: string
     guestCount?: number
+    unit?: {
+      id: string
+      name: string
+      code?: string
+      color?: string
+    }
   }
   package: {
     id: string
@@ -1337,7 +1346,6 @@ export interface TeamSchedule {
     name: string
     eventDate: string
     eventTime: string
-    location?: string
     client?: {
       id: string
       name: string
@@ -1347,6 +1355,11 @@ export interface TeamSchedule {
       name: string
       fantasyName?: string
       phone?: string
+    }
+    unit?: {
+      id: string
+      name: string
+      color?: string
     }
   }
 }
@@ -1384,7 +1397,6 @@ export interface TeamScheduleDayView {
     name: string
     eventDate: string
     eventTime: string
-    location?: string
     guestCount?: number
     client: {
       id: string

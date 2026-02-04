@@ -140,10 +140,11 @@ export class EventsListComponent implements OnInit {
         const client = this.getClientName(event.clientId)
         const packageName = this.getPackageName(event.packageId)
         
+        const unitName = this.getUnitName(event)
         return event.name.toLowerCase().includes(searchLower) ||
                client.toLowerCase().includes(searchLower) ||
                packageName.toLowerCase().includes(searchLower) ||
-               (event.location && event.location.toLowerCase().includes(searchLower))
+               (unitName && unitName.toLowerCase().includes(searchLower))
       })
     }
 
@@ -225,9 +226,10 @@ export class EventsListComponent implements OnInit {
     return client?.name || 'Cliente não encontrado'
   }
 
-  getPackageName(packageId: string): string {
+  getPackageName(packageId: string | undefined): string {
+    if (!packageId) return '-'
     const pkg = this.packages.find(p => p.id === packageId)
-    return pkg?.name || 'Pacote não encontrado'
+    return pkg?.name || '-'
   }
 
   formatDate(dateString: string): string {

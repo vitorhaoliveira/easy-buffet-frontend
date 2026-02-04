@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-angular'
+import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2, ChevronDown, ChevronRight, Pencil } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -22,7 +22,7 @@ import {
 } from '@shared/components/ui/table/table.component'
 import { InstallmentService } from '@core/services/installment.service'
 import { ToastService } from '@core/services/toast.service'
-import type { Installment, PaymentMethod } from '@shared/models/api.types'
+import type { Installment, PaymentMethod, UpdateInstallmentRequest } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface InstallmentGroup {
@@ -69,6 +69,7 @@ export class InstallmentsListComponent implements OnInit {
   readonly CheckCircle2Icon = CheckCircle2
   readonly ChevronDownIcon = ChevronDown
   readonly ChevronRightIcon = ChevronRight
+  readonly PencilIcon = Pencil
 
   installments: Installment[] = []
   searchTerm: string = ''
@@ -86,6 +87,12 @@ export class InstallmentsListComponent implements OnInit {
   installmentToPay: Installment | null = null
   isPaymentProcessing: boolean = false
   paymentForm!: FormGroup
+
+  // Edit modal
+  showEditModal: boolean = false
+  installmentToEdit: Installment | null = null
+  isEditProcessing: boolean = false
+  editForm!: FormGroup
 
   expandedGroups: Record<string, boolean> = {}
 
@@ -108,6 +115,15 @@ export class InstallmentsListComponent implements OnInit {
     this.paymentForm = this.fb.group({
       paymentDate: [new Date().toISOString().split('T')[0], [Validators.required]],
       paymentAmount: ['', [Validators.required, Validators.min(0.01)]],
+      paymentMethod: [''],
+      notes: ['']
+    })
+    this.editForm = this.fb.group({
+      status: ['pending', [Validators.required]],
+      dueDate: ['', [Validators.required]],
+      amount: ['', [Validators.required, Validators.min(0.01)]],
+      paymentDate: [''],
+      paymentAmount: [''],
       paymentMethod: [''],
       notes: ['']
     })
@@ -371,6 +387,121 @@ export class InstallmentsListComponent implements OnInit {
     this.showPaymentModal = false
     this.installmentToPay = null
     this.paymentForm.reset()
+  }
+
+  /**
+   * @Function - normalizeStatusToApi
+   * @description - Normalize installment status to API format (pending | paid | overdue)
+   * @author - Vitor Hugo
+   * @param - status: string - Status from installment or form
+   * @returns - 'pending' | 'paid' | 'overdue'
+   */
+  normalizeStatusToApi(status: string): 'pending' | 'paid' | 'overdue' {
+    const s = (status || '').toLowerCase()
+    if (s === 'pago' || s === 'paid') return 'paid'
+    if (s === 'atrasado' || s === 'overdue') return 'overdue'
+    return 'pending'
+  }
+
+  /**
+   * @Function - handleEditClick
+   * @description - Open edit modal for installment
+   * @author - Vitor Hugo
+   * @param - installment: Installment - Installment to edit
+   * @returns - void
+   */
+  handleEditClick(installment: Installment): void {
+    this.installmentToEdit = installment
+    const statusApi = this.normalizeStatusToApi(installment.status)
+    const dueDate = installment.dueDate?.includes('T') ? installment.dueDate.split('T')[0] : (installment.dueDate || '')
+    this.editForm.patchValue({
+      status: statusApi,
+      dueDate,
+      amount: installment.amount,
+      paymentDate: installment.paymentDate?.split('T')[0] || '',
+      paymentAmount: installment.paymentAmount ?? installment.amount ?? '',
+      paymentMethod: installment.paymentMethod || '',
+      notes: installment.notes || ''
+    })
+    this.showEditModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleConfirmEdit
+   * @description - Submit installment update (status, due date, amount, payment data)
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleConfirmEdit(): Promise<void> {
+    if (!this.installmentToEdit || this.editForm.invalid) {
+      Object.keys(this.editForm.controls).forEach(key => this.editForm.get(key)?.markAsTouched())
+      return
+    }
+
+    try {
+      this.isEditProcessing = true
+      this.error = ''
+      const formValue = this.editForm.value
+      const statusApi = this.normalizeStatusToApi(formValue.status)
+
+      const payload: UpdateInstallmentRequest = {
+        status: statusApi,
+        dueDate: formValue.dueDate,
+        amount: parseFloat(formValue.amount)
+      }
+
+      if (statusApi === 'paid') {
+        if (formValue.paymentDate) payload.paymentDate = formValue.paymentDate
+        else payload.paymentDate = new Date().toISOString().split('T')[0]
+        payload.paymentAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : (this.installmentToEdit.amount ?? parseFloat(formValue.amount))
+        payload.paymentMethod = formValue.paymentMethod || null
+        payload.notes = formValue.notes || null
+      } else {
+        payload.paymentDate = null
+        payload.paymentAmount = null
+        payload.paymentMethod = null
+        payload.notes = formValue.notes || null
+      }
+
+      const response = await firstValueFrom(
+        this.installmentService.updateInstallment(this.installmentToEdit.id, payload)
+      )
+
+      if (response.success) {
+        this.toastService.success('Parcela atualizada com sucesso')
+        await this.loadInstallments()
+        this.showEditModal = false
+        this.installmentToEdit = null
+      } else {
+        this.error = response.message || 'Erro ao atualizar parcela'
+      }
+    } catch (err: any) {
+      this.error = err.error?.message || err.message || 'Erro ao atualizar parcela'
+    } finally {
+      this.isEditProcessing = false
+    }
+  }
+
+  /**
+   * @Function - handleCancelEdit
+   * @description - Close edit modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCancelEdit(): void {
+    this.showEditModal = false
+    this.installmentToEdit = null
+  }
+
+  /**
+   * @Function - isPaidStatus
+   * @description - Check if edit form status is paid (to show payment fields)
+   * @author - Vitor Hugo
+   * @returns - boolean
+   */
+  get isPaidStatusInEditForm(): boolean {
+    return this.editForm?.get('status')?.value === 'paid'
   }
 
   /**
