@@ -57,7 +57,7 @@
           <label appLabel htmlFor="packageId">Pacote/Serviço</label>
           <select id="packageId" formControlName="packageId"
             [class]="'flex min-h-[44px] h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('packageId') ? 'border-red-500' : '')">
-            <option value="">Selecione um pacote</option>
+            <option value="">Nenhum (opcional)</option>
             @for (pkg of packages; track pkg.id) {
             <option [value]="pkg.id">
               {{ pkg.name }} - {{ formatCurrency(pkg.price) }}
@@ -110,17 +110,6 @@
             [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('eventTime') ? 'border-red-500' : '')" />
           @if (hasError('eventTime')) {
           <p class="text-sm text-red-500">{{ getFieldError('eventTime') }}</p>
-          }
-        </div>
-
-        <!-- Local -->
-        <div class="space-y-2">
-          <label appLabel htmlFor="location">Local *</label>
-          <input type="text" id="location" formControlName="location"
-            placeholder="Ex: Salão de Festas Jardim das Flores"
-            [class]="'flex min-h-[44px] h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('location') ? 'border-red-500' : '')" />
-          @if (hasError('location')) {
-          <p class="text-sm text-red-500">{{ getFieldError('location') }}</p>
           }
         </div>
 

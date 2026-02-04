@@ -74,14 +74,14 @@ import { formatDateBR } from '@shared/utils/date.utils'
               </div>
             </div>
 
-            <!-- Location -->
+            <!-- Location (unit) -->
             <div class="flex items-start gap-3">
               <div class="bg-green-100 p-2 rounded-lg">
                 <lucide-icon [img]="MapPinIcon" class="h-5 w-5 text-green-600"></lucide-icon>
               </div>
               <div>
-                <p class="text-sm font-medium text-gray-600">Localização</p>
-                <p class="text-base font-semibold text-gray-900">{{ event.location }}</p>
+                <p class="text-sm font-medium text-gray-600">Local</p>
+                <p class="text-base font-semibold text-gray-900">{{ event.unit?.name || 'Não informado' }}</p>
               </div>
             </div>
 

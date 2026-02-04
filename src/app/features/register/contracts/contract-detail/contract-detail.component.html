@@ -374,6 +374,7 @@
                 <th appTableHead>Valor Pago</th>
                 <th appTableHead>Forma de Pagamento</th>
                 <th appTableHead>Observações</th>
+                <th appTableHead class="text-right">Ações</th>
               </tr>
             </thead>
             <tbody appTableBody>
@@ -400,12 +401,104 @@
                   <td appTableCell>
                     {{ installment.notes || '-' }}
                   </td>
+                  <td appTableCell class="text-right">
+                    <button appButton variant="ghost" size="sm" (click)="handleEditInstallmentClick(installment)"
+                      title="Editar parcela">
+                      <lucide-icon [img]="PencilIcon" class="h-4 w-4"></lucide-icon>
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
           </app-table>
         </div>
       </div>
+    }
+
+    <!-- Edit Installment Modal -->
+    @if (showEditInstallmentModal && installmentToEdit) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="handleCancelEditInstallment()">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        <div class="p-6 border-b">
+          <h2 class="text-xl font-semibold">Editar Parcela</h2>
+          <p class="text-sm text-muted-foreground mt-1">
+            Parcela nº {{ installmentToEdit.installmentNumber }}
+          </p>
+        </div>
+        @if (error) {
+        <div class="mx-6 mt-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">{{ error }}</div>
+        }
+        <form [formGroup]="installmentEditForm" (ngSubmit)="handleConfirmEditInstallment()" class="p-6 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label appLabel htmlFor="installmentEditStatus">Status</label>
+              <select id="installmentEditStatus" formControlName="status"
+                class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm">
+                <option value="pending">Pendente</option>
+                <option value="paid">Pago</option>
+                <option value="overdue">Atrasado</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label appLabel htmlFor="installmentEditDueDate">Vencimento *</label>
+              <input type="date" id="installmentEditDueDate" formControlName="dueDate"
+                [class]="'flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm ' + (installmentEditForm.get('dueDate')?.invalid && installmentEditForm.get('dueDate')?.touched ? 'border-red-500' : '')" />
+              @if (installmentEditForm.get('dueDate')?.invalid && installmentEditForm.get('dueDate')?.touched) {
+              <p class="text-xs text-red-500">Campo obrigatório</p>
+              }
+            </div>
+            <div class="space-y-2">
+              <label appLabel htmlFor="installmentEditAmount">Valor da parcela (R$) *</label>
+              <input type="number" id="installmentEditAmount" formControlName="amount" step="0.01"
+                [class]="'flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm ' + (installmentEditForm.get('amount')?.invalid && installmentEditForm.get('amount')?.touched ? 'border-red-500' : '')" />
+              @if (installmentEditForm.get('amount')?.invalid && installmentEditForm.get('amount')?.touched) {
+              <p class="text-xs text-red-500">Valor obrigatório e maior que zero</p>
+              }
+            </div>
+          </div>
+          @if (isPaidStatusInInstallmentEditForm) {
+          <div class="border-t pt-4 space-y-4">
+            <p class="text-sm font-medium text-gray-700">Dados do pagamento</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label appLabel htmlFor="installmentEditPaymentDate">Data do pagamento</label>
+                <input type="date" id="installmentEditPaymentDate" formControlName="paymentDate"
+                  class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm" />
+              </div>
+              <div class="space-y-2">
+                <label appLabel htmlFor="installmentEditPaymentAmount">Valor pago (R$)</label>
+                <input type="number" id="installmentEditPaymentAmount" formControlName="paymentAmount" step="0.01"
+                  class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm" />
+              </div>
+              <div class="space-y-2 sm:col-span-2">
+                <label appLabel htmlFor="installmentEditPaymentMethod">Forma de pagamento</label>
+                <select id="installmentEditPaymentMethod" formControlName="paymentMethod"
+                  class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm">
+                  <option value="">Selecione</option>
+                  @for (method of paymentMethods; track method) {
+                  <option [value]="method">{{ method }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+          }
+          <div class="space-y-2">
+            <label appLabel htmlFor="installmentEditNotes">Observações</label>
+            <textarea id="installmentEditNotes" formControlName="notes" rows="2"
+              class="flex min-h-[60px] w-full rounded-md border border-input px-3 py-2 text-sm"></textarea>
+          </div>
+          <div class="flex justify-end gap-2 pt-4 border-t">
+            <button appButton type="button" variant="outline" (click)="handleCancelEditInstallment()" [disabled]="isEditInstallmentProcessing">
+              Cancelar
+            </button>
+            <button appButton type="submit" [disabled]="isEditInstallmentProcessing">
+              {{ isEditInstallmentProcessing ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
     }
 
     <!-- Additional Payments List -->

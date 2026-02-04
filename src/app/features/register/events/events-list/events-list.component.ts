@@ -140,10 +140,11 @@ export class EventsListComponent implements OnInit {
         const client = this.getClientName(event.clientId)
         const packageName = this.getPackageName(event.packageId)
         
+        const unitName = this.getUnitName(event)
         return event.name.toLowerCase().includes(searchLower) ||
                client.toLowerCase().includes(searchLower) ||
                packageName.toLowerCase().includes(searchLower) ||
-               (event.location && event.location.toLowerCase().includes(searchLower))
+               (unitName && unitName.toLowerCase().includes(searchLower))
       })
     }
 

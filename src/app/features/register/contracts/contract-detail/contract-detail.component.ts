@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute, RouterModule } from '@angular/router'
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, ArrowLeft, Edit, FileText, User, Calendar, DollarSign, CreditCard, CheckCircle2, Clock, AlertCircle, Plus, Trash2, X, Lock, Download } from 'lucide-angular'
+import { LucideAngularModule, ArrowLeft, Edit, FileText, User, Calendar, DollarSign, CreditCard, CheckCircle2, Clock, AlertCircle, Plus, Trash2, X, Lock, Download, Pencil } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -17,12 +17,13 @@ import {
 } from '@shared/components/ui/table/table.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 import { ContractService } from '@core/services/contract.service'
+import { InstallmentService } from '@core/services/installment.service'
 import { AdditionalPaymentService } from '@core/services/additional-payment.service'
 import { CommissionService } from '@core/services/commission.service'
 import { SellerService } from '@core/services/seller.service'
 import { ContractCommissionCardComponent } from '../contract-commission-card/contract-commission-card.component'
 import { ContractCommissionFormComponent } from '../contract-commission-form/contract-commission-form.component'
-import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem, CommissionDetails, Seller } from '@shared/models/api.types'
+import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem, CommissionDetails, Seller, UpdateInstallmentRequest } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface ContractWithDetails extends Contract {
@@ -77,6 +78,7 @@ export class ContractDetailComponent implements OnInit {
   readonly XIcon = X
   readonly LockIcon = Lock
   readonly DownloadIcon = Download
+  readonly PencilIcon = Pencil
 
   contract: ContractWithDetails | null = null
   contractId: string | null = null
@@ -111,6 +113,12 @@ export class ContractDetailComponent implements OnInit {
   // Export PDF
   isExportingPDF: boolean = false
 
+  // Edit Installment
+  showEditInstallmentModal: boolean = false
+  installmentToEdit: Installment | null = null
+  isEditInstallmentProcessing: boolean = false
+  installmentEditForm!: FormGroup
+
   // Commission
   commission: CommissionDetails | null = null
   isLoadingCommission: boolean = false
@@ -134,6 +142,7 @@ export class ContractDetailComponent implements OnInit {
 
   constructor(
     private contractService: ContractService,
+    private installmentService: InstallmentService,
     private additionalPaymentService: AdditionalPaymentService,
     private commissionService: CommissionService,
     private sellerService: SellerService,
@@ -152,6 +161,16 @@ export class ContractDetailComponent implements OnInit {
       description: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(255)]],
       quantity: ['', [Validators.required, Validators.min(0.01)]],
       unitPrice: ['', [Validators.required, Validators.min(0.01)]]
+    })
+
+    this.installmentEditForm = this.fb.group({
+      status: ['pending', [Validators.required]],
+      dueDate: ['', [Validators.required]],
+      amount: ['', [Validators.required, Validators.min(0.01)]],
+      paymentDate: [''],
+      paymentAmount: [''],
+      paymentMethod: [''],
+      notes: ['']
     })
   }
 
@@ -338,6 +357,119 @@ export class ContractDetailComponent implements OnInit {
       default:
         return this.ClockIcon
     }
+  }
+
+  /**
+   * @Function - normalizeInstallmentStatusToApi
+   * @description - Normalize installment status to API format (pending | paid | overdue)
+   * @author - Vitor Hugo
+   * @param - status: string - Status from installment or form
+   * @returns - 'pending' | 'paid' | 'overdue'
+   */
+  normalizeInstallmentStatusToApi(status: string): 'pending' | 'paid' | 'overdue' {
+    const s = (status || '').toLowerCase()
+    if (s === 'pago' || s === 'paid') return 'paid'
+    if (s === 'atrasado' || s === 'overdue') return 'overdue'
+    return 'pending'
+  }
+
+  /**
+   * @Function - handleEditInstallmentClick
+   * @description - Open edit modal for installment
+   * @author - Vitor Hugo
+   * @param - installment: Installment - Installment to edit
+   * @returns - void
+   */
+  handleEditInstallmentClick(installment: Installment): void {
+    this.installmentToEdit = installment
+    const statusApi = this.normalizeInstallmentStatusToApi(installment.status)
+    const dueDate = installment.dueDate?.includes('T') ? installment.dueDate.split('T')[0] : (installment.dueDate || '')
+    this.installmentEditForm.patchValue({
+      status: statusApi,
+      dueDate,
+      amount: installment.amount,
+      paymentDate: installment.paymentDate?.split('T')[0] || '',
+      paymentAmount: installment.paymentAmount ?? installment.amount ?? '',
+      paymentMethod: installment.paymentMethod || '',
+      notes: installment.notes || ''
+    })
+    this.showEditInstallmentModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleConfirmEditInstallment
+   * @description - Submit installment update
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleConfirmEditInstallment(): Promise<void> {
+    if (!this.installmentToEdit || !this.contractId || this.installmentEditForm.invalid) {
+      Object.keys(this.installmentEditForm.controls).forEach(key => this.installmentEditForm.get(key)?.markAsTouched())
+      return
+    }
+
+    try {
+      this.isEditInstallmentProcessing = true
+      this.error = ''
+      const formValue = this.installmentEditForm.value
+      const statusApi = this.normalizeInstallmentStatusToApi(formValue.status)
+
+      const payload: UpdateInstallmentRequest = {
+        status: statusApi,
+        dueDate: formValue.dueDate,
+        amount: parseFloat(formValue.amount)
+      }
+
+      if (statusApi === 'paid') {
+        payload.paymentDate = formValue.paymentDate || new Date().toISOString().split('T')[0]
+        payload.paymentAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : (this.installmentToEdit.amount ?? parseFloat(formValue.amount))
+        payload.paymentMethod = formValue.paymentMethod || null
+        payload.notes = formValue.notes || null
+      } else {
+        payload.paymentDate = null
+        payload.paymentAmount = null
+        payload.paymentMethod = null
+        payload.notes = formValue.notes || null
+      }
+
+      const response = await firstValueFrom(
+        this.installmentService.updateInstallment(this.installmentToEdit.id, payload)
+      )
+
+      if (response.success) {
+        await this.loadContractDetails(this.contractId)
+        this.showEditInstallmentModal = false
+        this.installmentToEdit = null
+      } else {
+        this.error = response.message || 'Erro ao atualizar parcela'
+      }
+    } catch (err: any) {
+      this.error = err.error?.message || err.message || 'Erro ao atualizar parcela'
+    } finally {
+      this.isEditInstallmentProcessing = false
+    }
+  }
+
+  /**
+   * @Function - handleCancelEditInstallment
+   * @description - Close edit installment modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCancelEditInstallment(): void {
+    this.showEditInstallmentModal = false
+    this.installmentToEdit = null
+  }
+
+  /**
+   * @Function - isPaidStatusInInstallmentEditForm
+   * @description - Whether edit form status is paid (show payment fields)
+   * @author - Vitor Hugo
+   * @returns - boolean
+   */
+  get isPaidStatusInInstallmentEditForm(): boolean {
+    return this.installmentEditForm?.get('status')?.value === 'paid'
   }
 
   /**

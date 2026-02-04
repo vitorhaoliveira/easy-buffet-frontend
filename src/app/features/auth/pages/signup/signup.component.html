@@ -1,30 +1,88 @@
-<div class="flex min-h-screen">
-  <!-- Left Side - Brand Section -->
-  <!-- <div
-    class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 to-primary-600 p-12 flex-col justify-center items-center">
-    <div>
-      <img src="/logo.jpg" alt="Easy Buffet" class="w-80 mix-blend-multiply">
-    </div>
-  </div> -->
-  <div class="hidden lg:flex lg:w-1/2 p-12 flex-col justify-center items-center relative overflow-hidden">
-    <!-- Background with blur -->
-    <div class="absolute inset-0"
-      style="background-image: url('/bg.jpg'); background-size: cover; background-position: center;  transform: scale(1);">
-    </div>
+<div class="flex min-h-screen relative">
+  <!-- Full-page background (behind everything so it shows through the right panel edges) -->
+  <div class="absolute inset-0 z-0"
+    style="background-image: url('/bg.jpg'); background-size: cover; background-position: center;">
+  </div>
+  <!-- Full-page dark overlay (so it shows through the right panel too) -->
+  <div class="absolute inset-0 z-0 bg-black/30 backdrop-blur-[2px]"></div>
 
-    <div class="relative z-10">
-      <img src="/LOGO_EASY_BUFFET_page-0001-removebg-preview.png" alt="Easy Buffet Logo"
-        class="w-[35rem] mix-blend-multiply"
-        style="filter: drop-shadow(0px 0px 6px rgb(0 0 0 / 17%)) drop-shadow(0 3px 5px rgb(0 0 0 / 46%));">
+  <!-- Left Side - testimonial only -->
+  <div class="hidden lg:flex absolute left-0 top-0 bottom-0 w-1/2 flex-shrink-0 z-[1] p-12 justify-center items-center overflow-hidden">
+
+    <!-- Testimonial carousel -->
+    <div class="relative z-10 w-full max-w-lg text-white rounded-2xl p-8 text-left">
+      @switch (currentTestimonialIndex) {
+        @case (0) {
+          <div class="testimonial-slide">
+            <span class="block text-7xl font-serif text-white/90 leading-none mb-2" aria-hidden="true">"</span>
+            <p class="text-lg leading-relaxed text-white mb-8 pl-1">{{ testimonials[0].quote }}</p>
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center flex-shrink-0">
+                <span class="text-xl font-semibold text-white">{{ testimonials[0].initials }}</span>
+              </div>
+              <div>
+                <p class="font-semibold text-white text-lg">{{ testimonials[0].author }}</p>
+                <span class="inline-block mt-1 px-3 py-1 text-sm text-white border border-white/60 rounded-lg bg-white/10">{{ testimonials[0].role }}</span>
+              </div>
+            </div>
+          </div>
+        }
+        @case (1) {
+          <div class="testimonial-slide">
+            <span class="block text-7xl font-serif text-white/90 leading-none mb-2" aria-hidden="true">"</span>
+            <p class="text-lg leading-relaxed text-white mb-8 pl-1">{{ testimonials[1].quote }}</p>
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center flex-shrink-0">
+                <span class="text-xl font-semibold text-white">{{ testimonials[1].initials }}</span>
+              </div>
+              <div>
+                <p class="font-semibold text-white text-lg">{{ testimonials[1].author }}</p>
+                <span class="inline-block mt-1 px-3 py-1 text-sm text-white border border-white/60 rounded-lg bg-white/10">{{ testimonials[1].role }}</span>
+              </div>
+            </div>
+          </div>
+        }
+        @case (2) {
+          <div class="testimonial-slide">
+            <span class="block text-7xl font-serif text-white/90 leading-none mb-2" aria-hidden="true">"</span>
+            <p class="text-lg leading-relaxed text-white mb-8 pl-1">{{ testimonials[2].quote }}</p>
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center flex-shrink-0">
+                <span class="text-xl font-semibold text-white">{{ testimonials[2].initials }}</span>
+              </div>
+              <div>
+                <p class="font-semibold text-white text-lg">{{ testimonials[2].author }}</p>
+                <span class="inline-block mt-1 px-3 py-1 text-sm text-white border border-white/60 rounded-lg bg-white/10">{{ testimonials[2].role }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      }
+      <!-- Dots indicator -->
+      <div class="flex justify-center gap-2 mt-6">
+        @for (t of testimonials; track t; let i = $index) {
+          <button type="button" (click)="goToTestimonial(i)" class="rounded-full p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+            [class.bg-white]="currentTestimonialIndex === i"
+            [class.bg-white/40]="currentTestimonialIndex !== i"
+            [attr.aria-label]="'Depoimento ' + (i + 1)">
+            <span class="sr-only">Depoimento {{ i + 1 }}</span>
+          </button>
+        }
+      </div>
     </div>
   </div>
 
-  <!-- Right Side - Form Section -->
-  <div class="flex-1 flex items-center justify-center p-8 bg-white">
-    <div class="w-full max-w-md">
+  <!-- Spacer so right panel starts at 50% and left background is visible -->
+  <div class="hidden lg:block w-1/2 flex-shrink-0" aria-hidden="true"></div>
+
+  <!-- Right Side - Form Section (frosted panel so background shows through borders) -->
+  <div class="flex-1 flex flex-col items-center justify-between p-8 bg-white backdrop-blur-md border-l border-t border-b border-white/30 rounded-l-2xl shadow-lg min-h-screen relative z-10 min-w-0">
+    <div class="w-full max-w-md flex-1 flex flex-col justify-center">
+      <!-- Logo above title -->
+      <img src="/LOGO_EASY_BUFFET_page-0001-removebg-preview.png" alt="Easy Buffet" class="h-[6rem] w-auto object-contain object-center mb-6" />
       <div class="mb-8">
-        <h2 class="text-4xl font-bold text-gray-900 mb-2">Criar Conta</h2>
-        <p class="text-gray-600">Cadastre-se para começar</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-1">Criar conta</h2>
+        <p class="text-gray-600">Estamos animados em ter você conosco!</p>
       </div>
 
       <form (ngSubmit)="onSubmit()" class="space-y-5">
@@ -135,5 +193,6 @@
         </div>
       </form>
     </div>
+    <p class="text-sm text-black font-extralight">Copyright &#64; 2026 - Easy Buffet</p>
   </div>
 </div>

@@ -56,7 +56,6 @@ export class EventsFormComponent implements OnInit {
       name: ['', [Validators.required]],
       eventDate: ['', [Validators.required]],
       eventTime: ['', [Validators.required]],
-      location: ['', [Validators.required]],
       guestCount: ['', [Validators.required, Validators.min(1)]],
       status: ['Pendente'],
       notes: ['']
@@ -107,12 +106,11 @@ export class EventsFormComponent implements OnInit {
         const event = response.data
         this.eventForm.patchValue({
           clientId: event.clientId,
-          packageId: event.packageId,
+          packageId: event.packageId || '',
           unitId: event.unitId || '',
           name: event.name,
           eventDate: event.eventDate.split('T')[0],
           eventTime: this.formatTimeToString(event.eventTime),
-          location: event.location,
           guestCount: event.guestCount,
           status: event.status,
           notes: event.notes || ''
@@ -156,12 +154,11 @@ export class EventsFormComponent implements OnInit {
       const formValue = this.eventForm.value
       const eventData = {
         clientId: formValue.clientId,
-        packageId: formValue.packageId || undefined,
+        ...(formValue.packageId ? { packageId: formValue.packageId } : {}),
         unitId: formValue.unitId || undefined,
         name: formValue.name,
         eventDate: formValue.eventDate,
         eventTime: this.formatTimeToString(formValue.eventTime),
-        location: formValue.location,
         guestCount: Number(formValue.guestCount),
         status: formValue.status,
         notes: formValue.notes || undefined
