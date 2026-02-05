@@ -124,6 +124,28 @@
     </app-mobile-card>
     }
   </div>
+
+  <!-- Pagination -->
+  @if (!isLoading && pagination && pagination.total > 0) {
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <p class="text-sm text-gray-600">
+      Página {{ pagination.page }} de {{ pagination.totalPages }}
+      <span class="text-gray-500">({{ pagination.total }} cliente{{ pagination.total === 1 ? '' : 's' }})</span>
+    </p>
+    <div class="flex items-center gap-2">
+      <button type="button" (click)="setPage(page - 1)" [disabled]="pagination.page <= 1"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors">
+        <lucide-icon [img]="ChevronLeftIcon" class="h-4 w-4"></lucide-icon>
+        Anterior
+      </button>
+      <button type="button" (click)="setPage(page + 1)" [disabled]="pagination.page >= pagination.totalPages"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors">
+        Próxima
+        <lucide-icon [img]="ChevronRightIcon" class="h-4 w-4"></lucide-icon>
+      </button>
+    </div>
+  </div>
+  }
   }
 
   <!-- Empty State -->

@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, FileText, DollarSign, Eye } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, FileText, DollarSign, Eye, ChevronLeft, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -19,10 +19,10 @@ import {
   TableHeadComponent, 
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
-import { QuoteService } from '@core/services/quote.service'
+import { QuoteService, GetQuotesParams } from '@core/services/quote.service'
 import { ClientService } from '@core/services/client.service'
 import { ExportService } from '@shared/utils/export.service'
-import type { Quote } from '@shared/models/api.types'
+import type { Quote, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -55,6 +55,8 @@ export class QuoteListComponent implements OnInit {
   readonly FileTextIcon = FileText
   readonly DollarSignIcon = DollarSign
   readonly EyeIcon = Eye
+  readonly ChevronLeftIcon = ChevronLeft
+  readonly ChevronRightIcon = ChevronRight
 
   private readonly quoteService = inject(QuoteService)
   private readonly clientService = inject(ClientService)
@@ -70,6 +72,10 @@ export class QuoteListComponent implements OnInit {
   quoteToDelete: Quote | null = null
   isDeleting: boolean = false
 
+  page: number = 1
+  limit: number = 20
+  pagination: PaginationInfo | null = null
+
   async ngOnInit(): Promise<void> {
     await this.loadData()
   }
@@ -78,30 +84,60 @@ export class QuoteListComponent implements OnInit {
     try {
       this.isLoading = true
       this.error = ''
-      const response = await firstValueFrom(this.quoteService.getQuotes())
+      const params: GetQuotesParams = {
+        page: this.page,
+        limit: this.limit,
+        status: this.statusFilter || undefined
+      }
+      const response = await firstValueFrom(this.quoteService.getQuotesPaginated(params))
       if (response.success && response.data) {
         this.quotes = response.data
+        this.pagination = response.pagination ?? null
       } else {
         this.error = 'Erro ao carregar orçamentos'
+        this.pagination = null
       }
     } catch (err: unknown) {
       const error = err as { message: string }
       this.error = error.message || 'Erro ao carregar orçamentos'
+      this.pagination = null
     } finally {
       this.isLoading = false
     }
   }
 
+  /**
+   * @Function - setPage
+   * @description - Changes current page and reloads quotes
+   * @author - Vitor Hugo
+   * @param - p: number - Page number (1-based)
+   * @returns - Promise<void>
+   */
+  async setPage(p: number): Promise<void> {
+    if (p < 1 || (this.pagination && p > this.pagination.totalPages)) return
+    this.page = p
+    await this.loadData()
+  }
+
+  /**
+   * @Function - onStatusFilterChange
+   * @description - Reloads quotes when status filter changes, resets to page 1
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async onStatusFilterChange(): Promise<void> {
+    this.page = 1
+    await this.loadData()
+  }
+
+  /** Filter by search term on current page (client-side); status is applied by API */
   get filteredQuotes(): Quote[] {
-    return this.quotes.filter(quote => {
-      const matchSearch = !this.searchTerm || 
-        (quote.client?.name?.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
-        (quote.id?.toLowerCase().includes(this.searchTerm.toLowerCase()))
-      
-      const matchStatus = !this.statusFilter || quote.status === this.statusFilter
-      
-      return matchSearch && matchStatus
-    })
+    if (!this.searchTerm) return this.quotes
+    const searchLower = this.searchTerm.toLowerCase()
+    return this.quotes.filter(quote =>
+      (quote.client?.name ?? '').toLowerCase().includes(searchLower) ||
+      (quote.id ?? '').toLowerCase().includes(searchLower)
+    )
   }
 
   get uniqueStatuses(): string[] {
@@ -123,9 +159,13 @@ export class QuoteListComponent implements OnInit {
         this.quoteService.deleteQuote(this.quoteToDelete.id)
       )
       if (response.success) {
-        this.quotes = this.quotes.filter(q => q.id !== this.quoteToDelete!.id)
+        const hadOneItemOnPage = this.quotes.length === 1
         this.showDeleteModal = false
         this.quoteToDelete = null
+        if (hadOneItemOnPage && this.page > 1) {
+          this.page = this.page - 1
+        }
+        await this.loadData()
       } else {
         this.error = response.message || response.errors?.[0] || 'Erro ao excluir orçamento'
         this.showDeleteModal = false

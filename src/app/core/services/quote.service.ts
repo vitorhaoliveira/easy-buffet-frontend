@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core'
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { Observable } from 'rxjs'
 import { environment } from '@environments/environment'
 import type {
@@ -14,8 +14,15 @@ import type {
   QuoteResponse,
   QuoteAcceptanceResponse,
   ContractGenerationResponse,
-  Contract
+  Contract,
+  PaginatedResponse,
 } from '@shared/models/api.types'
+
+export interface GetQuotesParams {
+  page?: number
+  limit?: number
+  status?: string
+}
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +35,21 @@ export class QuoteService {
 
   getQuotes(params?: any): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/quotes`, { params })
+  }
+
+  /**
+   * @Function - getQuotesPaginated
+   * @description - Retrieves a paginated list of quotes with optional status filter
+   * @author - Vitor Hugo
+   * @param - params: GetQuotesParams - page, limit, status
+   * @returns - Observable<PaginatedResponse<Quote>>
+   */
+  getQuotesPaginated(params: GetQuotesParams = {}): Observable<PaginatedResponse<Quote>> {
+    let httpParams = new HttpParams()
+    if (params.page != null) httpParams = httpParams.set('page', String(params.page))
+    if (params.limit != null) httpParams = httpParams.set('limit', String(params.limit))
+    if (params.status) httpParams = httpParams.set('status', params.status)
+    return this.http.get<PaginatedResponse<Quote>>(`${this.apiUrl}/quotes`, { params: httpParams })
   }
 
   getQuoteById(id: string): Observable<ApiResponse<Quote>> {
