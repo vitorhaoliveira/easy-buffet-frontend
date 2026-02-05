@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -19,8 +19,8 @@ import {
   TableHeadComponent, 
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
-import { ClientService } from '@core/services/client.service'
-import type { Client } from '@shared/models/api.types'
+import { ClientService, GetClientsParams } from '@core/services/client.service'
+import type { Client, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -51,6 +51,8 @@ export class ClientListComponent implements OnInit {
   readonly EditIcon = Edit
   readonly Trash2Icon = Trash2
   readonly EyeIcon = Eye
+  readonly ChevronLeftIcon = ChevronLeft
+  readonly ChevronRightIcon = ChevronRight
 
   clientes: Client[] = []
   searchTerm: string = ''
@@ -59,6 +61,10 @@ export class ClientListComponent implements OnInit {
   showDeleteModal: boolean = false
   clientToDelete: Client | null = null
   isDeleting: boolean = false
+
+  page: number = 1
+  limit: number = 20
+  pagination: PaginationInfo | null = null
 
   constructor(
     private clientService: ClientService,
@@ -73,28 +79,43 @@ export class ClientListComponent implements OnInit {
     try {
       this.isLoading = true
       this.error = ''
-      const response = await firstValueFrom(this.clientService.getClients())
+      const params: GetClientsParams = { page: this.page, limit: this.limit }
+      const response = await firstValueFrom(this.clientService.getClientsPaginated(params))
       if (response.success && response.data) {
-        this.clientes = response.data as Client[]
+        this.clientes = response.data
+        this.pagination = response.pagination ?? null
       } else {
         this.error = 'Erro ao carregar clientes'
+        this.pagination = null
       }
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar clientes'
+      this.pagination = null
     } finally {
       this.isLoading = false
     }
   }
 
+  /**
+   * @Function - setPage
+   * @description - Changes current page and reloads clients
+   * @author - Vitor Hugo
+   * @param - p: number - Page number (1-based)
+   * @returns - Promise<void>
+   */
+  async setPage(p: number): Promise<void> {
+    if (p < 1 || (this.pagination && p > this.pagination.totalPages)) return
+    this.page = p
+    await this.loadClients()
+  }
+
+  /** Filter by search term on current page (client-side) */
   get filteredClientes(): Client[] {
-    if (!this.searchTerm) {
-      return this.clientes
-    }
-    
+    if (!this.searchTerm) return this.clientes
     const searchLower = this.searchTerm.toLowerCase()
     const searchDigits = this.searchTerm.replace(/\D/g, '')
     return this.clientes.filter(cliente =>
-      cliente.name.toLowerCase().includes(searchLower) ||
+      (cliente.name || '').toLowerCase().includes(searchLower) ||
       (cliente.email && cliente.email.toLowerCase().includes(searchLower)) ||
       (cliente.phone && cliente.phone.includes(searchLower)) ||
       (cliente.cpf && (cliente.cpf.toLowerCase().includes(searchLower) || cliente.cpf.replace(/\D/g, '').includes(searchDigits)))
@@ -132,6 +153,7 @@ export class ClientListComponent implements OnInit {
         this.clientes = this.clientes.filter(cliente => cliente.id !== this.clientToDelete!.id)
         this.showDeleteModal = false
         this.clientToDelete = null
+        await this.loadClients()
       } else {
         // Handle error from response when success is false
         this.error = response.message || response.errors?.[0] || 'Erro ao excluir cliente'

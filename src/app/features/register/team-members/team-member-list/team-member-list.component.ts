@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2 } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -50,6 +50,8 @@ export class TeamMemberListComponent implements OnInit {
   readonly PlusIcon = Plus
   readonly EditIcon = Edit
   readonly Trash2Icon = Trash2
+  readonly ChevronLeftIcon = ChevronLeft
+  readonly ChevronRightIcon = ChevronRight
 
   teamMembers: TeamMember[] = []
   searchTerm: string = ''
@@ -129,11 +131,17 @@ export class TeamMemberListComponent implements OnInit {
     this.loadTeamMembers()
   }
 
-  onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page
-      this.loadTeamMembers()
-    }
+  /**
+   * @Function - setPage
+   * @description - Changes current page and reloads team members
+   * @author - Vitor Hugo
+   * @param - p: number - Page number (1-based)
+   * @returns - Promise<void>
+   */
+  async setPage(p: number): Promise<void> {
+    if (p < 1 || (this.totalPages > 0 && p > this.totalPages)) return
+    this.currentPage = p
+    await this.loadTeamMembers()
   }
 
   /**
@@ -164,9 +172,13 @@ export class TeamMemberListComponent implements OnInit {
         this.teamMemberService.deleteTeamMember(this.memberToDelete.id)
       )
       if (response.success) {
-        await this.loadTeamMembers()
+        const hadOneItemOnPage = this.teamMembers.length === 1
         this.showDeleteModal = false
         this.memberToDelete = null
+        if (hadOneItemOnPage && this.currentPage > 1) {
+          this.currentPage = this.currentPage - 1
+        }
+        await this.loadTeamMembers()
       } else {
         this.error = response.message || response.errors?.[0] || 'Erro ao excluir membro da equipe'
         this.showDeleteModal = false

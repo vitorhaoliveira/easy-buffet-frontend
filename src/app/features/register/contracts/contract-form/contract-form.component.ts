@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute } from '@angular/router'
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms'
 import { LucideAngularModule, ArrowLeft, Save, X, FileText } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
@@ -10,10 +10,10 @@ import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { ContractService } from '@core/services/contract.service'
 import { ToastService } from '@core/services/toast.service'
 import { QuoteService } from '@core/services/quote.service'
-import { EventService } from '@core/services/event.service'
-import { ClientService } from '@core/services/client.service'
+import { EventService, GetEventsParams } from '@core/services/event.service'
+import { ClientService, GetClientsParams } from '@core/services/client.service'
 import { SellerService } from '@core/services/seller.service'
-import type { Event, Client, Seller, CreateContractRequest, UpdateContractRequest, QuoteItem } from '@shared/models/api.types'
+import type { Event, Client, Seller, CreateContractRequest, UpdateContractRequest, QuoteItem, PaginationInfo } from '@shared/models/api.types'
 
 @Component({
   selector: 'app-contract-form',
@@ -21,6 +21,7 @@ import type { Event, Client, Seller, CreateContractRequest, UpdateContractReques
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     LucideAngularModule,
     ButtonComponent,
     LabelComponent
@@ -46,6 +47,22 @@ export class ContractFormComponent implements OnInit {
   errorMessage: string = ''
   /** When editing, minimum installment count allowed (number of already paid installments) */
   paidInstallmentsCount: number = 0
+
+  /** Events: pagination + search in field */
+  readonly eventsPageSize = 20
+  eventsPage = 1
+  eventsPagination: PaginationInfo | null = null
+  eventSearchTerm = ''
+  eventDropdownOpen = false
+  isLoadingMoreEvents = false
+
+  /** Clients: pagination + search in field */
+  readonly clientsPageSize = 20
+  clientsPage = 1
+  clientsPagination: PaginationInfo | null = null
+  clientSearchTerm = ''
+  clientDropdownOpen = false
+  isLoadingMoreClients = false
 
   constructor(
     private fb: FormBuilder,
@@ -100,12 +117,18 @@ export class ContractFormComponent implements OnInit {
       if (quote.status !== 'Aceito' || !clientId) return
       this.quoteIdFromConversion = quoteId
       this.quoteItemsFromConversion = quote.items?.length ? [...quote.items] : []
-      const eventId = quote.eventId ?? quote.event?.id ?? ''
+      const eventId = quote.eventId ?? (quote as any).event?.id ?? ''
       this.contractForm.patchValue({
         eventId,
         clientId,
         totalAmount: quote.totalAmount
       })
+      if ((quote as any).event && !this.events.some(e => e.id === eventId)) {
+        this.events = [(quote as any).event as Event, ...this.events]
+      }
+      if ((quote as any).client && !this.clients.some(c => c.id === clientId)) {
+        this.clients = [(quote as any).client as Client, ...this.clients]
+      }
     } catch {
       this.errorMessage = 'Erro ao carregar orçamento para conversão'
     }
@@ -113,34 +136,144 @@ export class ContractFormComponent implements OnInit {
 
   /**
    * @Function - loadData
-   * @description - Loads events, clients and sellers data for the form
+   * @description - Loads first page of events, first page of clients, and sellers for the form
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
   async loadData(): Promise<void> {
     try {
+      this.eventsPage = 1
+      this.clientsPage = 1
       const [eventsResponse, clientsResponse, sellersResponse] = await Promise.all([
-        firstValueFrom(this.eventService.getEvents()),
-        firstValueFrom(this.clientService.getClients()),
+        firstValueFrom(this.eventService.getEventsPaginated({ page: 1, limit: this.eventsPageSize })),
+        firstValueFrom(this.clientService.getClientsPaginated({ page: 1, limit: this.clientsPageSize })),
         firstValueFrom(this.sellerService.getSellers())
       ])
 
       if (eventsResponse.success && eventsResponse.data) {
         this.events = eventsResponse.data
+        this.eventsPagination = eventsResponse.pagination ?? null
+      } else {
+        this.events = []
+        this.eventsPagination = null
       }
 
       if (clientsResponse.success && clientsResponse.data) {
-        this.clients = clientsResponse.data as Client[]
+        this.clients = clientsResponse.data
+        this.clientsPagination = clientsResponse.pagination ?? null
+      } else {
+        this.clients = []
+        this.clientsPagination = null
       }
 
       if (sellersResponse.success && sellersResponse.data) {
-        this.sellers = Array.isArray(sellersResponse.data) 
-          ? sellersResponse.data 
+        this.sellers = Array.isArray(sellersResponse.data)
+          ? sellersResponse.data
           : (sellersResponse.data as any).data || []
       }
     } catch (err: any) {
       this.errorMessage = err.message || 'Erro ao carregar dados'
+      this.events = []
+      this.clients = []
+      this.eventsPagination = null
+      this.clientsPagination = null
     }
+  }
+
+  /**
+   * @Function - loadMoreEvents
+   * @description - Loads next page of events and appends to the list
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async loadMoreEvents(): Promise<void> {
+    if (this.isLoadingMoreEvents || !this.eventsPagination || this.eventsPage >= this.eventsPagination.totalPages) return
+    this.isLoadingMoreEvents = true
+    try {
+      const nextPage = this.eventsPage + 1
+      const res = await firstValueFrom(
+        this.eventService.getEventsPaginated({ page: nextPage, limit: this.eventsPageSize })
+      )
+      if (res.success && res.data?.length) {
+        this.events = [...this.events, ...res.data]
+        this.eventsPage = nextPage
+        this.eventsPagination = res.pagination ?? this.eventsPagination
+      }
+    } finally {
+      this.isLoadingMoreEvents = false
+    }
+  }
+
+  /**
+   * @Function - loadMoreClients
+   * @description - Loads next page of clients and appends to the list
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async loadMoreClients(): Promise<void> {
+    if (this.isLoadingMoreClients || !this.clientsPagination || this.clientsPage >= this.clientsPagination.totalPages) return
+    this.isLoadingMoreClients = true
+    try {
+      const nextPage = this.clientsPage + 1
+      const res = await firstValueFrom(
+        this.clientService.getClientsPaginated({ page: nextPage, limit: this.clientsPageSize })
+      )
+      if (res.success && res.data?.length) {
+        this.clients = [...this.clients, ...res.data]
+        this.clientsPage = nextPage
+        this.clientsPagination = res.pagination ?? this.clientsPagination
+      }
+    } finally {
+      this.isLoadingMoreClients = false
+    }
+  }
+
+  /** Filtered events for dropdown (by search term) */
+  get filteredEvents(): Event[] {
+    if (!this.eventSearchTerm.trim()) return this.events
+    const q = this.eventSearchTerm.toLowerCase().trim()
+    return this.events.filter(e => e.name.toLowerCase().includes(q))
+  }
+
+  /** Filtered clients for dropdown (by search term) */
+  get filteredClients(): Client[] {
+    if (!this.clientSearchTerm.trim()) return this.clients
+    const q = this.clientSearchTerm.toLowerCase().trim()
+    return this.clients.filter(c => (c.name || '').toLowerCase().includes(q))
+  }
+
+  getSelectedEventName(): string {
+    const id = this.contractForm.get('eventId')?.value
+    if (!id) return ''
+    const e = this.events.find(ev => ev.id === id)
+    return e?.name ?? ''
+  }
+
+  getSelectedClientName(): string {
+    const id = this.contractForm.get('clientId')?.value
+    if (!id) return ''
+    const c = this.clients.find(cl => cl.id === id)
+    return c?.name ?? ''
+  }
+
+  selectEvent(event: Event): void {
+    this.contractForm.patchValue({ eventId: event.id })
+    this.eventDropdownOpen = false
+    this.eventSearchTerm = ''
+  }
+
+  selectClient(client: Client): void {
+    this.contractForm.patchValue({ clientId: client.id })
+    this.clientDropdownOpen = false
+    this.clientSearchTerm = ''
+  }
+
+  closeEventDropdown(): void {
+    this.eventDropdownOpen = false
+  }
+
+  closeClientDropdown(): void {
+    this.clientDropdownOpen = false
   }
 
   /**
@@ -170,6 +303,12 @@ export class ContractFormComponent implements OnInit {
           status: contract.status,
           signedAt: contract.signedAt || ''
         })
+        if (contract.event && !this.events.some(e => e.id === contract.eventId)) {
+          this.events = [contract.event as Event, ...this.events]
+        }
+        if (contract.client && !this.clients.some(c => c.id === contract.clientId)) {
+          this.clients = [contract.client as Client, ...this.clients]
+        }
         if (installmentsResponse.success && Array.isArray(installmentsResponse.data)) {
           this.paidInstallmentsCount = installmentsResponse.data.filter(
             i => (i.status?.toLowerCase() === 'paid' || i.status?.toLowerCase() === 'pago')
