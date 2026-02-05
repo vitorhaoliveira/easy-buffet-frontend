@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye, Calendar, MapPin, ClipboardCheck, Users } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Eye, Calendar, MapPin, ClipboardCheck, Users, ChevronLeft, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -19,11 +19,11 @@ import {
   TableHeadComponent, 
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
-import { EventService } from '@core/services/event.service'
+import { EventService, GetEventsParams } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
 import { PackageService } from '@core/services/package.service'
 import { UnitService } from '@core/services/unit.service'
-import type { Event, Client, Package, Unit } from '@shared/models/api.types'
+import type { Event, Client, Package, Unit, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -58,6 +58,8 @@ export class EventsListComponent implements OnInit {
   readonly MapPinIcon = MapPin
   readonly ClipboardCheckIcon = ClipboardCheck
   readonly UsersIcon = Users
+  readonly ChevronLeftIcon = ChevronLeft
+  readonly ChevronRightIcon = ChevronRight
 
   events: Event[] = []
   clients: Client[] = []
@@ -71,6 +73,11 @@ export class EventsListComponent implements OnInit {
   showDeleteModal: boolean = false
   eventToDelete: Event | null = null
   isDeleting: boolean = false
+
+  /** Pagination: backend returns page, limit, total, totalPages */
+  page: number = 1
+  limit: number = 20
+  pagination: PaginationInfo | null = null
 
   constructor(
     private eventService: EventService,
@@ -88,9 +95,14 @@ export class EventsListComponent implements OnInit {
       this.isLoading = true
       this.error = ''
 
-      const unitId = this.filterUnitId || undefined
+      const params: GetEventsParams = {
+        page: this.page,
+        limit: this.limit,
+        unitId: this.filterUnitId || undefined,
+        status: this.filterStatus !== 'todos' ? this.filterStatus : undefined
+      }
       const [eventsResponse, clientsResponse, packagesResponse, unitsResponse] = await Promise.all([
-        firstValueFrom(this.eventService.getEvents(unitId)),
+        firstValueFrom(this.eventService.getEventsPaginated(params)),
         firstValueFrom(this.clientService.getClients()),
         firstValueFrom(this.packageService.getPackages()),
         firstValueFrom(this.unitService.getUnits(true))
@@ -98,8 +110,10 @@ export class EventsListComponent implements OnInit {
 
       if (eventsResponse.success && eventsResponse.data) {
         this.events = eventsResponse.data
+        this.pagination = eventsResponse.pagination ?? null
       } else {
         this.error = 'Erro ao carregar eventos'
+        this.pagination = null
       }
 
       if (clientsResponse.success && clientsResponse.data) {
@@ -115,45 +129,60 @@ export class EventsListComponent implements OnInit {
       }
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar dados'
+      this.pagination = null
     } finally {
       this.isLoading = false
     }
   }
 
   /**
+   * @Function - setPage
+   * @description - Changes current page and reloads events
+   * @author - Vitor Hugo
+   * @param - p: number - Page number (1-based)
+   * @returns - Promise<void>
+   */
+  async setPage(p: number): Promise<void> {
+    if (p < 1 || (this.pagination && p > this.pagination.totalPages)) return
+    this.page = p
+    await this.loadData()
+  }
+
+  /**
    * @Function - onUnitFilterChange
-   * @description - Handles unit filter change and reloads events
+   * @description - Handles unit filter change, resets to page 1 and reloads events
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
   async onUnitFilterChange(): Promise<void> {
+    this.page = 1
     await this.loadData()
   }
 
+  /**
+   * @Function - onStatusFilterChange
+   * @description - Handles status filter change, resets to page 1 and reloads events
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async onStatusFilterChange(): Promise<void> {
+    this.page = 1
+    await this.loadData()
+  }
+
+  /** Events are already filtered by unit and status by the API; only search is client-side on current page */
   get filteredEvents(): Event[] {
-    let filtered = this.events
-
-    // Filter by search term
-    if (this.searchTerm) {
-      const searchLower = this.searchTerm.toLowerCase()
-      filtered = filtered.filter(event => {
-        const client = this.getClientName(event.clientId)
-        const packageName = this.getPackageName(event.packageId)
-        
-        const unitName = this.getUnitName(event)
-        return event.name.toLowerCase().includes(searchLower) ||
-               client.toLowerCase().includes(searchLower) ||
-               packageName.toLowerCase().includes(searchLower) ||
-               (unitName && unitName.toLowerCase().includes(searchLower))
-      })
-    }
-
-    // Filter by status
-    if (this.filterStatus !== 'todos') {
-      filtered = filtered.filter(event => event.status === this.filterStatus)
-    }
-
-    return filtered
+    if (!this.searchTerm) return this.events
+    const searchLower = this.searchTerm.toLowerCase()
+    return this.events.filter(event => {
+      const client = this.getClientName(event.clientId)
+      const packageName = this.getPackageName(event.packageId)
+      const unitName = this.getUnitName(event)
+      return event.name.toLowerCase().includes(searchLower) ||
+             client.toLowerCase().includes(searchLower) ||
+             packageName.toLowerCase().includes(searchLower) ||
+             (unitName != null && unitName.toLowerCase().includes(searchLower))
+    })
   }
 
   /**
@@ -187,6 +216,7 @@ export class EventsListComponent implements OnInit {
         this.events = this.events.filter(event => event.id !== this.eventToDelete!.id)
         this.showDeleteModal = false
         this.eventToDelete = null
+        await this.loadData()
       } else {
         // Handle error from response when success is false
         this.error = response.message || response.errors?.[0] || 'Erro ao excluir evento'
