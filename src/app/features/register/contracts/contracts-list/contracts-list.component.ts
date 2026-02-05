@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye, FileText, Calendar, DollarSign, User, Lock } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Eye, FileText, Calendar, DollarSign, User, Lock, ChevronLeft, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -19,10 +19,10 @@ import {
   TableHeadComponent, 
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
-import { ContractService } from '@core/services/contract.service'
+import { ContractService, GetContractsParams } from '@core/services/contract.service'
 import { EventService } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
-import type { Contract, Event, Client } from '@shared/models/api.types'
+import type { Contract, Event, Client, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -58,6 +58,8 @@ export class ContractsListComponent implements OnInit {
   readonly DollarSignIcon = DollarSign
   readonly UserIcon = User
   readonly LockIcon = Lock
+  readonly ChevronLeftIcon = ChevronLeft
+  readonly ChevronRightIcon = ChevronRight
 
   contracts: Contract[] = []
   events: Event[] = []
@@ -70,6 +72,11 @@ export class ContractsListComponent implements OnInit {
   showDeleteModal: boolean = false
   contractToDelete: Contract | null = null
   isDeleting: boolean = false
+
+  /** Pagination */
+  page: number = 1
+  limit: number = 20
+  pagination: PaginationInfo | null = null
 
   constructor(
     private contractService: ContractService,
@@ -87,16 +94,24 @@ export class ContractsListComponent implements OnInit {
       this.isLoading = true
       this.error = ''
 
+      const params: GetContractsParams = {
+        page: this.page,
+        limit: this.limit,
+        paymentStatus: this.filterPaymentStatus,
+        status: this.filterStatus !== 'todos' ? this.filterStatus : undefined
+      }
       const [contractsResponse, eventsResponse, clientsResponse] = await Promise.all([
-        firstValueFrom(this.contractService.getContracts(this.filterPaymentStatus !== 'all' ? this.filterPaymentStatus : undefined)),
+        firstValueFrom(this.contractService.getContractsPaginated(params)),
         firstValueFrom(this.eventService.getEvents()),
         firstValueFrom(this.clientService.getClients())
       ])
 
       if (contractsResponse.success && contractsResponse.data) {
         this.contracts = contractsResponse.data
+        this.pagination = contractsResponse.pagination ?? null
       } else {
         this.error = 'Erro ao carregar contratos'
+        this.pagination = null
       }
 
       if (eventsResponse.success && eventsResponse.data) {
@@ -108,32 +123,35 @@ export class ContractsListComponent implements OnInit {
       }
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar dados'
+      this.pagination = null
     } finally {
       this.isLoading = false
     }
   }
 
+  /**
+   * @Function - setPage
+   * @description - Changes current page and reloads contracts
+   * @author - Vitor Hugo
+   * @param - p: number - Page number (1-based)
+   * @returns - Promise<void>
+   */
+  async setPage(p: number): Promise<void> {
+    if (p < 1 || (this.pagination && p > this.pagination.totalPages)) return
+    this.page = p
+    await this.loadData()
+  }
+
+  /** Contracts are filtered by status and paymentStatus by the API; only search is client-side on current page */
   get filteredContracts(): Contract[] {
-    let filtered = this.contracts
-
-    // Filter by search term
-    if (this.searchTerm) {
-      const searchLower = this.searchTerm.toLowerCase()
-      filtered = filtered.filter(contract => {
-        const event = this.getEventName(contract.eventId)
-        const client = this.getClientName(contract.clientId)
-        
-        return event.toLowerCase().includes(searchLower) ||
-               client.toLowerCase().includes(searchLower)
-      })
-    }
-
-    // Filter by status
-    if (this.filterStatus !== 'todos') {
-      filtered = filtered.filter(contract => (contract.status || 'Pendente') === this.filterStatus)
-    }
-
-    return filtered
+    if (!this.searchTerm) return this.contracts
+    const searchLower = this.searchTerm.toLowerCase()
+    return this.contracts.filter(contract => {
+      const event = this.getEventName(contract.eventId)
+      const client = this.getClientName(contract.clientId)
+      return event.toLowerCase().includes(searchLower) ||
+             client.toLowerCase().includes(searchLower)
+    })
   }
 
   /**
@@ -167,6 +185,7 @@ export class ContractsListComponent implements OnInit {
         this.contracts = this.contracts.filter(contract => contract.id !== this.contractToDelete!.id)
         this.showDeleteModal = false
         this.contractToDelete = null
+        await this.loadData()
       } else {
         // Handle error from response when success is false
         this.error = response.message || response.errors?.[0] || 'Erro ao excluir contrato'
@@ -237,11 +256,23 @@ export class ContractsListComponent implements OnInit {
 
   /**
    * @Function - onPaymentStatusChange
-   * @description - Reload contracts when payment status filter changes
+   * @description - Reload contracts when payment status filter changes, resets to page 1
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
   async onPaymentStatusChange(): Promise<void> {
+    this.page = 1
+    await this.loadData()
+  }
+
+  /**
+   * @Function - onStatusFilterChange
+   * @description - Reload contracts when status filter changes, resets to page 1
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async onStatusFilterChange(): Promise<void> {
+    this.page = 1
     await this.loadData()
   }
 

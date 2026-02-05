@@ -12,7 +12,15 @@ import type {
   ContractItem,
   CreateContractItemRequest,
   UpdateContractItemRequest,
+  PaginatedResponse,
 } from '@shared/models/api.types'
+
+export interface GetContractsParams {
+  page?: number
+  limit?: number
+  paymentStatus?: 'received' | 'pending' | 'all'
+  status?: string
+}
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +36,24 @@ export class ContractService {
       params = params.set('paymentStatus', paymentStatus)
     }
     return this.http.get<ApiResponse<Contract[]>>(`${this.apiUrl}/contracts`, { params })
+  }
+
+  /**
+   * @Function - getContractsPaginated
+   * @description - Retrieves a paginated list of contracts with optional filters
+   * @author - Vitor Hugo
+   * @param - params: GetContractsParams - page, limit, paymentStatus, status
+   * @returns - Observable<PaginatedResponse<Contract>>
+   */
+  getContractsPaginated(params: GetContractsParams = {}): Observable<PaginatedResponse<Contract>> {
+    let httpParams = new HttpParams()
+    if (params.page != null) httpParams = httpParams.set('page', String(params.page))
+    if (params.limit != null) httpParams = httpParams.set('limit', String(params.limit))
+    if (params.paymentStatus && params.paymentStatus !== 'all') {
+      httpParams = httpParams.set('paymentStatus', params.paymentStatus)
+    }
+    if (params.status) httpParams = httpParams.set('status', params.status)
+    return this.http.get<PaginatedResponse<Contract>>(`${this.apiUrl}/contracts`, { params: httpParams })
   }
 
   getContractById(id: string): Observable<ApiResponse<Contract>> {
