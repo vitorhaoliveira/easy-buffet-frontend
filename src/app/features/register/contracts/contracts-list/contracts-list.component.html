@@ -78,7 +78,7 @@
           <td appTableCell class="font-medium">
             <div class="flex items-center space-x-2">
               <lucide-icon [img]="FileTextIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-              <span>{{ getEventName(contract.eventId) }}</span>
+              <span>{{ contract.event?.name || 'Evento não encontrado' }}</span>
               @if (isContractClosed(contract)) {
               <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-500" title="Contrato fechado"></lucide-icon>
               }
@@ -87,7 +87,7 @@
           <td appTableCell>
             <div class="flex items-center space-x-2">
               <lucide-icon [img]="UserIcon" class="h-4 w-4 text-muted-foreground"></lucide-icon>
-              <span>{{ getClientName(contract.clientId) }}</span>
+              <span>{{ contract.client?.name || 'Cliente não encontrado' }}</span>
             </div>
           </td>
           <td appTableCell class="font-medium">
@@ -153,12 +153,12 @@
 
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <h3 class="font-semibold text-gray-900 truncate">{{ getEventName(contract.eventId) }}</h3>
+              <h3 class="font-semibold text-gray-900 truncate">{{ contract.event?.name || 'Evento não encontrado' }}</h3>
               @if (isContractClosed(contract)) {
               <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-500 flex-shrink-0" title="Fechado"></lucide-icon>
               }
             </div>
-            <p class="text-sm text-gray-600 truncate">{{ getClientName(contract.clientId) }}</p>
+            <p class="text-sm text-gray-600 truncate">{{ contract.client?.name || 'Cliente não encontrado' }}</p>
             <p class="text-lg font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
               {{ formatCurrency(contract.totalAmount) }}
             </p>
