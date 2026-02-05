@@ -96,11 +96,15 @@ export class SigninComponent implements OnInit, OnDestroy {
 
   /**
    * @Function - goToTestimonial
-   * @description - Jumps to a specific testimonial by index (e.g. dot click)
+   * @description - Jumps to a specific testimonial by index (e.g. dot click) and resets the carousel timer
    * @param - index: number - testimonial index
    */
   goToTestimonial(index: number): void {
     this.currentTestimonialIndex = index
+    if (this.testimonialInterval) {
+      clearInterval(this.testimonialInterval)
+    }
+    this.startTestimonialCarousel()
   }
 
   /**
