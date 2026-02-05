@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core'
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core'
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'
 import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, Home, ClipboardList, DollarSign, Settings, HelpCircle, MessageCircle, LogOut, Building2, ChevronDown, Plus, X, Menu } from 'lucide-angular'
+import { LucideAngularModule, Home, ClipboardList, DollarSign, HelpCircle, MessageCircle, LogOut, Building2, ChevronDown, ChevronUp, Plus, X, Menu, Search, User as LucideUserIcon } from 'lucide-angular'
 import { Subject, takeUntil, firstValueFrom } from 'rxjs'
 import { AuthStateService } from '@core/services/auth-state.service'
 import { AuthService } from '@core/services/auth.service'
@@ -11,6 +11,8 @@ import { StorageService } from '@core/services/storage.service'
 import { phoneValidator } from '@shared/validators'
 import type { User } from '@shared/models/api.types'
 import { ToastComponent } from '@shared/components/ui/toast/toast.component'
+
+type UserOrganization = NonNullable<User['organizations']>[number]
 
 interface MenuItem {
   title: string;
@@ -24,6 +26,12 @@ interface SubMenuItem {
   title: string;
   url: string;
   disabled?: boolean;
+}
+
+export interface SearchableItem {
+  title: string;
+  section: string;
+  url: string;
 }
 
 @Component({
@@ -51,8 +59,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   readonly HomeIcon = Home
   readonly ClipboardListIcon = ClipboardList
   readonly DollarSignIcon = DollarSign
-  readonly SettingsIcon = Settings
   readonly HelpCircleIcon = HelpCircle
+  readonly SearchIcon = Search
+  readonly UserIcon = LucideUserIcon
   readonly MessageCircleIcon = MessageCircle
   readonly LogOutIcon = LogOut
   readonly Building2Icon = Building2
@@ -60,6 +69,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   readonly PlusIcon = Plus
   readonly XIcon = X
   readonly MenuIcon = Menu
+  readonly ChevronUpIcon = ChevronUp
 
   // State
   sidebarCollapsed = false
@@ -68,6 +78,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   showOrgDropdown = false
   isSwitchingOrg = false
   errorMessage = ''
+  showProfileDropdown = false
+
+  // Global search (command palette)
+  searchQuery = ''
+  showSearchDropdown = false
+  selectedSearchIndex = 0
   
   // Create organization modal
   showCreateOrgModal = false
@@ -78,12 +94,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   
   private destroy$ = new Subject<void>()
 
+  @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>
+
   constructor(
     private authStateService: AuthStateService,
     private authService: AuthService,
     private organizationService: OrganizationService,
     private storageService: StorageService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.initializeCreateOrgForm()
   }
@@ -115,15 +134,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         { title: 'Parcelas', url: '/financeiro/parcelas' },
         { title: 'Custos e Despesas', url: '/financeiro/custos' },
         { title: 'Relatório Mensal', url: '/relatorios/mensal' }
-      ]
-    },
-    {
-      title: 'Configurações',
-      icon: 'settings',
-      expanded: false,
-      items: [
-        { title: 'Minha Conta', url: '/conta' },
-        { title: 'Assinatura', url: '/assinatura' },
       ]
     }
   ]
@@ -179,7 +189,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     }
 
     // Find the organization in the user's organizations array
-    const currentOrg = this.currentUser.organizations.find(org => org.id === currentOrgId)
+    const currentOrg = this.currentUser.organizations.find((org: UserOrganization) => org.id === currentOrgId)
     
     if (currentOrg && (!this.currentUser.currentOrganization || this.currentUser.currentOrganization.id !== currentOrgId)) {
       // Update currentUser with the correct currentOrganization
@@ -297,8 +307,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   getIconComponent(iconName: string): any {
     const iconMap: { [key: string]: any } = {
       'clipboard-list': this.ClipboardListIcon,
-      'dollar-sign': this.DollarSignIcon,
-      'settings': this.SettingsIcon
+      'dollar-sign': this.DollarSignIcon
     }
     return iconMap[iconName] || this.ClipboardListIcon
   }
@@ -313,6 +322,183 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     if (this.sidebarCollapsed) return
     this.showOrgDropdown = !this.showOrgDropdown
     this.errorMessage = ''
+  }
+
+  /**
+   * @Function - toggleProfileDropdown
+   * @description - Toggles profile dropdown visibility in the top bar
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  toggleProfileDropdown(): void {
+    this.showProfileDropdown = !this.showProfileDropdown
+  }
+
+  /**
+   * @Function - closeProfileDropdown
+   * @description - Closes the profile dropdown in the top bar
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  closeProfileDropdown(): void {
+    this.showProfileDropdown = false
+  }
+
+  /**
+   * @Function - getSearchableItems
+   * @description - Builds flat list of menu items for global search (Dashboard + all sub-items)
+   * @author - Vitor Hugo
+   * @returns - SearchableItem[]
+   */
+  getSearchableItems(): SearchableItem[] {
+    const items: SearchableItem[] = [
+      { title: 'Dashboard', section: 'Início', url: '/' }
+    ]
+    for (const menu of this.menuItems) {
+      if (menu.items) {
+        for (const sub of menu.items) {
+          if (!sub.disabled) {
+            items.push({ title: sub.title, section: menu.title, url: sub.url })
+          }
+        }
+      }
+    }
+    return items
+  }
+
+  /**
+   * @Function - normalizeForSearch
+   * @description - Normalizes string for search (lowercase, remove accents)
+   * @author - Vitor Hugo
+   * @param s - string - Text to normalize
+   * @returns - string
+   */
+  private normalizeForSearch(s: string): string {
+    return s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+  }
+
+  /**
+   * @Function - getSearchResults
+   * @description - Filters searchable items by current query
+   * @author - Vitor Hugo
+   * @returns - SearchableItem[]
+   */
+  getSearchResults(): SearchableItem[] {
+    const q = this.normalizeForSearch(this.searchQuery).trim()
+    if (!q) return []
+    const all = this.getSearchableItems()
+    return all.filter(
+      item =>
+        this.normalizeForSearch(item.title).includes(q) ||
+        this.normalizeForSearch(item.section).includes(q)
+    )
+  }
+
+  /**
+   * @Function - onSearchInput
+   * @description - Handles search input change and shows/filters dropdown
+   * @author - Vitor Hugo
+   * @param value - string - Current input value
+   * @returns - void
+   */
+  onSearchInput(value: string): void {
+    this.searchQuery = value
+    this.selectedSearchIndex = 0
+    this.showSearchDropdown = value.trim().length > 0
+  }
+
+  /**
+   * @Function - onSearchResultSelect
+   * @description - Navigates to selected item and closes search
+   * @author - Vitor Hugo
+   * @param item - SearchableItem - Selected search result
+   * @returns - void
+   */
+  onSearchResultSelect(item: SearchableItem): void {
+    this.router.navigate([item.url])
+    this.closeSearchDropdown()
+    this.searchQuery = ''
+  }
+
+  /**
+   * @Function - closeSearchDropdown
+   * @description - Closes search dropdown and clears selection
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  closeSearchDropdown(): void {
+    this.showSearchDropdown = false
+    this.selectedSearchIndex = 0
+  }
+
+  /**
+   * @Function - onSearchKeydown
+   * @description - Handles keyboard navigation in search dropdown (arrows, Enter, Escape)
+   * @author - Vitor Hugo
+   * @param event - KeyboardEvent
+   * @returns - void
+   */
+  onSearchKeydown(event: KeyboardEvent): void {
+    if (!this.showSearchDropdown) return
+    const results = this.getSearchResults()
+    if (results.length === 0) {
+      if (event.key === 'Escape') {
+        this.closeSearchDropdown()
+        event.preventDefault()
+      }
+      return
+    }
+    switch (event.key) {
+      case 'ArrowDown':
+        this.selectedSearchIndex = (this.selectedSearchIndex + 1) % results.length
+        event.preventDefault()
+        break
+      case 'ArrowUp':
+        this.selectedSearchIndex = this.selectedSearchIndex <= 0 ? results.length - 1 : this.selectedSearchIndex - 1
+        event.preventDefault()
+        break
+      case 'Enter':
+        event.preventDefault()
+        this.onSearchResultSelect(results[this.selectedSearchIndex])
+        break
+      case 'Escape':
+        this.closeSearchDropdown()
+        event.preventDefault()
+        break
+      default:
+        break
+    }
+  }
+
+  /**
+   * @Function - openSearchWithShortcut
+   * @description - Opens search and focuses input (Ctrl+K / Cmd+K)
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  openSearchWithShortcut(): void {
+    this.showSearchDropdown = true
+    setTimeout(() => {
+      this.searchInputRef?.nativeElement?.focus()
+    }, 0)
+  }
+
+  /**
+   * @Function - handleGlobalKeydown
+   * @description - Listens for Ctrl+K / Cmd+K to open search palette
+   * @author - Vitor Hugo
+   * @param event - KeyboardEvent
+   * @returns - void
+   */
+  @HostListener('document:keydown', ['$event'])
+  handleGlobalKeydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+      event.preventDefault()
+      this.openSearchWithShortcut()
+    }
   }
 
   /**
@@ -340,7 +526,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     // If not available, try to get from organizations array using currentOrganizationId
     const currentOrgId = this.storageService.getCurrentOrganizationId()
     if (currentOrgId && this.currentUser?.organizations) {
-      const org = this.currentUser.organizations.find(o => o.id === currentOrgId)
+      const org = this.currentUser.organizations.find((o: UserOrganization) => o.id === currentOrgId)
       if (org) {
         return org.name
       }
@@ -396,7 +582,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.errorMessage = ''
 
       // Check if organization exists in user's organizations
-      const targetOrg = this.currentUser?.organizations?.find(org => org.id === orgId)
+      const targetOrg = this.currentUser?.organizations?.find((org: UserOrganization) => org.id === orgId)
       if (!targetOrg) {
         console.error('❌ Target organization not found in user organizations')
         this.errorMessage = 'Organização não encontrada'

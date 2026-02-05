@@ -1,7 +1,7 @@
 <div class="flex h-screen bg-gray-50 overflow-hidden">
   <!-- Mobile Menu Button -->
   <button (click)="toggleMobileSidebar()"
-    class="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 transition-colors">
+    class="lg:hidden fixed top-[.7rem] left-[.5rem] z-50 p-2 bg-white rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 transition-colors">
     <lucide-icon [img]="MenuIcon" class="w-6 h-6 text-gray-700"></lucide-icon>
   </button>
 
@@ -19,26 +19,41 @@
     <!-- Header -->
     <div class="p-4 border-b border-gray-200">
       <div class="flex flex-col gap-3">
-        <!-- Logo and Organization Switcher -->
+        <!-- Row 1: System logo (hidden when collapsed) + Hamburger menu toggle (like PreSkool reference) -->
+        <div [class]="'flex items-center gap-2 min-h-10 ' + (sidebarCollapsed ? 'justify-center' : 'justify-between')">
+          <div [class]="'flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ' + (sidebarCollapsed ? 'w-0 min-w-0 opacity-0' : 'max-w-[140px] opacity-100')">
+            <img src="/LOGO_EASY_BUFFET_page-0001-removebg-preview.png" alt="Easy Buffet"
+              class="h-9 w-auto object-contain transition-opacity duration-300" />
+          </div>
+          <button (click)="toggleSidebar()"
+            class="hidden lg:flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 text-gray-600"
+            [title]="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'">
+            <lucide-icon [img]="MenuIcon" class="w-5 h-5"></lucide-icon>
+          </button>
+        </div>
+
+        <!-- Row 2: Organization switcher card (Global International style - white bg, light border, stacked chevrons) -->
         <div class="relative">
-          <button (click)="toggleOrgDropdown()" [class]="'flex items-center gap-3 min-w-0 w-full rounded-lg transition-colors ' + 
-                     (sidebarCollapsed ? '' : 'hover:bg-gray-50 p-2 -m-2')" [disabled]="isSwitchingOrg"
+          <button (click)="toggleOrgDropdown()" [class]="'flex items-center gap-3 min-w-0 w-full rounded-lg border border-gray-200 transition-colors ' + 
+                     (sidebarCollapsed ? 'bg-white p-2 justify-center' : 'bg-white hover:bg-gray-50 p-2.5')" [disabled]="isSwitchingOrg"
             [title]="sidebarCollapsed ? getCurrentOrganizationName() : ''">
             <div
-              class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-800 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-              <span class="text-white font-bold text-lg">EB</span>
+              class="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0">
+              <lucide-icon [img]="Building2Icon" class="w-4 h-4 text-gray-600"></lucide-icon>
             </div>
             <div
-              [class]="'transition-all duration-300 overflow-hidden flex-1 ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">
-              <div class="flex items-center justify-between gap-2">
+              [class]="'transition-all duration-300 overflow-hidden min-w-0 ' + (sidebarCollapsed ? 'w-0 opacity-0 flex-none' : 'flex-1 w-auto opacity-100')">
+              <div class="flex items-center justify-between gap-2 text-left">
                 <div class="min-w-0 flex-1">
                   <h2 class="text-sm font-semibold text-gray-900 whitespace-nowrap truncate">{{
                     getCurrentOrganizationName() }}</h2>
                   <p class="text-xs text-gray-500 whitespace-nowrap">Trocar organização</p>
                 </div>
                 @if (!isSwitchingOrg) {
-                <lucide-icon [img]="ChevronDownIcon"
-                  [class]="'w-4 h-4 text-gray-600 transition-transform duration-200 flex-shrink-0 ' + (showOrgDropdown ? 'rotate-180' : '')"></lucide-icon>
+                <div class="flex flex-col items-center justify-center flex-shrink-0 text-gray-500">
+                  <lucide-icon [img]="ChevronUpIcon" class="w-3.5 h-3.5 -mb-0.5"></lucide-icon>
+                  <lucide-icon [img]="ChevronDownIcon" class="w-3.5 h-3.5 -mt-0.5"></lucide-icon>
+                </div>
                 } @else {
                 <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500 flex-shrink-0"></div>
                 }
@@ -105,20 +120,6 @@
           </div>
           }
         </div>
-
-        <!-- Toggle Button (Desktop only) -->
-        <button (click)="toggleSidebar()"
-          [class]="'hidden lg:flex items-center justify-center gap-2 w-full py-2 px-3 hover:bg-gray-100 rounded-lg transition-colors ' + (sidebarCollapsed ? 'justify-center' : 'justify-between')"
-          [title]="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'">
-          <span
-            [class]="'text-xs font-medium text-gray-600 transition-all duration-300 overflow-hidden whitespace-nowrap ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">
-            {{ sidebarCollapsed ? '' : 'Recolher menu' }}
-          </span>
-          <svg class="w-4 h-4 text-gray-600 transition-transform duration-300 flex-shrink-0"
-            [class.rotate-180]="sidebarCollapsed" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-        </button>
       </div>
     </div>
 
@@ -212,12 +213,73 @@
     </div>
   </aside>
 
-  <!-- Main content -->
-  <main class="flex-1 overflow-y-auto bg-gray-50 w-full">
-    <div class="p-4 sm:p-6 pt-16 lg:pt-6">
-      <router-outlet />
-    </div>
-  </main>
+  <!-- Right side: top bar + main content -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- Top bar (white background, orange accents - project colors). On mobile/tablet: extra left padding so fixed menu button does not overlap search -->
+    <header class="flex items-center gap-4 h-16 pl-14 pr-4 py-3 lg:pl-4 bg-white border-b border-gray-200 flex-shrink-0 shadow-sm">
+      <div class="flex-1 flex justify-center max-w-xl mx-auto">
+        <div class="relative w-full">
+          <input #searchInput type="search" placeholder="Buscar páginas (ex: parcelas, clientes)... Ctrl+K"
+            [value]="searchQuery"
+            (input)="onSearchInput($any($event.target).value)"
+            (keydown)="onSearchKeydown($event)"
+            (focus)="searchQuery && (showSearchDropdown = true)"
+            class="w-full pl-4 pr-10 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm transition-colors"
+            autocomplete="off" />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-primary-500 pointer-events-none">
+            <lucide-icon [img]="SearchIcon" class="w-4 h-4"></lucide-icon>
+          </span>
+          @if (showSearchDropdown) {
+          <div class="fixed inset-0 z-40" (click)="closeSearchDropdown()"></div>
+          <div class="absolute left-0 right-0 top-full mt-1 py-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-60 overflow-y-auto">
+            @let results = getSearchResults();
+            @if (results.length === 0) {
+            <p class="px-4 py-3 text-sm text-gray-500">{{ searchQuery.trim() ? 'Nenhum resultado para \"' + searchQuery + '\"' : 'Digite para buscar páginas (ex: parcelas, clientes)' }}</p>
+            } @else {
+            @for (item of results; track item.url + item.title; let i = $index) {
+            <button type="button" (click)="onSearchResultSelect(item)"
+              [class]="'w-full text-left px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors ' + (i === selectedSearchIndex ? 'bg-primary-50 text-primary-800' : 'text-gray-700 hover:bg-gray-50')">
+              <span class="font-medium truncate">{{ item.title }}</span>
+              <span class="text-xs text-gray-500 flex-shrink-0">{{ item.section }}</span>
+            </button>
+            }
+            }
+          </div>
+          }
+        </div>
+      </div>
+      <div class="relative flex-shrink-0">
+        <button (click)="toggleProfileDropdown()" class="flex items-center gap-3 py-1.5 pl-1 pr-2 rounded-lg hover:bg-primary-50 transition-colors border border-transparent hover:border-primary-100">
+          @if (currentUser?.avatar) {
+          <img [src]="currentUser?.avatar" [alt]="currentUser?.name" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary-100" />
+          } @else {
+          <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center ring-2 ring-primary-100">
+            <lucide-icon [img]="UserIcon" class="w-5 h-5 text-primary-600"></lucide-icon>
+          </div>
+          }
+          <div class="text-left hidden sm:block">
+            <p class="text-sm font-medium text-gray-900 leading-tight truncate max-w-[140px]">{{ currentUser?.name || 'Usuário' }}</p>
+            <p class="text-xs text-gray-500 truncate max-w-[140px]">{{ currentUser?.email || '' }}</p>
+          </div>
+          <lucide-icon [img]="ChevronDownIcon" [class]="'w-4 h-4 text-primary-500 transition-transform ' + (showProfileDropdown ? 'rotate-180' : '')"></lucide-icon>
+        </button>
+        @if (showProfileDropdown) {
+        <div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
+        <div class="absolute right-0 top-full mt-1 py-1 min-w-[180px] bg-white rounded-lg border border-gray-200 shadow-lg z-50">
+          <a routerLink="/conta" (click)="closeProfileDropdown()" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors">Minha conta</a>
+          <a routerLink="/assinatura" (click)="closeProfileDropdown()" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors">Assinatura</a>
+        </div>
+        }
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 w-full">
+      <div class="p-4 sm:p-6 pt-4">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
 
   <!-- Toast Notifications -->
   <app-toast></app-toast>
