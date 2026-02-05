@@ -20,9 +20,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { ContractService, GetContractsParams } from '@core/services/contract.service'
-import { EventService } from '@core/services/event.service'
-import { ClientService } from '@core/services/client.service'
-import type { Contract, Event, Client, PaginationInfo } from '@shared/models/api.types'
+import type { Contract, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -62,8 +60,6 @@ export class ContractsListComponent implements OnInit {
   readonly ChevronRightIcon = ChevronRight
 
   contracts: Contract[] = []
-  events: Event[] = []
-  clients: Client[] = []
   searchTerm: string = ''
   filterStatus: string = 'todos'
   filterPaymentStatus: 'received' | 'pending' | 'all' = 'all'
@@ -80,8 +76,6 @@ export class ContractsListComponent implements OnInit {
 
   constructor(
     private contractService: ContractService,
-    private eventService: EventService,
-    private clientService: ClientService,
     public router: Router
   ) {}
 
@@ -100,11 +94,9 @@ export class ContractsListComponent implements OnInit {
         paymentStatus: this.filterPaymentStatus,
         status: this.filterStatus !== 'todos' ? this.filterStatus : undefined
       }
-      const [contractsResponse, eventsResponse, clientsResponse] = await Promise.all([
-        firstValueFrom(this.contractService.getContractsPaginated(params)),
-        firstValueFrom(this.eventService.getEvents()),
-        firstValueFrom(this.clientService.getClients())
-      ])
+      const contractsResponse = await firstValueFrom(
+        this.contractService.getContractsPaginated(params)
+      )
 
       if (contractsResponse.success && contractsResponse.data) {
         this.contracts = contractsResponse.data
@@ -112,14 +104,6 @@ export class ContractsListComponent implements OnInit {
       } else {
         this.error = 'Erro ao carregar contratos'
         this.pagination = null
-      }
-
-      if (eventsResponse.success && eventsResponse.data) {
-        this.events = eventsResponse.data
-      }
-
-      if (clientsResponse.success && clientsResponse.data) {
-        this.clients = clientsResponse.data as Client[]
       }
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar dados'
@@ -142,15 +126,15 @@ export class ContractsListComponent implements OnInit {
     await this.loadData()
   }
 
-  /** Contracts are filtered by status and paymentStatus by the API; only search is client-side on current page */
+  /** Contracts are filtered by status and paymentStatus by the API; only search is client-side using embedded event/client */
   get filteredContracts(): Contract[] {
     if (!this.searchTerm) return this.contracts
     const searchLower = this.searchTerm.toLowerCase()
     return this.contracts.filter(contract => {
-      const event = this.getEventName(contract.eventId)
-      const client = this.getClientName(contract.clientId)
-      return event.toLowerCase().includes(searchLower) ||
-             client.toLowerCase().includes(searchLower)
+      const eventName = contract.event?.name ?? ''
+      const clientName = contract.client?.name ?? ''
+      return eventName.toLowerCase().includes(searchLower) ||
+             clientName.toLowerCase().includes(searchLower)
     })
   }
 
@@ -220,21 +204,19 @@ export class ContractsListComponent implements OnInit {
     this.contractToDelete = null
   }
 
-  getEventName(eventId: string): string {
-    const event = this.events.find(e => e.id === eventId)
-    return event?.name || 'Evento não encontrado'
-  }
-
-  getClientName(clientId: string): string {
-    const client = this.clients.find(c => c.id === clientId)
-    return client?.name || 'Cliente não encontrado'
-  }
-
-  formatCurrency(value: number): string {
+  /**
+   * @Function - formatCurrency
+   * @description - Formats amount for display; accepts number or string (API may return string)
+   * @author - Vitor Hugo
+   * @param value - number | string - Amount to format
+   * @returns - string
+   */
+  formatCurrency(value: number | string): string {
+    const num = typeof value === 'string' ? Number(value) : value
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(value)
+    }).format(num)
   }
 
   formatDate(dateString: string): string {
