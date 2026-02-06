@@ -106,6 +106,9 @@ export class ContractDetailComponent implements OnInit {
   paymentToEdit: AdditionalPayment | null = null
   isSubmitting: boolean = false
   additionalPaymentForm!: FormGroup
+  showDeletePaymentModal: boolean = false
+  paymentToDelete: AdditionalPayment | null = null
+  isDeletingPayment: boolean = false
 
   // Close Contract
   isClosingContract: boolean = false
@@ -166,7 +169,6 @@ export class ContractDetailComponent implements OnInit {
     this.installmentEditForm = this.fb.group({
       status: ['pending', [Validators.required]],
       dueDate: ['', [Validators.required]],
-      amount: ['', [Validators.required, Validators.min(0.01)]],
       paymentDate: [''],
       paymentAmount: [''],
       paymentMethod: [''],
@@ -213,6 +215,11 @@ export class ContractDetailComponent implements OnInit {
         }
         // Load contract items
         await this.loadContractItems(id)
+        // Load installments so parcelas and totals stay in sync (e.g. after additional payment or partial pay)
+        const instRes = await firstValueFrom(this.contractService.getContractInstallments(id))
+        if (instRes.success && Array.isArray(instRes.data)) {
+          this.contract = { ...this.contract, installments: instRes.data }
+        }
         // Load commission
         await this.loadCommission(id)
         // Load sellers for commission form
@@ -387,7 +394,6 @@ export class ContractDetailComponent implements OnInit {
     this.installmentEditForm.patchValue({
       status: statusApi,
       dueDate,
-      amount: installment.amount,
       paymentDate: installment.paymentDate?.split('T')[0] || '',
       paymentAmount: installment.paymentAmount ?? installment.amount ?? '',
       paymentMethod: installment.paymentMethod || '',
@@ -409,21 +415,32 @@ export class ContractDetailComponent implements OnInit {
       return
     }
 
+    const formValue = this.installmentEditForm.value
+    const statusApi = this.normalizeInstallmentStatusToApi(formValue.status)
+    const installmentCount = this.contract?.installments?.length ?? 0
+    const paidAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : Number(this.installmentToEdit.amount)
+    const installmentAmount = Number(this.installmentToEdit.amount)
+
+    if (statusApi === 'paid' && installmentCount > 1) {
+      const epsilon = 0.005
+      if (paidAmount < installmentAmount - epsilon || paidAmount > installmentAmount + epsilon) {
+        this.error = 'Com mais de uma parcela, pague o valor total da parcela.'
+        return
+      }
+    }
+
     try {
       this.isEditInstallmentProcessing = true
       this.error = ''
-      const formValue = this.installmentEditForm.value
-      const statusApi = this.normalizeInstallmentStatusToApi(formValue.status)
 
       const payload: UpdateInstallmentRequest = {
         status: statusApi,
-        dueDate: formValue.dueDate,
-        amount: parseFloat(formValue.amount)
+        dueDate: formValue.dueDate
       }
 
       if (statusApi === 'paid') {
         payload.paymentDate = formValue.paymentDate || new Date().toISOString().split('T')[0]
-        payload.paymentAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : (this.installmentToEdit.amount ?? parseFloat(formValue.amount))
+        payload.paymentAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : Number(this.installmentToEdit.amount)
         payload.paymentMethod = formValue.paymentMethod || null
         payload.notes = formValue.notes || null
       } else {
@@ -445,7 +462,12 @@ export class ContractDetailComponent implements OnInit {
         this.error = response.message || 'Erro ao atualizar parcela'
       }
     } catch (err: any) {
-      this.error = err.error?.message || err.message || 'Erro ao atualizar parcela'
+      const status = err?.status ?? err?.error?.status
+      if (status === 422) {
+        this.error = 'Com mais de uma parcela, pague o valor total da parcela.'
+      } else {
+        this.error = err.error?.message || err.message || 'Erro ao atualizar parcela'
+      }
     } finally {
       this.isEditInstallmentProcessing = false
     }
@@ -731,28 +753,58 @@ export class ContractDetailComponent implements OnInit {
   }
 
   /**
-   * @Function - handleDeleteAdditionalPayment
-   * @description - Delete additional payment
+   * @Function - handleDeletePaymentClick
+   * @description - Opens confirmation modal to delete additional payment
    * @author - Vitor Hugo
    * @param - payment: AdditionalPayment - Payment to delete
+   * @returns - void
+   */
+  handleDeletePaymentClick(payment: AdditionalPayment): void {
+    this.paymentToDelete = payment
+    this.showDeletePaymentModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleCancelDeletePayment
+   * @description - Closes delete payment modal without deleting
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCancelDeletePayment(): void {
+    this.showDeletePaymentModal = false
+    this.paymentToDelete = null
+  }
+
+  /**
+   * @Function - handleConfirmDeletePayment
+   * @description - Confirms and executes additional payment deletion
+   * @author - Vitor Hugo
    * @returns - Promise<void>
    */
-  async handleDeleteAdditionalPayment(payment: AdditionalPayment): Promise<void> {
-    if (!confirm(`Tem certeza que deseja excluir o pagamento adicional de ${this.formatCurrency(payment.amount)}?`)) {
-      return
-    }
+  async handleConfirmDeletePayment(): Promise<void> {
+    if (!this.paymentToDelete) return
 
     try {
+      this.isDeletingPayment = true
       const response = await firstValueFrom(
-        this.additionalPaymentService.deleteAdditionalPayment(payment.id)
+        this.additionalPaymentService.deleteAdditionalPayment(this.paymentToDelete.id)
       )
       if (response.success && this.contractId) {
+        this.showDeletePaymentModal = false
+        this.paymentToDelete = null
         await this.loadAdditionalPayments(this.contractId)
       } else {
         this.error = response.message || 'Erro ao excluir pagamento adicional'
+        this.showDeletePaymentModal = false
+        this.paymentToDelete = null
       }
     } catch (err: any) {
       this.error = err.error?.message || err.message || 'Erro ao excluir pagamento adicional'
+      this.showDeletePaymentModal = false
+      this.paymentToDelete = null
+    } finally {
+      this.isDeletingPayment = false
     }
   }
 
