@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Eye, Trash2 } from 'lucide-angular'
+import { LucideAngularModule, Plus, Eye, Trash2, ChevronLeft, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -19,8 +19,8 @@ import {
   TableHeadComponent,
   TableCellComponent
 } from '@shared/components/ui/table/table.component'
-import { CostService } from '@core/services/cost.service'
-import type { Cost } from '@shared/models/api.types'
+import { CostService, GetCostsParams } from '@core/services/cost.service'
+import type { Cost, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -50,6 +50,8 @@ export class CostsListComponent implements OnInit {
   readonly PlusIcon = Plus
   readonly EyeIcon = Eye
   readonly Trash2Icon = Trash2
+  readonly ChevronLeftIcon = ChevronLeft
+  readonly ChevronRightIcon = ChevronRight
 
   costs: Cost[] = []
   searchTerm: string = ''
@@ -59,6 +61,10 @@ export class CostsListComponent implements OnInit {
   showDeleteModal: boolean = false
   costToDelete: Cost | null = null
   isDeleting: boolean = false
+
+  page: number = 1
+  limit: number = 20
+  pagination: PaginationInfo | null = null
 
   constructor(
     private costService: CostService
@@ -70,7 +76,7 @@ export class CostsListComponent implements OnInit {
 
   /**
    * @Function - loadCosts
-   * @description - Load all costs from API
+   * @description - Load paginated costs from API
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
@@ -78,43 +84,59 @@ export class CostsListComponent implements OnInit {
     try {
       this.isLoading = true
       this.error = ''
-      const response = await firstValueFrom(this.costService.getCosts())
+      const params: GetCostsParams = {
+        page: this.page,
+        limit: this.limit,
+        category: this.filterCategory !== 'todos' ? this.filterCategory : undefined
+      }
+      const response = await firstValueFrom(this.costService.getCostsPaginated(params))
       if (response.success && response.data) {
-        this.costs = response.data as Cost[]
+        this.costs = response.data
+        this.pagination = response.pagination ?? null
       } else {
         this.error = 'Erro ao carregar custos'
+        this.pagination = null
       }
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar custos'
+      this.pagination = null
     } finally {
       this.isLoading = false
     }
   }
 
   /**
-   * @Function - filteredCosts
-   * @description - Filter costs by search term and category
+   * @Function - setPage
+   * @description - Changes current page and reloads costs
    * @author - Vitor Hugo
-   * @returns - Cost[] - Filtered costs array
+   * @param - p: number - Page number (1-based)
+   * @returns - Promise<void>
    */
+  async setPage(p: number): Promise<void> {
+    if (p < 1 || (this.pagination && p > this.pagination.totalPages)) return
+    this.page = p
+    await this.loadCosts()
+  }
+
+  /**
+   * @Function - onCategoryFilterChange
+   * @description - Reloads costs when category filter changes, resets to page 1
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async onCategoryFilterChange(): Promise<void> {
+    this.page = 1
+    await this.loadCosts()
+  }
+
+  /** Filter by search term on current page (client-side); category is applied by API */
   get filteredCosts(): Cost[] {
-    let filtered = this.costs
-
-    // Filter by category
-    if (this.filterCategory !== 'todos') {
-      filtered = filtered.filter(cost => cost.category === this.filterCategory)
-    }
-
-    // Filter by search term
-    if (this.searchTerm) {
-      const searchLower = this.searchTerm.toLowerCase()
-      filtered = filtered.filter(cost =>
-        cost.description.toLowerCase().includes(searchLower) ||
-        (cost.event?.name && cost.event.name.toLowerCase().includes(searchLower))
-      )
-    }
-
-    return filtered
+    if (!this.searchTerm) return this.costs
+    const searchLower = this.searchTerm.toLowerCase()
+    return this.costs.filter(cost =>
+      (cost.description ?? '').toLowerCase().includes(searchLower) ||
+      (cost.event?.name ?? '').toLowerCase().includes(searchLower)
+    )
   }
 
   /**
@@ -145,9 +167,13 @@ export class CostsListComponent implements OnInit {
         this.costService.deleteCost(this.costToDelete.id)
       )
       if (response.success) {
-        this.costs = this.costs.filter(cost => cost.id !== this.costToDelete!.id)
+        const hadOneItemOnPage = this.costs.length === 1
         this.showDeleteModal = false
         this.costToDelete = null
+        if (hadOneItemOnPage && this.page > 1) {
+          this.page = this.page - 1
+        }
+        await this.loadCosts()
       } else {
         this.error = response.message || 'Erro ao excluir custo'
         this.showDeleteModal = false

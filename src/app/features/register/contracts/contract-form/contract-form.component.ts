@@ -80,6 +80,7 @@ export class ContractFormComponent implements OnInit {
       clientId: ['', [Validators.required]],
       sellerId: [''],
       totalAmount: ['', [Validators.required, Validators.min(0)]],
+      entrada: [null as number | null, [Validators.min(0)]],
       installmentCount: ['', [Validators.required, Validators.min(1)]],
       firstDueDate: ['', [Validators.required]],
       periodicity: ['Mensal'],
@@ -256,6 +257,16 @@ export class ContractFormComponent implements OnInit {
     return c?.name ?? ''
   }
 
+  /** Whether to show entrada in summary (optional field with value > 0) */
+  get showEntradaInSummary(): boolean {
+    const v = this.contractForm.get('entrada')?.value
+    return v != null && v !== '' && Number(v) > 0
+  }
+
+  get entradaSummaryValue(): number {
+    return Number(this.contractForm.get('entrada')?.value) || 0
+  }
+
   selectEvent(event: Event): void {
     this.contractForm.patchValue({ eventId: event.id })
     this.eventDropdownOpen = false
@@ -296,6 +307,7 @@ export class ContractFormComponent implements OnInit {
           clientId: contract.clientId,
           sellerId: contract.sellerId || '',
           totalAmount: contract.totalAmount,
+          entrada: (contract as any).entrada ?? null,
           installmentCount: contract.installmentCount,
           firstDueDate: contract.firstDueDate.split('T')[0],
           periodicity: contract.periodicity,
@@ -327,6 +339,15 @@ export class ContractFormComponent implements OnInit {
   }
 
   async handleSubmit(): Promise<void> {
+    const formValue = this.contractForm.value
+    const totalAmount = parseFloat(formValue.totalAmount) || 0
+    const entradaVal = formValue.entrada != null && formValue.entrada !== '' ? parseFloat(formValue.entrada) : null
+    if (entradaVal != null && (entradaVal < 0 || entradaVal >= totalAmount)) {
+      this.errorMessage = entradaVal < 0
+        ? 'Valor de entrada deve ser maior ou igual a zero.'
+        : 'Valor de entrada deve ser menor que o valor total do contrato.'
+      return
+    }
     if (this.contractForm.invalid) {
       Object.keys(this.contractForm.controls).forEach(key => {
         this.contractForm.controls[key].markAsTouched()
@@ -338,7 +359,6 @@ export class ContractFormComponent implements OnInit {
     this.errorMessage = ''
 
     try {
-      const formValue = this.contractForm.value
       
       if (this.isEditing && this.contractId) {
         const updateData: UpdateContractRequest = {
@@ -379,7 +399,8 @@ export class ContractFormComponent implements OnInit {
           periodicity: formValue.periodicity,
           notes: formValue.notes || undefined,
           ...(formValue.sellerId ? { sellerId: formValue.sellerId } : {}),
-          ...(this.quoteIdFromConversion ? { quoteId: this.quoteIdFromConversion } : {})
+          ...(this.quoteIdFromConversion ? { quoteId: this.quoteIdFromConversion } : {}),
+          ...(entradaVal != null && entradaVal > 0 ? { entrada: entradaVal } : {})
         }
         
         const response = await firstValueFrom(
@@ -456,10 +477,24 @@ export class ContractFormComponent implements OnInit {
     return ''
   }
 
+  /**
+   * @Function - installmentAmount
+   * @description - Amount per installment: (total - entrada) / installmentCount. Entrada reduces the amount financed in installments.
+   * @author - Vitor Hugo
+   * @returns - number - Value per installment
+   */
   get installmentAmount(): number {
     const total = this.contractForm.get('totalAmount')?.value
     const count = this.contractForm.get('installmentCount')?.value
-    return (total && count) ? parseFloat(total) / parseInt(count) : 0
+    if (!total || !count) return 0
+    const totalNum = parseFloat(total)
+    const countNum = parseInt(count, 10)
+    if (countNum <= 0) return 0
+    const entradaVal = this.contractForm.get('entrada')?.value
+    const entradaNum =
+      entradaVal != null && entradaVal !== '' ? parseFloat(entradaVal) : 0
+    const amountToFinance = Math.max(0, totalNum - entradaNum)
+    return amountToFinance / countNum
   }
 
 

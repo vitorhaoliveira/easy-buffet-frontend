@@ -222,6 +222,8 @@ export interface Contract {
   clientId: string
   sellerId?: string | null
   totalAmount: number
+  /** Down payment (entrada) when contract was created */
+  entrada?: number
   installmentCount: number
   installmentAmount: number
   firstDueDate: string
@@ -314,6 +316,7 @@ export interface Installment {
   contract?: {
     event: { name: string; eventDate: string }
     client: { name: string }
+    installmentCount?: number
   }
 }
 
@@ -535,6 +538,8 @@ export interface CreateContractRequest {
   eventId: string
   clientId: string
   totalAmount: number
+  /** Optional down payment (entrada). Must be >= 0 and < totalAmount */
+  entrada?: number
   installmentCount: number
   firstDueDate: string
   periodicity: 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual' | 'Semanal' | 'Quinzenal'
@@ -567,8 +572,8 @@ export interface CreateInstallmentRequest {
   dueDate: string
 }
 
+/** amount is not editable via PUT; use additional payment on the contract to reduce/pay off installments */
 export interface UpdateInstallmentRequest {
-  amount?: number
   dueDate?: string
   /** API expects 'pending' | 'paid' | 'overdue'. When status is pending/overdue, backend clears payment fields. */
   status?: 'pending' | 'paid' | 'overdue'

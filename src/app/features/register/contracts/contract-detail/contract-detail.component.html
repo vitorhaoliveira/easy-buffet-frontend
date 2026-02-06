@@ -55,6 +55,9 @@
             <p class="text-2xl font-bold text-gray-900 mt-1">
               {{ formatCurrency(contract.totalAmount) }}
             </p>
+            @if (contract.entrada != null && contract.entrada > 0) {
+            <p class="text-sm text-gray-500 mt-1">Entrada: {{ formatCurrency(contract.entrada) }}</p>
+            }
           </div>
           <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <lucide-icon [img]="DollarSignIcon" class="h-6 w-6 text-blue-600"></lucide-icon>
@@ -447,13 +450,11 @@
               <p class="text-xs text-red-500">Campo obrigatório</p>
               }
             </div>
-            <div class="space-y-2">
-              <label appLabel htmlFor="installmentEditAmount">Valor da parcela (R$) *</label>
-              <input type="number" id="installmentEditAmount" formControlName="amount" step="0.01"
-                [class]="'flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm ' + (installmentEditForm.get('amount')?.invalid && installmentEditForm.get('amount')?.touched ? 'border-red-500' : '')" />
-              @if (installmentEditForm.get('amount')?.invalid && installmentEditForm.get('amount')?.touched) {
-              <p class="text-xs text-red-500">Valor obrigatório e maior que zero</p>
-              }
+            <div class="space-y-2 sm:col-span-2">
+              <p class="text-sm text-muted-foreground">
+                <strong>Valor da parcela:</strong> {{ formatCurrency(installmentToEdit.amount) }}
+              </p>
+              <p class="text-xs text-muted-foreground">Para alterar o valor das parcelas, use pagamento adicional no contrato.</p>
             </div>
           </div>
           @if (isPaidStatusInInstallmentEditForm) {
@@ -557,7 +558,7 @@
                         appButton 
                         variant="ghost" 
                         size="sm"
-                        (click)="handleDeleteAdditionalPayment(payment)"
+                        (click)="handleDeletePaymentClick(payment)"
                         title="Excluir"
                       >
                         <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
@@ -847,6 +848,19 @@
     cancelText="Cancelar"
     variant="danger"
     [loading]="isDeletingItem"
+  ></app-confirmation-modal>
+
+  <!-- Delete Additional Payment Confirmation Modal -->
+  <app-confirmation-modal
+    [isOpen]="showDeletePaymentModal"
+    (onClose)="handleCancelDeletePayment()"
+    (onConfirm)="handleConfirmDeletePayment()"
+    title="Excluir Pagamento"
+    [message]="'Tem certeza que deseja excluir o pagamento adicional de ' + (paymentToDelete ? formatCurrency(paymentToDelete.amount) : '') + '? Esta ação não pode ser desfeita.'"
+    confirmText="Excluir"
+    cancelText="Cancelar"
+    variant="danger"
+    [loading]="isDeletingPayment"
   ></app-confirmation-modal>
 
   <!-- Commission Form Modal -->
