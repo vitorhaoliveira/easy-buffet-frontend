@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute } from '@angular/router'
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms'
 import { LucideAngularModule, ArrowLeft, Save, X } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
@@ -11,7 +11,7 @@ import { EventService } from '@core/services/event.service'
 import { ClientService } from '@core/services/client.service'
 import { PackageService } from '@core/services/package.service'
 import { UnitService } from '@core/services/unit.service'
-import type { Client, Package, Unit, CreateEventRequest, UpdateEventRequest } from '@shared/models/api.types'
+import type { Client, Package, Unit, CreateEventRequest, UpdateEventRequest, PaginationInfo } from '@shared/models/api.types'
 
 @Component({
   selector: 'app-events-form',
@@ -19,6 +19,7 @@ import type { Client, Package, Unit, CreateEventRequest, UpdateEventRequest } fr
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     LucideAngularModule,
     ButtonComponent,
     LabelComponent
@@ -39,6 +40,14 @@ export class EventsFormComponent implements OnInit {
   isLoading: boolean = false
   isLoadingData: boolean = true
   errorMessage: string = ''
+
+  /** Clients: pagination + search in field */
+  readonly clientsPageSize = 20
+  clientsPage = 1
+  clientsPagination: PaginationInfo | null = null
+  clientSearchTerm = ''
+  clientDropdownOpen = false
+  isLoadingMoreClients = false
 
   constructor(
     private fb: FormBuilder,
@@ -75,16 +84,27 @@ export class EventsFormComponent implements OnInit {
     this.isLoadingData = false
   }
 
+  /**
+   * @Function - loadClientsAndPackages
+   * @description - Loads first page of clients (paginated), packages and units for the form
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
   async loadClientsAndPackages(): Promise<void> {
     try {
+      this.clientsPage = 1
       const [clientsResponse, packagesResponse, unitsResponse] = await Promise.all([
-        firstValueFrom(this.clientService.getClients()),
+        firstValueFrom(this.clientService.getClientsPaginated({ page: 1, limit: this.clientsPageSize })),
         firstValueFrom(this.packageService.getPackages()),
         firstValueFrom(this.unitService.getUnits(true))
       ])
 
       if (clientsResponse.success && clientsResponse.data) {
-        this.clients = clientsResponse.data as Client[]
+        this.clients = clientsResponse.data
+        this.clientsPagination = clientsResponse.pagination ?? null
+      } else {
+        this.clients = []
+        this.clientsPagination = null
       }
 
       if (packagesResponse.success && packagesResponse.data) {
@@ -96,7 +116,57 @@ export class EventsFormComponent implements OnInit {
       }
     } catch (err: any) {
       this.errorMessage = err.message || 'Erro ao carregar dados'
+      this.clients = []
+      this.clientsPagination = null
     }
+  }
+
+  /**
+   * @Function - loadMoreClients
+   * @description - Loads next page of clients and appends to the list
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async loadMoreClients(): Promise<void> {
+    if (this.isLoadingMoreClients || !this.clientsPagination || this.clientsPage >= this.clientsPagination.totalPages) return
+    this.isLoadingMoreClients = true
+    try {
+      const nextPage = this.clientsPage + 1
+      const res = await firstValueFrom(
+        this.clientService.getClientsPaginated({ page: nextPage, limit: this.clientsPageSize })
+      )
+      if (res.success && res.data?.length) {
+        this.clients = [...this.clients, ...res.data]
+        this.clientsPage = nextPage
+        this.clientsPagination = res.pagination ?? this.clientsPagination
+      }
+    } finally {
+      this.isLoadingMoreClients = false
+    }
+  }
+
+  /** Filtered clients for dropdown (by search term) */
+  get filteredClients(): Client[] {
+    if (!this.clientSearchTerm.trim()) return this.clients
+    const q = this.clientSearchTerm.toLowerCase().trim()
+    return this.clients.filter(c => (c.name || '').toLowerCase().includes(q))
+  }
+
+  getSelectedClientName(): string {
+    const id = this.eventForm.get('clientId')?.value
+    if (!id) return ''
+    const c = this.clients.find(cl => cl.id === id)
+    return c?.name ?? ''
+  }
+
+  selectClient(client: Client): void {
+    this.eventForm.patchValue({ clientId: client.id })
+    this.clientDropdownOpen = false
+    this.clientSearchTerm = ''
+  }
+
+  closeClientDropdown(): void {
+    this.clientDropdownOpen = false
   }
 
   async loadEvent(id: string): Promise<void> {
@@ -115,6 +185,10 @@ export class EventsFormComponent implements OnInit {
           status: event.status,
           notes: event.notes || ''
         })
+        const client = (event as any).client
+        if (client && !this.clients.some(c => c.id === event.clientId)) {
+          this.clients = [client as Client, ...this.clients]
+        }
       } else {
         this.errorMessage = 'Erro ao carregar evento'
       }
@@ -212,4 +286,3 @@ export class EventsFormComponent implements OnInit {
     }).format(value)
   }
 }
-

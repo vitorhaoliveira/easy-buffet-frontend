@@ -35,7 +35,6 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@stripe/stripe-js": "^8.6.0",
-    "@vercel/analytics": "^1.6.1",
     "apexcharts": "^5.3.6",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
