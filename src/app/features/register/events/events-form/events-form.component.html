@@ -37,16 +37,38 @@
   <form [formGroup]="eventForm" (ngSubmit)="handleSubmit()" class="space-y-6">
     <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Cliente -->
-        <div class="space-y-2">
-          <label appLabel htmlFor="clientId">Cliente *</label>
-          <select id="clientId" formControlName="clientId"
-            [class]="'flex min-h-[44px] h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('clientId') ? 'border-red-500' : '')">
-            <option value="">Selecione um cliente</option>
-            @for (client of clients; track client.id) {
-            <option [value]="client.id">{{ client.name }}</option>
+        <!-- Cliente (pesquisa + paginação com Carregar mais) -->
+        <div class="space-y-2 relative">
+          <label appLabel>Cliente *</label>
+          <div class="relative">
+            <button type="button" [disabled]="isLoadingData" (click)="clientDropdownOpen = !clientDropdownOpen"
+              [class]="'flex min-h-[44px] w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm text-left ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('clientId') ? 'border-red-500' : '')">
+              <span [class]="getSelectedClientName() ? 'text-foreground' : 'text-muted-foreground'">{{ getSelectedClientName() || (isLoadingData ? 'Carregando clientes...' : 'Selecione um cliente') }}</span>
+              <svg class="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            @if (clientDropdownOpen) {
+            <div class="absolute z-50 mt-1 w-full rounded-md border border-input bg-background shadow-lg max-h-64 flex flex-col">
+              <input type="text" [(ngModel)]="clientSearchTerm" [ngModelOptions]="{standalone: true}" placeholder="Pesquisar cliente..."
+                class="m-2 rounded border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" (click)="$event.stopPropagation()" />
+              <div class="overflow-y-auto flex-1 min-h-0">
+                @for (client of filteredClients; track client.id) {
+                <button type="button" (click)="selectClient(client)" class="w-full text-left px-3 py-2 text-sm hover:bg-primary-50 transition-colors" [class.bg-primary-50]="eventForm.get('clientId')?.value === client.id">
+                  {{ client.name }}
+                </button>
+                }
+                @if (filteredClients.length === 0) {
+                <p class="px-3 py-2 text-sm text-muted-foreground">Nenhum cliente encontrado</p>
+                }
+              </div>
+              @if (clientsPagination && clientsPage < clientsPagination.totalPages) {
+              <button type="button" (click)="loadMoreClients()" [disabled]="isLoadingMoreClients" class="border-t border-input px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50 disabled:opacity-50">
+                {{ isLoadingMoreClients ? 'Carregando...' : 'Carregar mais clientes' }}
+              </button>
+              }
+            </div>
+            <div class="fixed inset-0 z-40" (click)="closeClientDropdown()"></div>
             }
-          </select>
+          </div>
           @if (hasError('clientId')) {
           <p class="text-sm text-red-500">{{ getFieldError('clientId') }}</p>
           }
