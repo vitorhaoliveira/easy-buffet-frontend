@@ -1,16 +1,4 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
-    <button appButton
-      [class]="'w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]' + (userLimit && userLimit.available === 0 ? ' opacity-50 cursor-not-allowed' : '')"
-      [routerLink]="userLimit && userLimit.available === 0 ? null : '/cadastros/usuarios/novo'"
-      [disabled]="!!(userLimit && userLimit.available === 0)"
-      (click)="userLimit && userLimit.available === 0 ? showAddUsersModal = true : null">
-      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
-      Novo Usuário
-    </button>
-  </div>
-
   <!-- User Limit Info -->
   @if (userLimit) {
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -46,6 +34,12 @@
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <app-fab
+        [routerLink]="(userLimit && userLimit.available === 0) ? null : '/cadastros/usuarios/novo'"
+        title="Novo Usuário"
+        [inline]="true"
+        (fabClick)="onFabClick()">
+      </app-fab>
       <div class="flex-1 w-full">
         <app-search-bar placeholder="Buscar por nome, email ou função..." [(ngModel)]="searchTerm"></app-search-bar>
       </div>
@@ -183,9 +177,8 @@
   @if (!isLoading && filteredUsers.length === 0) {
   <app-empty-state [icon]="UserCircleIcon"
     [title]="searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'"
-    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece cadastrando seu primeiro usuário no sistema.'"
-    [actionLabel]="searchTerm ? '' : 'Novo Usuário'" [actionIcon]="PlusIcon"
-    (action)="router.navigate(['/cadastros/usuarios/novo'])"></app-empty-state>
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece cadastrando seu primeiro usuário no sistema.'">
+  </app-empty-state>
   }
 
   <!-- Confirmation Modal -->

@@ -65,6 +65,7 @@ export class EventsFormComponent implements OnInit {
       name: ['', [Validators.required]],
       eventDate: ['', [Validators.required]],
       eventTime: ['', [Validators.required]],
+      eventEndTime: [''],
       guestCount: ['', [Validators.required, Validators.min(1)]],
       status: ['Pendente'],
       notes: ['']
@@ -186,6 +187,7 @@ export class EventsFormComponent implements OnInit {
           name: event.name,
           eventDate: event.eventDate.split('T')[0],
           eventTime: this.formatTimeToString(event.eventTime),
+          eventEndTime: event.eventEndTime ? this.formatTimeToString(event.eventEndTime) : '',
           guestCount: event.guestCount,
           status: event.status,
           notes: event.notes || ''
@@ -231,7 +233,8 @@ export class EventsFormComponent implements OnInit {
 
     try {
       const formValue = this.eventForm.value
-      const eventData = {
+      const eventEndTimeStr = formValue.eventEndTime ? this.formatTimeToString(formValue.eventEndTime) : null
+      const baseData = {
         clientId: formValue.clientId,
         ...(formValue.packageId ? { packageId: formValue.packageId } : {}),
         unitId: formValue.unitId || undefined,
@@ -245,10 +248,13 @@ export class EventsFormComponent implements OnInit {
 
       let response
       if (this.isEditing && this.eventId) {
-        const updateData: UpdateEventRequest = eventData
+        const updateData: UpdateEventRequest = { ...baseData, eventEndTime: eventEndTimeStr }
         response = await firstValueFrom(this.eventService.updateEvent(this.eventId, updateData))
       } else {
-        const createData: CreateEventRequest = eventData
+        const createData: CreateEventRequest = {
+          ...baseData,
+          ...(eventEndTimeStr ? { eventEndTime: eventEndTimeStr } : {})
+        }
         response = await firstValueFrom(this.eventService.createEvent(createData))
       }
 

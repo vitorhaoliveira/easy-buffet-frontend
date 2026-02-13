@@ -96,7 +96,11 @@ export class QuotePreviewComponent implements OnInit {
               ['Telefone', this.quote.client?.phone || '-'],
               ['Evento', this.quote.event?.name || '-'],
               ['Data do Evento', this.quote.event?.eventDate ? this.formatDate(this.quote.event.eventDate) : '-'],
-              ...(this.quote.event?.eventTime ? [['Horário', this.formatTime(this.quote.event.eventTime)]] : []),
+              ...(this.quote.event?.eventTime
+                ? [['Horário', this.quote.event.eventEndTime
+                  ? `${this.formatTime(this.quote.event.eventTime)} - ${this.formatTime(this.quote.event.eventEndTime)}`
+                  : this.formatTime(this.quote.event.eventTime)]]
+                : []),
               ['Pacote', this.quote.package?.name || '-'],
               ['Status', this.quote.status],
               ['Válido até', this.formatDate(this.quote.validUntilDate)],

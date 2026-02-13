@@ -48,7 +48,9 @@
           <div>
             <p class="text-sm text-gray-500">Data do Evento</p>
             <p class="font-medium">{{ formatDate(dayView.event.eventDate) }}</p>
-            <p class="text-sm text-gray-600">{{ formatTime(dayView.event.eventTime) }}</p>
+            <p class="text-sm text-gray-600">
+              {{ formatTime(dayView.event.eventTime) }}{{ dayView.event.eventEndTime ? ' - ' + formatTime(dayView.event.eventEndTime) : '' }}
+            </p>
           </div>
         </div>
         @if (dayView.event.unit?.name) {

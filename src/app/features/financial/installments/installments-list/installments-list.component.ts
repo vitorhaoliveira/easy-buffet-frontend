@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2, ChevronDown, ChevronRight, Pencil } from 'lucide-angular'
+import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2, ChevronDown, ChevronRight, ChevronLeft, Pencil } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -12,6 +12,7 @@ import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-m
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
+import { FabComponent } from '@shared/components/ui/fab/fab.component'
 import {
   TableComponent,
   TableHeaderComponent,
@@ -23,7 +24,7 @@ import {
 import { InstallmentService } from '@core/services/installment.service'
 import { ToastService } from '@core/services/toast.service'
 import { PageTitleService } from '@core/services/page-title.service'
-import type { Installment, PaymentMethod, UpdateInstallmentRequest } from '@shared/models/api.types'
+import type { Installment, PaymentMethod, UpdateInstallmentRequest, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface InstallmentGroup {
@@ -54,6 +55,7 @@ interface InstallmentGroup {
     LabelComponent,
     SkeletonComponent,
     EmptyStateComponent,
+    FabComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
@@ -70,11 +72,15 @@ export class InstallmentsListComponent implements OnInit {
   readonly CheckCircle2Icon = CheckCircle2
   readonly ChevronDownIcon = ChevronDown
   readonly ChevronRightIcon = ChevronRight
+  readonly ChevronLeftIcon = ChevronLeft
   readonly PencilIcon = Pencil
 
   installments: Installment[] = []
   searchTerm: string = ''
   filterStatus: string = 'todos'
+  /** Pagination is over groups (events), not individual installments */
+  groupPage: number = 1
+  readonly groupLimit: number = 10
   isLoading: boolean = true
   error: string = ''
   
@@ -141,7 +147,7 @@ export class InstallmentsListComponent implements OnInit {
 
   /**
    * @Function - loadInstallments
-   * @description - Load installments from API with optional status filter
+   * @description - Fetches all installments from API (all pages), then groups by event. Pagination is over groups in the UI.
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
@@ -149,18 +155,53 @@ export class InstallmentsListComponent implements OnInit {
     try {
       this.isLoading = true
       this.error = ''
-      const response = await firstValueFrom(this.installmentService.getInstallments())
-      if (response.success && response.data) {
-        this.installments = response.data as Installment[]
-        this.expandedGroups = {}
-      } else {
-        this.error = 'Erro ao carregar parcelas'
+      const all: Installment[] = []
+      let page = 1
+      const limit = 500
+      let hasMore = true
+      while (hasMore) {
+        const params = { page, limit }
+        const response = await firstValueFrom(this.installmentService.getInstallmentsPaginated(params))
+        if (!response.success || !response.data) {
+          this.error = 'Erro ao carregar parcelas'
+          this.installments = []
+          this.expandedGroups = {}
+          return
+        }
+        all.push(...response.data)
+        const pagination = (response as { pagination?: PaginationInfo }).pagination
+        hasMore = !!pagination && page < pagination.totalPages
+        page += 1
       }
+      this.installments = all
+      this.expandedGroups = {}
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar parcelas'
+      this.installments = []
     } finally {
       this.isLoading = false
     }
+  }
+
+  /**
+   * @Function - setPage
+   * @description - Changes current page of groups (events). Client-side only, no API call.
+   * @param - p: number - Page number (1-based)
+   * @returns - void
+   */
+  setPage(p: number): void {
+    const totalPages = this.totalGroupPages
+    if (p < 1 || p > totalPages) return
+    this.groupPage = p
+  }
+
+  /**
+   * @Function - onFilterOrSearchChange
+   * @description - Resets group page to 1 when status filter or search changes (client-side filter)
+   * @returns - void
+   */
+  onFilterOrSearchChange(): void {
+    this.groupPage = 1
   }
 
   /**
@@ -249,6 +290,18 @@ export class InstallmentsListComponent implements OnInit {
       }
       return a.clientName.localeCompare(b.clientName)
     })
+  }
+
+  /** Total number of groups (eventos) after filter */
+  get totalGroupPages(): number {
+    const total = this.groupedInstallments.length
+    return total === 0 ? 1 : Math.ceil(total / this.groupLimit)
+  }
+
+  /** Slice of groups for the current page (paginate events, show all installments per event) */
+  get paginatedGroups(): InstallmentGroup[] {
+    const start = (this.groupPage - 1) * this.groupLimit
+    return this.groupedInstallments.slice(start, start + this.groupLimit)
   }
 
   /**

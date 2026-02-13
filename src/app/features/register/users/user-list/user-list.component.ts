@@ -12,6 +12,7 @@ import { AddUsersModalComponent } from '@shared/components/ui/add-users-modal/ad
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
+import { FabComponent } from '@shared/components/ui/fab/fab.component'
 import { 
   TableComponent, 
   TableHeaderComponent, 
@@ -43,6 +44,7 @@ import { formatDateBR } from '@shared/utils/date.utils'
     SkeletonComponent,
     MobileCardComponent,
     EmptyStateComponent,
+    FabComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,
@@ -207,6 +209,18 @@ export class UserListComponent implements OnInit {
   handleCancelDelete(): void {
     this.showDeleteModal = false
     this.userToDelete = null
+  }
+
+  /**
+   * @Function - onFabClick
+   * @description - Handles FAB click: when user limit is reached opens add-users modal; otherwise navigation is handled by routerLink
+   * @author - EasyBuffet
+   * @returns - void
+   */
+  onFabClick(): void {
+    if (this.userLimit && this.userLimit.available === 0) {
+      this.showAddUsersModal = true
+    }
   }
 
   /**

@@ -1,16 +1,8 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
-    <button appButton routerLink="/cadastros/unidades/novo"
-      class="w-full sm:w-auto min-h-[44px] bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200">
-      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
-      Nova Unidade
-    </button>
-  </div>
-
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <app-fab routerLink="/cadastros/unidades/novo" title="Nova Unidade" [inline]="true"></app-fab>
       <div class="flex-1">
         <app-search-bar placeholder="Buscar por nome, código, cidade ou estado..."
           [(ngModel)]="searchTerm"></app-search-bar>

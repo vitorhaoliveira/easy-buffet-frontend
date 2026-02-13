@@ -1,4 +1,4 @@
-<div class="space-y-4 sm:space-y-6">
+<div>
   <!-- Tabs -->
   <div class="border-b border-gray-200">
     <nav class="flex gap-1 min-h-[44px] sm:min-h-0" aria-label="Abas financeiro">
@@ -27,11 +27,13 @@
     </nav>
   </div>
 
-  <!-- Tab content -->
-  @if (activeTab === 'overview') {
-    <app-financial-dashboard />
-  }
-  @if (activeTab === 'report' && canViewReport) {
-    <app-monthly-report />
-  }
+  <!-- Tab content: espaçamento padronizado abaixo das abas -->
+  <div class="pt-6 sm:pt-8">
+    @if (activeTab === 'overview') {
+      <app-financial-dashboard />
+    }
+    @if (activeTab === 'report' && canViewReport) {
+      <app-monthly-report />
+    }
+  </div>
 </div>

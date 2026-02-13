@@ -1,17 +1,8 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
-    <button appButton
-      class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]"
-      routerLink="/cadastros/vendedoras/novo">
-      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
-      Novo(a) Vendedor(a)
-    </button>
-  </div>
-
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <app-fab routerLink="/cadastros/vendedoras/novo" title="Novo(a) Vendedor(a)" [inline]="true"></app-fab>
       <div class="flex-1 w-full">
         <app-search-bar placeholder="Buscar por nome, email ou telefone..." [(ngModel)]="searchTerm"></app-search-bar>
       </div>
@@ -128,9 +119,8 @@
   @if (!isLoading && filteredSellers.length === 0) {
   <app-empty-state [icon]="UserCircle2Icon"
     [title]="searchTerm ? 'Nenhum(a) vendedor(a) encontrado(a)' : 'Nenhum(a) vendedor(a) cadastrado(a)'"
-    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece cadastrando seu primeiro(a) vendedor(a) no sistema.'"
-    [actionLabel]="searchTerm ? '' : 'Novo(a) Vendedor(a)'" [actionIcon]="PlusIcon"
-    (action)="router.navigate(['/cadastros/vendedoras/novo'])"></app-empty-state>
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece cadastrando seu primeiro(a) vendedor(a) no sistema.'">
+  </app-empty-state>
   }
 
   <!-- Confirmation Modal -->

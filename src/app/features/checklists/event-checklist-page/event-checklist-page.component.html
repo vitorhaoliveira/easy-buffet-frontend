@@ -42,7 +42,7 @@
         </div>
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <lucide-icon [img]="ClockIcon" class="w-4 h-4"></lucide-icon>
-          <span>{{ formatTime(event.eventTime) }}</span>
+          <span>{{ formatTime(event.eventTime) }}{{ event.eventEndTime ? ' - ' + formatTime(event.eventEndTime) : '' }}</span>
         </div>
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <lucide-icon [img]="MapPinIcon" class="w-4 h-4"></lucide-icon>

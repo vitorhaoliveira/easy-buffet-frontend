@@ -1,10 +1,14 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Search -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
-    <div class="flex-1 sm:max-w-xs w-full">
-      <input type="search" [(ngModel)]="searchTerm"
-        [placeholder]="'Buscar em ' + (pagination?.total ?? events.length) + ' evento' + ((pagination?.total ?? events.length) !== 1 ? 's' : '') + '...'"
-        class="w-full pl-4 pr-10 py-2.5 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <app-fab routerLink="/cadastros/eventos/novo" title="Novo Evento" [inline]="true"></app-fab>
+      <div class="flex-1 w-full">
+        <app-search-bar
+          [placeholder]="'Buscar em ' + (pagination?.total ?? events.length) + ' evento' + ((pagination?.total ?? events.length) !== 1 ? 's' : '') + '...'"
+          [(ngModel)]="searchTerm">
+        </app-search-bar>
+      </div>
     </div>
   </div>
 
@@ -27,15 +31,8 @@
   }
 
   @if (!isLoading) {
-  <!-- Cards grid: Adicionar evento + event cards -->
+  <!-- Cards grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-    <!-- Add event card -->
-    <a routerLink="/cadastros/eventos/novo"
-      class="flex flex-col items-center justify-center min-h-[160px] rounded-xl border-2 border-dashed border-gray-300 bg-gray-50/50 hover:border-primary-400 hover:bg-primary-50/30 transition-colors text-gray-500 hover:text-primary-600">
-      <lucide-icon [img]="PlusIcon" class="w-10 h-10 mb-2"></lucide-icon>
-      <span class="text-sm font-medium">Adicionar evento</span>
-    </a>
-
     @for (event of filteredEvents; track event.id) {
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-primary-200 transition-all overflow-hidden group relative">
       <a [routerLink]="['/cadastros/eventos/visualizar', event.id, 'dados']" class="block">
@@ -87,14 +84,7 @@
 
   @if (!isLoading && filteredEvents.length === 0) {
   <div class="text-center py-12">
-    <p class="text-gray-500 mb-4">{{ searchTerm ? 'Nenhum evento encontrado.' : 'Nenhum evento cadastrado.' }}</p>
-    @if (!searchTerm) {
-    <a routerLink="/cadastros/eventos/novo"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors">
-      <lucide-icon [img]="PlusIcon" class="w-4 h-4"></lucide-icon>
-      Adicionar evento
-    </a>
-    }
+    <p class="text-gray-500">{{ searchTerm ? 'Nenhum evento encontrado.' : 'Nenhum evento cadastrado.' }}</p>
   </div>
   }
 

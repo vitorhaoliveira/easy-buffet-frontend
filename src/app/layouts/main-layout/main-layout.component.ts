@@ -353,6 +353,28 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     return iconMap[iconName] || this.FileTextIcon
   }
 
+  /** Stable options for routerLinkActive to avoid unnecessary re-evaluation. */
+  private readonly linkActiveExactTrue = { exact: true as const }
+  private readonly linkActiveExactFalse = { exact: false as const }
+
+  /**
+   * @Function - getSubItemLinkActiveOptions
+   * @description - Returns routerLinkActiveOptions so that a parent route (e.g. /financeiro) is only active when exact, avoiding both "Carteira" and "Pagamentos" being highlighted when on /financeiro/parcelas
+   * @author - EasyBuffet
+   * @param - sectionItems: SubMenuItem[] - all items in the same nav section
+   * @param - currentUrl: string - url of the current sub item
+   * @returns - { exact: boolean }
+   */
+  getSubItemLinkActiveOptions(sectionItems: SubMenuItem[] | undefined, currentUrl: string): { exact: boolean } {
+    if (!sectionItems || !Array.isArray(sectionItems) || !currentUrl) {
+      return this.linkActiveExactFalse
+    }
+    const isParentOfAnother = sectionItems.some(
+      i => i?.url !== currentUrl && i?.url?.startsWith(currentUrl + '/')
+    )
+    return isParentOfAnother ? this.linkActiveExactTrue : this.linkActiveExactFalse
+  }
+
   /**
    * @Function - toggleOrgDropdown
    * @description - Toggles organization dropdown visibility
