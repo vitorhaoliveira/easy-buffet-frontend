@@ -213,6 +213,8 @@ export interface Event {
     type?: string
     price?: number
   }
+  /** Contract ID when backend exposes event → contract link */
+  contractId?: string | null
 }
 
 // Contract Types

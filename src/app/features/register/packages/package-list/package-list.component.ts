@@ -20,6 +20,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { PackageService } from '@core/services/package.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Package as PackageType } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -61,7 +62,10 @@ export class PackageListComponent implements OnInit {
   packageToDelete: PackageType | null = null
   isDeleting: boolean = false
 
-  constructor(private packageService: PackageService) {}
+  constructor(
+    private packageService: PackageService,
+    private pageTitleService: PageTitleService
+  ) {}
 
   /**
    * @Function - ngOnInit
@@ -70,6 +74,7 @@ export class PackageListComponent implements OnInit {
    * @returns - Promise<void>
    */
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Pacotes e Serviços', 'Gerencie os pacotes de buffet e serviços avulsos')
     await this.loadData()
   }
 

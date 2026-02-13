@@ -8,6 +8,7 @@ import type { ApexOptions } from 'ng-apexcharts'
 
 import { DashboardService } from '@core/services/dashboard.service'
 import { InstallmentService } from '@core/services/installment.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import { 
   TableComponent,
   TableHeaderComponent,
@@ -160,7 +161,8 @@ export class FinancialDashboardComponent implements OnInit {
 
   constructor(
     private readonly dashboardService: DashboardService,
-    private readonly installmentService: InstallmentService
+    private readonly installmentService: InstallmentService,
+    private readonly pageTitleService: PageTitleService
   ) {}
 
   /**
@@ -170,6 +172,7 @@ export class FinancialDashboardComponent implements OnInit {
    * @returns - Promise<void>
    */
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Carteira', 'Visão geral das finanças e parcelas')
     await this.loadDashboardData()
   }
 

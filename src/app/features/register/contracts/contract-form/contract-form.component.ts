@@ -42,6 +42,10 @@ export class ContractFormComponent implements OnInit {
   contractId: string | null = null
   quoteIdFromConversion: string | null = null
   quoteItemsFromConversion: QuoteItem[] = []
+  /** True when opened from event hub (Definir pagamentos do evento); event/client fields are hidden */
+  isFromEventContext: boolean = false
+  /** Event id when isFromEventContext; used to redirect back to event payments tab */
+  eventIdFromContext: string | null = null
   isLoading: boolean = false
   isLoadingData: boolean = true
   errorMessage: string = ''
@@ -101,9 +105,70 @@ export class ContractFormComponent implements OnInit {
       await this.loadContract(this.contractId)
     } else if (fromQuoteId) {
       await this.prefillFromQuote(fromQuoteId)
+    } else {
+      const eventIdFromQuery = this.route.snapshot.queryParamMap.get('eventId')
+      const clientIdFromQuery = this.route.snapshot.queryParamMap.get('clientId')
+      if (eventIdFromQuery) {
+        await this.prefillFromEventContext(eventIdFromQuery, clientIdFromQuery || null)
+      }
+      if (!this.isEditing) {
+        this.setInstallmentFieldsOptional()
+      }
     }
 
     this.isLoadingData = false
+  }
+
+  /**
+   * Makes installment count and first due date optional when creating a contract.
+   * Defaults will be applied on submit (1 installment, today's date).
+   */
+  private setInstallmentFieldsOptional(): void {
+    this.contractForm.get('installmentCount')?.clearValidators()
+    this.contractForm.get('installmentCount')?.setValidators([Validators.min(0)])
+    this.contractForm.get('installmentCount')?.updateValueAndValidity()
+    this.contractForm.get('firstDueDate')?.clearValidators()
+    this.contractForm.get('firstDueDate')?.updateValueAndValidity()
+  }
+
+  /**
+   * Pre-fill contract form when opened from event hub (Definir pagamentos do evento).
+   * Fetches event and client, patches form, and sets isFromEventContext so event/client fields are hidden.
+   */
+  async prefillFromEventContext(eventId: string, clientId: string | null): Promise<void> {
+    try {
+      const eventRes = await firstValueFrom(this.eventService.getEventById(eventId))
+      if (!eventRes.success || !eventRes.data) {
+        this.errorMessage = 'Evento não encontrado'
+        return
+      }
+      const event = eventRes.data
+      const resolvedClientId = clientId || event.clientId || (event.client as any)?.id
+      if (!resolvedClientId) {
+        this.errorMessage = 'Evento sem cliente associado. Associe um cliente ao evento primeiro.'
+        return
+      }
+      const clientRes = await firstValueFrom(this.clientService.getClientById(resolvedClientId))
+      if (!clientRes.success || !clientRes.data) {
+        this.errorMessage = 'Cliente não encontrado'
+        return
+      }
+      const client = clientRes.data
+      if (!this.events.some(e => e.id === event.id)) {
+        this.events = [event, ...this.events]
+      }
+      if (!this.clients.some(c => c.id === client.id)) {
+        this.clients = [client, ...this.clients]
+      }
+      this.contractForm.patchValue({
+        eventId: event.id,
+        clientId: client.id
+      })
+      this.isFromEventContext = true
+      this.eventIdFromContext = event.id
+    } catch (err: any) {
+      this.errorMessage = err.message || 'Erro ao carregar dados do evento'
+    }
   }
 
   /**
@@ -334,7 +399,7 @@ export class ContractFormComponent implements OnInit {
         }
       }
     } catch (error: any) {
-      this.errorMessage = error.message || 'Erro ao carregar contrato'
+      this.errorMessage = error.message || 'Erro ao carregar evento'
     }
   }
 
@@ -345,7 +410,7 @@ export class ContractFormComponent implements OnInit {
     if (entradaVal != null && (entradaVal < 0 || entradaVal >= totalAmount)) {
       this.errorMessage = entradaVal < 0
         ? 'Valor de entrada deve ser maior ou igual a zero.'
-        : 'Valor de entrada deve ser menor que o valor total do contrato.'
+        : 'Valor de entrada deve ser menor que o valor total do evento.'
       return
     }
     if (this.contractForm.invalid) {
@@ -386,17 +451,24 @@ export class ContractFormComponent implements OnInit {
           } else if (response.message) {
             this.errorMessage = response.message
           } else {
-            this.errorMessage = 'Erro ao atualizar contrato'
+            this.errorMessage = 'Erro ao atualizar evento'
           }
         }
       } else {
+        const rawCount = formValue.installmentCount !== '' && formValue.installmentCount != null
+          ? parseInt(String(formValue.installmentCount), 10)
+          : 1
+        const installmentCount = Number.isNaN(rawCount) || rawCount < 1 ? 1 : rawCount
+        const firstDueDate = formValue.firstDueDate && String(formValue.firstDueDate).trim()
+          ? formValue.firstDueDate
+          : new Date().toISOString().split('T')[0]
         const createData: CreateContractRequest = {
           eventId: formValue.eventId,
           clientId: formValue.clientId,
           totalAmount: parseFloat(formValue.totalAmount),
-          installmentCount: parseInt(formValue.installmentCount),
-          firstDueDate: formValue.firstDueDate,
-          periodicity: formValue.periodicity,
+          installmentCount,
+          firstDueDate,
+          periodicity: formValue.periodicity || 'Mensal',
           notes: formValue.notes || undefined,
           ...(formValue.sellerId ? { sellerId: formValue.sellerId } : {}),
           ...(this.quoteIdFromConversion ? { quoteId: this.quoteIdFromConversion } : {}),
@@ -420,7 +492,13 @@ export class ContractFormComponent implements OnInit {
               )
             }
           }
-          this.router.navigate(['/cadastros/contratos'])
+          if (this.isFromEventContext && this.eventIdFromContext) {
+            this.toastService.success('Pagamentos definidos com sucesso')
+            this.router.navigate(['/cadastros/eventos/visualizar', this.eventIdFromContext, 'pagamentos'])
+          } else {
+            this.toastService.success('Contrato criado com sucesso')
+            this.router.navigate(['/cadastros/contratos'])
+          }
         } else {
           // Extract error message from response
           if ((response as any).error?.message) {
@@ -428,7 +506,7 @@ export class ContractFormComponent implements OnInit {
           } else if (response.message) {
             this.errorMessage = response.message
           } else {
-            this.errorMessage = 'Erro ao criar contrato'
+            this.errorMessage = 'Erro ao criar evento'
           }
         }
       }
@@ -444,7 +522,7 @@ export class ContractFormComponent implements OnInit {
       } else if (error.message) {
         this.errorMessage = error.message
       } else {
-        this.errorMessage = 'Erro ao salvar contrato'
+        this.errorMessage = 'Erro ao salvar evento'
       }
     } finally {
       this.isLoading = false
@@ -452,7 +530,11 @@ export class ContractFormComponent implements OnInit {
   }
 
   handleCancel(): void {
-    this.router.navigate(['/cadastros/contratos'])
+    if (this.isFromEventContext && this.eventIdFromContext) {
+      this.router.navigate(['/cadastros/eventos/visualizar', this.eventIdFromContext, 'pagamentos'])
+    } else {
+      this.router.navigate(['/cadastros/contratos'])
+    }
   }
 
   hasError(fieldName: string): boolean {

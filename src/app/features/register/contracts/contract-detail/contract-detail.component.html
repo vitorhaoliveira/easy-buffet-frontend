@@ -1,4 +1,5 @@
 <div class="space-y-6">
+  @if (!embeddedInEventHub) {
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div class="flex items-center space-x-4">
@@ -7,9 +8,9 @@
         Voltar
       </button>
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">Detalhes do Contrato</h1>
+        <h1 class="text-3xl font-bold tracking-tight">Detalhes do Evento</h1>
         <p class="text-muted-foreground">
-          Visualize todas as informações do contrato e parcelas
+          Visualize todas as informações do evento e parcelas
         </p>
       </div>
     </div>
@@ -18,21 +19,22 @@
         @if (!isContractClosed()) {
           <button appButton variant="outline" (click)="handleCloseContract()" [disabled]="isClosingContract">
             <lucide-icon [img]="LockIcon" class="h-4 w-4 mr-2"></lucide-icon>
-            {{ isClosingContract ? 'Fechando...' : 'Fechar Contrato' }}
+            {{ isClosingContract ? 'Fechando...' : 'Fechar Evento' }}
           </button>
         }
         <button appButton variant="outline" (click)="handleEdit()">
           <lucide-icon [img]="EditIcon" class="h-4 w-4 mr-2"></lucide-icon>
-          Editar Contrato
+          Editar Evento
         </button>
       </div>
     }
   </div>
+  }
 
   <!-- Loading State -->
   @if (isLoading) {
     <div class="text-center py-8">
-      <p class="text-muted-foreground">Carregando detalhes do contrato...</p>
+      <p class="text-muted-foreground">Carregando detalhes do evento...</p>
     </div>
   }
 
@@ -119,72 +121,96 @@
 
     <!-- Contract Information -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Left Column - Contract Details -->
-      <div class="bg-white rounded-lg border p-6 space-y-4">
-        <div class="flex items-center gap-2 pb-4 border-b">
-          <lucide-icon [img]="FileTextIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
-          <h2 class="text-lg font-semibold">Informações do Contrato</h2>
+      <!-- Left Column - Contract Details + Seller when embedded -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-lg border p-6 space-y-4">
+          <div class="flex items-center gap-2 pb-4 border-b">
+            <lucide-icon [img]="FileTextIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+            <h2 class="text-lg font-semibold">Informações do Evento</h2>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <span class="text-sm font-medium text-gray-600">Valor por Parcela:</span>
+              <span class="text-sm font-semibold text-gray-900">{{ formatCurrency(contract.installmentAmount) }}</span>
+            </div>
+
+            <div class="flex justify-between items-start">
+              <span class="text-sm font-medium text-gray-600">Quantidade de Parcelas:</span>
+              <span class="text-sm font-semibold text-gray-900">{{ contract.installmentCount }}x</span>
+            </div>
+
+            <div class="flex justify-between items-start">
+              <span class="text-sm font-medium text-gray-600">Periodicidade:</span>
+              <span class="text-sm font-semibold text-gray-900">{{ contract.periodicity }}</span>
+            </div>
+
+            <div class="flex justify-between items-start">
+              <span class="text-sm font-medium text-gray-600">Primeiro Vencimento:</span>
+              <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.firstDueDate) }}</span>
+            </div>
+
+
+            <div class="flex justify-between items-start">
+              <span class="text-sm font-medium text-gray-600">Data de Criação:</span>
+              <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.createdAt) }}</span>
+            </div>
+
+            @if (contract.closedAt) {
+              <div class="flex justify-between items-start pt-3 border-t">
+                <span class="text-sm font-medium text-gray-600">Data de Fechamento:</span>
+                <div class="flex items-center gap-2">
+                  <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-600"></lucide-icon>
+                  <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.closedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            @if (getOverdueInstallmentsCount() > 0) {
+              <div class="pt-3 border-t">
+                <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <lucide-icon [img]="AlertCircleIcon" class="h-5 w-5 text-red-600"></lucide-icon>
+                  <span class="text-sm font-medium text-red-800">
+                    {{ getOverdueInstallmentsCount() }} parcela(s) atrasada(s)
+                  </span>
+                </div>
+              </div>
+            }
+
+            @if (contract.notes) {
+              <div class="pt-3 border-t">
+                <span class="text-sm font-medium text-gray-600">Observações:</span>
+                <p class="text-sm text-gray-900 mt-1">{{ contract.notes }}</p>
+              </div>
+            }
+          </div>
         </div>
 
-        <div class="space-y-3">
-          <div class="flex justify-between items-start">
-            <span class="text-sm font-medium text-gray-600">Valor por Parcela:</span>
-            <span class="text-sm font-semibold text-gray-900">{{ formatCurrency(contract.installmentAmount) }}</span>
+        @if (embeddedInEventHub && contract.seller) {
+        <div class="bg-white rounded-lg border p-6 space-y-4">
+          <div class="flex items-center gap-2 pb-4 border-b">
+            <lucide-icon [img]="UserIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+            <h2 class="text-lg font-semibold">Informações do Vendedor(a)</h2>
           </div>
-
-          <div class="flex justify-between items-start">
-            <span class="text-sm font-medium text-gray-600">Quantidade de Parcelas:</span>
-            <span class="text-sm font-semibold text-gray-900">{{ contract.installmentCount }}x</span>
-          </div>
-
-          <div class="flex justify-between items-start">
-            <span class="text-sm font-medium text-gray-600">Periodicidade:</span>
-            <span class="text-sm font-semibold text-gray-900">{{ contract.periodicity }}</span>
-          </div>
-
-          <div class="flex justify-between items-start">
-            <span class="text-sm font-medium text-gray-600">Primeiro Vencimento:</span>
-            <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.firstDueDate) }}</span>
-          </div>
-
-
-          <div class="flex justify-between items-start">
-            <span class="text-sm font-medium text-gray-600">Data de Criação:</span>
-            <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.createdAt) }}</span>
-          </div>
-
-          @if (contract.closedAt) {
-            <div class="flex justify-between items-start pt-3 border-t">
-              <span class="text-sm font-medium text-gray-600">Data de Fechamento:</span>
-              <div class="flex items-center gap-2">
-                <lucide-icon [img]="LockIcon" class="h-4 w-4 text-gray-600"></lucide-icon>
-                <span class="text-sm font-semibold text-gray-900">{{ formatDate(contract.closedAt) }}</span>
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <span class="text-sm font-medium text-gray-600">Nome:</span>
+              <span class="text-sm font-semibold text-gray-900">{{ contract.seller.name }}</span>
+            </div>
+            @if (contract.seller.email) {
+              <div class="flex justify-between items-start">
+                <span class="text-sm font-medium text-gray-600">E-mail:</span>
+                <span class="text-sm font-semibold text-gray-900">{{ contract.seller.email }}</span>
               </div>
-            </div>
-          }
-
-          @if (getOverdueInstallmentsCount() > 0) {
-            <div class="pt-3 border-t">
-              <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <lucide-icon [img]="AlertCircleIcon" class="h-5 w-5 text-red-600"></lucide-icon>
-                <span class="text-sm font-medium text-red-800">
-                  {{ getOverdueInstallmentsCount() }} parcela(s) atrasada(s)
-                </span>
-              </div>
-            </div>
-          }
-
-          @if (contract.notes) {
-            <div class="pt-3 border-t">
-              <span class="text-sm font-medium text-gray-600">Observações:</span>
-              <p class="text-sm text-gray-900 mt-1">{{ contract.notes }}</p>
-            </div>
-          }
+            }
+          </div>
         </div>
+        }
       </div>
 
-      <!-- Right Column - Event and Client Details -->
-      <div class="space-y-6">
+      <!-- Right Column - Event/Client (when not embedded) or Próximas parcelas (when embedded) -->
+      <div class="space-y-6 flex flex-col min-h-0">
+        @if (!embeddedInEventHub) {
         <!-- Event Information -->
         @if (contract.event) {
           <div class="bg-white rounded-lg border p-6 space-y-4">
@@ -223,9 +249,41 @@
             </div>
           </div>
         }
+        }
 
-        <!-- Seller Information -->
-        @if (contract.seller) {
+        @if (embeddedInEventHub && contract.installments?.length) {
+        <!-- Next installments (when embedded - fills right column with larger view) -->
+        <div class="bg-white rounded-lg border p-6 flex flex-col flex-1 min-h-0">
+          <div class="flex items-center gap-2 pb-4 border-b flex-shrink-0">
+            <lucide-icon [img]="ClockIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
+            <h2 class="text-lg font-semibold">Próximas parcelas</h2>
+          </div>
+          @let nextList = getNextInstallments();
+          @if (nextList.length > 0) {
+          <ul class="space-y-3 flex-1 min-h-0 overflow-y-auto mt-4 pr-1">
+            @for (inst of nextList; track inst.id) {
+            <li class="flex items-center justify-between gap-2 py-2 border-b border-gray-100 last:border-0">
+              <div class="min-w-0">
+                <span class="text-sm font-medium text-gray-900">Parcela {{ inst.installmentNumber }}</span>
+                <span class="text-xs text-gray-500 block mt-0.5">{{ formatDate(inst.dueDate) }}</span>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-sm font-semibold text-gray-900">{{ formatCurrency(inst.amount) }}</span>
+                <span [class]="getStatusBadgeClass(inst.status)" class="text-xs">
+                  {{ getStatusText(inst.status) }}
+                </span>
+              </div>
+            </li>
+            }
+          </ul>
+          } @else {
+          <p class="text-sm text-gray-500 mt-4">Todas as parcelas foram pagas.</p>
+          }
+        </div>
+        }
+
+        <!-- Seller Information (right column only when not embedded) -->
+        @if (!embeddedInEventHub && contract.seller) {
           <div class="bg-white rounded-lg border p-6 space-y-4">
             <div class="flex items-center gap-2 pb-4 border-b">
               <lucide-icon [img]="UserIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
@@ -266,7 +324,7 @@
       <div class="flex items-center justify-between pb-4 border-b">
         <div class="flex items-center gap-2">
           <lucide-icon [img]="FileTextIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
-          <h2 class="text-lg font-semibold">Itens do Contrato</h2>
+          <h2 class="text-lg font-semibold">Itens do Evento</h2>
           @if (contractItems.length > 0) {
             <span class="text-sm text-muted-foreground">({{ contractItems.length }} {{ contractItems.length === 1 ? 'item' : 'itens' }})</span>
           }
@@ -286,7 +344,7 @@
 
       @if (isLoadingItems) {
         <div class="text-center py-4">
-          <p class="text-muted-foreground">Carregando itens do contrato...</p>
+          <p class="text-muted-foreground">Carregando itens do evento...</p>
         </div>
       } @else if (contractItems.length > 0) {
         <div class="rounded-md border">
@@ -346,7 +404,7 @@
         </div>
       } @else {
         <div class="text-center py-8">
-          <p class="text-muted-foreground">Nenhum item cadastrado para este contrato.</p>
+          <p class="text-muted-foreground">Nenhum item cadastrado para este evento.</p>
         </div>
       }
     </div>
@@ -357,7 +415,7 @@
         <div class="flex items-center justify-between pb-4 border-b">
           <div class="flex items-center gap-2">
             <lucide-icon [img]="CreditCardIcon" class="h-5 w-5 text-gray-600"></lucide-icon>
-            <h2 class="text-lg font-semibold">Parcelas do Contrato</h2>
+            <h2 class="text-lg font-semibold">Parcelas do Evento</h2>
           </div>
           <button appButton variant="outline" size="sm" (click)="handleExportPDF()" [disabled]="isExportingPDF">
             <lucide-icon [img]="DownloadIcon" class="h-4 w-4 mr-2"></lucide-icon>
@@ -454,7 +512,7 @@
               <p class="text-sm text-muted-foreground">
                 <strong>Valor da parcela:</strong> {{ formatCurrency(installmentToEdit.amount) }}
               </p>
-              <p class="text-xs text-muted-foreground">Para alterar o valor das parcelas, use pagamento adicional no contrato.</p>
+              <p class="text-xs text-muted-foreground">Para alterar o valor das parcelas, use pagamento adicional no evento.</p>
             </div>
           </div>
           @if (isPaidStatusInInstallmentEditForm) {
@@ -578,7 +636,7 @@
         </div>
       } @else {
         <div class="text-center py-8">
-          <p class="text-muted-foreground">Nenhum pagamento adicional registrado para este contrato.</p>
+          <p class="text-muted-foreground">Nenhum pagamento adicional registrado para este evento.</p>
         </div>
       }
     </div>
@@ -706,7 +764,7 @@
         <div class="flex items-center justify-between pb-4 border-b">
           <div>
             <h2 class="text-xl font-semibold">
-              {{ isItemEditMode ? 'Editar Item do Contrato' : 'Novo Item do Contrato' }}
+              {{ isItemEditMode ? 'Editar Item do Evento' : 'Novo Item do Evento' }}
             </h2>
             <p class="text-sm text-muted-foreground mt-1">
               {{ contract?.client?.name }} - {{ contract?.event?.name }}
@@ -842,7 +900,7 @@
     [isOpen]="showDeleteItemModal"
     (onClose)="handleCancelDeleteItem()"
     (onConfirm)="handleConfirmDeleteItem()"
-    title="Excluir Item do Contrato"
+    title="Excluir Item do Evento"
     [message]="'Tem certeza que deseja excluir o item &quot;' + (itemToDelete?.description || '') + '&quot;? Esta ação não pode ser desfeita.'"
     confirmText="Excluir"
     cancelText="Cancelar"
@@ -880,7 +938,7 @@
     (onClose)="handleCancelDeleteCommission()"
     (onConfirm)="handleRemoveCommission()"
     title="Remover Comissão"
-    message="Tem certeza que deseja remover a comissão deste contrato? Esta ação não pode ser desfeita."
+    message="Tem certeza que deseja remover a comissão deste evento? Esta ação não pode ser desfeita."
     confirmText="Remover"
     cancelText="Cancelar"
     variant="danger"

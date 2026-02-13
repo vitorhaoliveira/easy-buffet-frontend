@@ -1,32 +1,28 @@
-<div class="w-full space-y-4 sm:space-y-6 p-4 sm:p-6">
-  <!-- Header -->
+<div class="w-full space-y-4 sm:space-y-6">
+  @if (!isInsideEventHub) {
+  <!-- Header (hidden when inside event hub - Checklist tab) -->
   <div class="flex items-center gap-4 mb-6">
     <button (click)="goBack()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
       <lucide-icon [img]="ArrowLeftIcon" class="w-5 h-5 text-gray-600"></lucide-icon>
     </button>
-    <div class="flex-1">
-      <h1
-        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
-        Checklist do Evento</h1>
-      <p class="text-gray-600 mt-1">Gerencie as tarefas deste evento</p>
-    </div>
   </div>
+  }
 
   <!-- Loading -->
-  <div *ngIf="isLoading" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+  <div *ngIf="isLoading" class="p-4">
     <app-skeleton class="h-32 mb-4"></app-skeleton>
     <app-skeleton class="h-48"></app-skeleton>
   </div>
 
   <!-- Error -->
-  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+  <div *ngIf="error" class="bg-red-50 text-red-700 px-4 py-3 rounded-lg">
     {{ error }}
   </div>
 
   <!-- Content -->
   <div *ngIf="!isLoading && event" class="space-y-6">
-    <!-- Event Info Card -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+    <!-- Event Info Card: only when not inside event hub (avoid repetition) -->
+    <div *ngIf="!isInsideEventHub" class="bg-white rounded-lg border border-gray-200 p-5">
       <div class="flex items-start justify-between">
         <div>
           <h2 class="text-xl font-semibold text-gray-900">{{ event.name }}</h2>
@@ -40,32 +36,24 @@
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
-        <!-- Date -->
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <lucide-icon [img]="CalendarIcon" class="w-4 h-4"></lucide-icon>
           <span>{{ formatDate(event.eventDate) }}</span>
         </div>
-
-        <!-- Time -->
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <lucide-icon [img]="ClockIcon" class="w-4 h-4"></lucide-icon>
           <span>{{ formatTime(event.eventTime) }}</span>
         </div>
-
-        <!-- Location (unit) -->
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <lucide-icon [img]="MapPinIcon" class="w-4 h-4"></lucide-icon>
           <span class="truncate">{{ event.unit?.name || 'Não informado' }}</span>
         </div>
-
-        <!-- Guests -->
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <lucide-icon [img]="UsersIcon" class="w-4 h-4"></lucide-icon>
           <span>{{ event.guestCount }} convidados</span>
         </div>
       </div>
 
-      <!-- Package -->
       <div *ngIf="event.package" class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100 text-sm">
         <lucide-icon [img]="PackageIcon" class="w-4 h-4 text-gray-400"></lucide-icon>
         <span class="text-gray-600">Pacote:</span>
@@ -73,7 +61,6 @@
       </div>
     </div>
 
-    <!-- Checklist Component -->
     <app-event-checklist [eventId]="eventId" [eventDate]="event.eventDate"></app-event-checklist>
   </div>
 </div>

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute, RouterModule } from '@angular/router'
-import { LucideAngularModule, ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Clock, UserPlus } from 'lucide-angular'
+import { LucideAngularModule, ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Clock, UserPlus, Plus } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -33,6 +33,7 @@ export class EventDayViewComponent implements OnInit {
   readonly MailIcon = Mail
   readonly ClockIcon = Clock
   readonly UserPlusIcon = UserPlus
+  readonly PlusIcon = Plus
 
   dayView: TeamScheduleDayView | null = null
   eventId: string = ''
@@ -46,13 +47,18 @@ export class EventDayViewComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.eventId = this.route.snapshot.paramMap.get('eventId') || ''
+    this.eventId = this.route.parent?.snapshot.paramMap.get('eventId') || this.route.snapshot.paramMap.get('eventId') || ''
     if (!this.eventId) {
       this.error = 'ID do evento não encontrado'
       this.isLoading = false
       return
     }
     await this.loadDayView()
+  }
+
+  /** Whether this view is shown inside the event hub (visualizar/:eventId/equipe/dia) */
+  get isInsideEventHub(): boolean {
+    return !!this.route.parent?.snapshot.paramMap.get('eventId')
   }
 
   async loadDayView(): Promise<void> {
@@ -135,7 +141,18 @@ export class EventDayViewComponent implements OnInit {
     return groups.length > 0 && groups.some(group => group.schedules.length > 0)
   }
 
+  getEquipePath(): string[] {
+    const inHub = !!this.route.parent?.snapshot.paramMap.get('eventId')
+    return inHub
+      ? ['/cadastros/eventos/visualizar', this.eventId, 'equipe']
+      : ['/cadastros/eventos', this.eventId, 'equipe']
+  }
+
+  getEquipeAdicionarLink(): string[] {
+    return [...this.getEquipePath(), 'adicionar']
+  }
+
   goBack(): void {
-    this.router.navigate(['/cadastros/eventos', this.eventId, 'equipe'])
+    this.router.navigate(this.getEquipePath())
   }
 }

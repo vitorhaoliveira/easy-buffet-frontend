@@ -1,14 +1,6 @@
-<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
+<div class="space-y-4 sm:space-y-6">
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <h1
-        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
-        Parcelas</h1>
-      <p class="text-sm sm:text-base text-muted-foreground">
-        Gerencie as parcelas dos contratos
-      </p>
-    </div>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
     <button routerLink="/financeiro/parcelas/nova"
       class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
       <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
@@ -220,7 +212,7 @@
   @if (!isLoading && groupedInstallments.length === 0) {
   <app-empty-state
     [title]="searchTerm || filterStatus !== 'todos' ? 'Nenhuma parcela encontrada' : 'Nenhuma parcela cadastrada'"
-    [message]="searchTerm || filterStatus !== 'todos' ? 'Tente ajustar os filtros de busca' : 'As parcelas dos contratos aparecerão aqui'">
+    [message]="searchTerm || filterStatus !== 'todos' ? 'Tente ajustar os filtros de busca' : 'As parcelas dos eventos aparecerão aqui'">
   </app-empty-state>
   }
 
@@ -266,7 +258,7 @@
             <p class="text-sm text-muted-foreground">
               <strong>Valor da parcela:</strong> {{ formatCurrency(installmentToEdit.amount) }}
             </p>
-            <p class="text-xs text-muted-foreground">Para alterar o valor das parcelas, use pagamento adicional no contrato.</p>
+            <p class="text-xs text-muted-foreground">Para alterar o valor das parcelas, use pagamento adicional no evento.</p>
           </div>
         </div>
         @if (isPaidStatusInEditForm) {

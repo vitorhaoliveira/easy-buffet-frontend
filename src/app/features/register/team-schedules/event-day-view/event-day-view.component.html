@@ -1,5 +1,6 @@
-<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
-  <!-- Header -->
+<div class="space-y-4 sm:space-y-6">
+  @if (!isInsideEventHub) {
+  <!-- Header: only when not inside event hub -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div class="flex items-center gap-4">
       <button appButton variant="ghost" size="sm" (click)="goBack()">
@@ -17,10 +18,11 @@
       </div>
     </div>
   </div>
+  }
 
   <!-- Error Message -->
   @if (error) {
-  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 rounded-lg">
     {{ error }}
   </div>
   }
@@ -104,8 +106,9 @@
     @if (dayView.total === 0 || getRoleGroups().length === 0) {
     <app-empty-state [icon]="UserPlusIcon" title="Nenhum membro escalado"
       message="Adicione membros da equipe para este evento">
-      <button [routerLink]="['/cadastros/eventos', eventId, 'equipe', 'adicionar']"
-        class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2">
+      <button [routerLink]="getEquipeAdicionarLink()"
+        class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white inline-flex items-center justify-center gap-2 transition-colors">
+        <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
         Adicionar Primeiro Membro
       </button>
     </app-empty-state>

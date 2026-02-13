@@ -20,6 +20,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { TeamMemberService } from '@core/services/team-member.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { TeamMember } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -74,10 +75,12 @@ export class TeamMemberListComponent implements OnInit {
 
   constructor(
     private teamMemberService: TeamMemberService,
-    private router: Router
+    private router: Router,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Equipe', 'Gerencie os membros da sua equipe')
     await this.loadTeamMembers()
   }
 

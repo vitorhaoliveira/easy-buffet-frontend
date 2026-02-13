@@ -20,6 +20,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { ClientService, GetClientsParams } from '@core/services/client.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Client, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -68,10 +69,12 @@ export class ClientListComponent implements OnInit {
 
   constructor(
     private clientService: ClientService,
-    private router: Router
+    private router: Router,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Clientes', 'Gerencie os dados dos seus clientes')
     await this.loadClients()
   }
 

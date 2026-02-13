@@ -1,14 +1,6 @@
-<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
+<div class="space-y-4 sm:space-y-6">
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-    <div>
-      <h1
-        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
-        Pacotes e Serviços</h1>
-      <p class="text-muted-foreground">
-        Gerencie os pacotes de buffet e serviços avulsos
-      </p>
-    </div>
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
     <button routerLink="/cadastros/pacotes/novo"
       class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
       <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
@@ -146,7 +138,7 @@
     [message]="searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece adicionando seu primeiro pacote ou serviço'">
     @if (!searchTerm) {
     <button routerLink="/cadastros/pacotes/novo"
-      class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2">
+      class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white inline-flex items-center justify-center gap-2 transition-colors">
       <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
       Novo Pacote/Serviço
     </button>

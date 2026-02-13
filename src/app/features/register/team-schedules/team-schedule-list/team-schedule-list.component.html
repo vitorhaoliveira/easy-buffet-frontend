@@ -1,6 +1,7 @@
-<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
-  <!-- Header -->
+<div class="space-y-4 sm:space-y-6">
+  <!-- Header: full (title + subtitle + actions) when standalone; only actions when inside event hub -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    @if (!isInsideEventHub) {
     <div class="flex items-center gap-4">
       <button appButton variant="ghost" size="sm" (click)="goBack()">
         <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4"></lucide-icon>
@@ -16,29 +17,25 @@
         }
       </div>
     </div>
-    <div class="flex flex-col sm:flex-row gap-2">
+    }
+    <div class="flex flex-col sm:flex-row gap-2" [class.sm:ml-auto]="isInsideEventHub">
       <button appButton variant="outline" (click)="goToDayView()" class="w-full sm:w-auto">
         <lucide-icon [img]="CalendarIcon" class="h-4 w-4 mr-2"></lucide-icon>
         Visualizar Dia do Evento
-      </button>
-      <button [routerLink]="['/cadastros/eventos', eventId, 'equipe', 'adicionar']"
-        class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
-        <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
-        Adicionar Membro
       </button>
     </div>
   </div>
 
   <!-- Error Message -->
   @if (error) {
-  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+  <div class="w-full p-3 text-sm text-red-600 bg-red-50 rounded-lg">
     {{ error }}
   </div>
   }
 
   <!-- Loading State -->
   @if (isLoading) {
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+  <div class="p-4">
     <app-skeleton class="h-16 mb-3"></app-skeleton>
     <app-skeleton class="h-16 mb-3"></app-skeleton>
     <app-skeleton class="h-16 mb-3"></app-skeleton>
@@ -86,7 +83,7 @@
           </div>
           <div class="flex gap-2 pt-3 border-t border-gray-200">
             <button appButton variant="outline" size="sm" class="flex-1 min-h-[44px]"
-              [routerLink]="['/cadastros/eventos', eventId, 'equipe', 'editar', schedule.id]">
+              [routerLink]="getEquipeEditarLink(schedule.id)">
               <lucide-icon [img]="EditIcon" class="mr-2 h-4 w-4"></lucide-icon>
               Editar
             </button>
@@ -109,8 +106,8 @@
     } @else {
     <app-empty-state [icon]="UsersIcon" title="Nenhum membro escalado"
       message="Adicione membros da equipe para este evento">
-      <button [routerLink]="['/cadastros/eventos', eventId, 'equipe', 'adicionar']"
-        class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center gap-2">
+      <button [routerLink]="getEquipeAdicionarLink()"
+        class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white inline-flex items-center justify-center gap-2 transition-colors">
         <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
         Adicionar Primeiro Membro
       </button>

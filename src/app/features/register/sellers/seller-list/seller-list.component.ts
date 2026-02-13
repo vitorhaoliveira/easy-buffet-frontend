@@ -20,6 +20,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { SellerService } from '@core/services/seller.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Seller, PaginatedResponse } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -63,10 +64,12 @@ export class SellerListComponent implements OnInit {
 
   constructor(
     private sellerService: SellerService,
-    public router: Router
+    public router: Router,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Vendedor(a)s', 'Gerencie os dados dos seus vendedor(a)s')
     await this.loadSellers()
   }
 

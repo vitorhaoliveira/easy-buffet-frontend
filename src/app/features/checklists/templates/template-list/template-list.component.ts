@@ -10,6 +10,7 @@ import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-m
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { ChecklistService } from '@core/services/checklist.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { ChecklistTemplate, ChecklistPhase } from '@shared/models/api.types'
 
 @Component({
@@ -58,9 +59,13 @@ export class TemplateListComponent implements OnInit {
     'Outro'
   ]
 
-  constructor(private checklistService: ChecklistService) {}
+  constructor(
+    private checklistService: ChecklistService,
+    private pageTitleService: PageTitleService
+  ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Templates de Checklist', 'Gerencie templates reutilizáveis para seus eventos')
     await this.loadTemplates()
   }
 

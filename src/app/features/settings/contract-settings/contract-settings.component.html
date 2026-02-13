@@ -1,9 +1,9 @@
 <div class="max-w-5xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Configuração de Contrato</h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Configuração de Evento</h1>
     <p class="text-gray-600">
-      Personalize as cláusulas que aparecerão nos contratos gerados quando uma proposta for aceita.
+      Personalize as cláusulas que aparecerão nos eventos gerados quando uma proposta for aceita.
     </p>
   </div>
 
@@ -11,8 +11,8 @@
   <div *ngIf="clausesPaused" class="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
     <p class="text-amber-800 font-medium mb-2">Configuração de cláusulas temporariamente indisponível</p>
     <p class="text-amber-700 text-sm">
-      A edição das cláusulas do contrato está pausada. Por enquanto, o fluxo está focado no aceite do orçamento.
-      O contrato será enviado posteriormente. Esta funcionalidade voltará em breve.
+      A edição das cláusulas do evento está pausada. Por enquanto, o fluxo está focado no aceite do orçamento.
+      O evento será enviado posteriormente. Esta funcionalidade voltará em breve.
     </p>
   </div>
 
@@ -35,7 +35,7 @@
             </label>
             <input type="text" formControlName="title"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Ex: Objeto do Contrato" />
+              placeholder="Ex: Objeto do Evento" />
           </div>
 
           <div class="ml-4 flex items-center">
@@ -102,7 +102,7 @@
   <!-- Preview -->
   <div *ngIf="!clausesPaused && showPreview" class="mt-8 bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
     <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
-      Preview do Contrato
+      Preview do Evento
     </h2>
 
     <div class="prose max-w-none">
@@ -136,8 +136,8 @@
         <div class="mt-2 text-sm text-blue-700">
           <ul class="list-disc list-inside space-y-1">
             <li>As cláusulas obrigatórias não podem ser desativadas</li>
-            <li>Alterações afetarão apenas novos contratos gerados</li>
-            <li>Contratos já aceitos não serão modificados</li>
+            <li>Alterações afetarão apenas novos eventos gerados</li>
+            <li>Eventos já aceitos não serão modificados</li>
             <li>Valores, datas e informações específicas do evento são preenchidos automaticamente</li>
           </ul>
         </div>

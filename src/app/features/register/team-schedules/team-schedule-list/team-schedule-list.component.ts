@@ -61,14 +61,39 @@ export class TeamScheduleListComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.eventId = this.route.snapshot.paramMap.get('eventId') || ''
+    this.eventId = this.route.parent?.snapshot.paramMap.get('eventId') || this.route.snapshot.paramMap.get('eventId') || ''
     if (!this.eventId) {
       this.error = 'ID do evento não encontrado'
       this.isLoading = false
       return
     }
-    
+
     await this.loadData()
+  }
+
+  /** Whether this list is shown inside the event hub (visualizar/:eventId/equipe) */
+  get isInsideEventHub(): boolean {
+    return !!this.route.parent?.snapshot.paramMap.get('eventId')
+  }
+
+  /** Base path for equipe routes (hub or legacy) */
+  get equipeBasePath(): string[] {
+    const inHub = this.isInsideEventHub
+    return inHub
+      ? ['/cadastros/eventos/visualizar', this.eventId, 'equipe']
+      : ['/cadastros/eventos', this.eventId, 'equipe']
+  }
+
+  get backPath(): string[] {
+    return this.isInsideEventHub ? ['/cadastros/eventos/visualizar', this.eventId] : ['/cadastros/eventos']
+  }
+
+  getEquipeAdicionarLink(): string[] {
+    return [...this.equipeBasePath, 'adicionar']
+  }
+
+  getEquipeEditarLink(scheduleId: string): string[] {
+    return [...this.equipeBasePath, 'editar', scheduleId]
   }
 
   async loadData(): Promise<void> {
@@ -337,10 +362,10 @@ export class TeamScheduleListComponent implements OnInit {
   }
 
   goToDayView(): void {
-    this.router.navigate(['/cadastros/eventos', this.eventId, 'equipe', 'dia'])
+    this.router.navigate([...this.equipeBasePath, 'dia'])
   }
 
   goBack(): void {
-    this.router.navigate(['/cadastros/eventos'])
+    this.router.navigate(this.backPath)
   }
 }

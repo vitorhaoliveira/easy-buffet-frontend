@@ -20,6 +20,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { ContractService, GetContractsParams } from '@core/services/contract.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Contract, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -76,10 +77,12 @@ export class ContractsListComponent implements OnInit {
 
   constructor(
     private contractService: ContractService,
-    public router: Router
+    public router: Router,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Eventos', 'Gerencie os eventos e parcelamentos')
     await this.loadData()
   }
 
@@ -102,7 +105,7 @@ export class ContractsListComponent implements OnInit {
         this.contracts = contractsResponse.data
         this.pagination = contractsResponse.pagination ?? null
       } else {
-        this.error = 'Erro ao carregar contratos'
+        this.error = 'Erro ao carregar eventos'
         this.pagination = null
       }
     } catch (err: any) {
@@ -172,7 +175,7 @@ export class ContractsListComponent implements OnInit {
         await this.loadData()
       } else {
         // Handle error from response when success is false
-        this.error = response.message || response.errors?.[0] || 'Erro ao excluir contrato'
+        this.error = response.message || response.errors?.[0] || 'Erro ao excluir evento'
         this.showDeleteModal = false
         this.contractToDelete = null
       }
@@ -189,7 +192,7 @@ export class ContractsListComponent implements OnInit {
         this.error = err.message
       } else {
         // Fallback error message
-        this.error = 'Erro ao excluir contrato'
+        this.error = 'Erro ao excluir evento'
       }
       // Close modal to show error message clearly
       this.showDeleteModal = false

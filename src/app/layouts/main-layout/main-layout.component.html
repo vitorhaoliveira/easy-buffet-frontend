@@ -1,4 +1,4 @@
-<div class="flex h-screen bg-gray-50 overflow-hidden">
+<div class="flex h-screen overflow-hidden">
   <!-- Mobile Menu Button -->
   <button (click)="toggleMobileSidebar()"
     class="lg:hidden fixed top-[.7rem] left-[.5rem] z-50 p-2 bg-white rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 transition-colors">
@@ -17,37 +17,37 @@
              (sidebarCollapsed ? 'w-20' : 'w-64') + ' ' +
              (mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')">
     <!-- Header -->
-    <div class="p-4 border-b border-gray-200">
-      <div class="flex flex-col gap-3">
-        <!-- Row 1: System logo (hidden when collapsed) + Hamburger menu toggle (like PreSkool reference) -->
-        <div [class]="'flex items-center gap-2 min-h-10 ' + (sidebarCollapsed ? 'justify-center' : 'justify-between')">
-          <div [class]="'flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ' + (sidebarCollapsed ? 'w-0 min-w-0 opacity-0' : 'max-w-[140px] opacity-100')">
+    <div class="p-3 border-b border-gray-200">
+      <div class="flex flex-col gap-2">
+        <!-- Row 1: System logo (hidden when collapsed) + Hamburger menu toggle -->
+        <div [class]="'flex items-center gap-1.5 min-h-8 ' + (sidebarCollapsed ? 'justify-center' : 'justify-between')">
+          <div [class]="'flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ' + (sidebarCollapsed ? 'w-0 min-w-0 opacity-0' : 'max-w-[120px] opacity-100')">
             <img src="/LOGO_EASY_BUFFET_page-0001-removebg-preview.png" alt="Easy Buffet"
-              class="h-9 w-auto object-contain transition-opacity duration-300" />
+              class="h-7 w-auto object-contain transition-opacity duration-300" />
           </div>
           <button (click)="toggleSidebar()"
-            class="hidden lg:flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 text-gray-600"
+            class="hidden lg:flex items-center justify-center p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 text-gray-600"
             [title]="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'">
-            <lucide-icon [img]="MenuIcon" class="w-5 h-5"></lucide-icon>
+            <lucide-icon [img]="MenuIcon" class="w-4 h-4"></lucide-icon>
           </button>
         </div>
 
         <!-- Row 2: Organization switcher card (Global International style - white bg, light border, stacked chevrons) -->
         <div class="relative">
-          <button (click)="toggleOrgDropdown()" [class]="'flex items-center gap-3 min-w-0 w-full rounded-lg border border-gray-200 transition-colors ' + 
-                     (sidebarCollapsed ? 'bg-white p-2 justify-center' : 'bg-white hover:bg-gray-50 p-2.5')" [disabled]="isSwitchingOrg"
+          <button (click)="toggleOrgDropdown()" [class]="'flex items-center gap-2 min-w-0 w-full rounded-lg border border-gray-200 transition-colors ' + 
+                     (sidebarCollapsed ? 'bg-white p-1.5 justify-center' : 'bg-white hover:bg-gray-50 p-2')" [disabled]="isSwitchingOrg"
             [title]="sidebarCollapsed ? getCurrentOrganizationName() : ''">
             <div
-              class="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0">
-              <lucide-icon [img]="Building2Icon" class="w-4 h-4 text-gray-600"></lucide-icon>
+              class="w-7 h-7 rounded-md bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0">
+              <lucide-icon [img]="Building2Icon" class="w-3.5 h-3.5 text-gray-600"></lucide-icon>
             </div>
             <div
               [class]="'transition-all duration-300 overflow-hidden min-w-0 ' + (sidebarCollapsed ? 'w-0 opacity-0 flex-none' : 'flex-1 w-auto opacity-100')">
-              <div class="flex items-center justify-between gap-2 text-left">
+              <div class="flex items-center justify-between gap-1.5 text-left">
                 <div class="min-w-0 flex-1">
-                  <h2 class="text-sm font-semibold text-gray-900 whitespace-nowrap truncate">{{
+                  <h2 class="text-xs font-semibold text-gray-900 whitespace-nowrap truncate">{{
                     getCurrentOrganizationName() }}</h2>
-                  <p class="text-xs text-gray-500 whitespace-nowrap">Trocar organização</p>
+                  <p class="text-[10px] text-gray-500 whitespace-nowrap">Trocar organização</p>
                 </div>
                 @if (!isSwitchingOrg) {
                 <div class="flex flex-col items-center justify-center flex-shrink-0 text-gray-500">
@@ -123,58 +123,44 @@
       </div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto px-3 py-4">
+    <!-- Navigation (compact: smaller fonts and icons to avoid scroll) -->
+    <nav class="flex-1 overflow-y-auto px-2.5 py-2">
       <ul class="space-y-1">
-        <!-- Dashboard -->
+        <!-- Início -->
         <li>
-          <a routerLink="/" routerLinkActive="bg-primary-50 text-primary-700 font-semibold"
-            [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileSidebar()" [class]="'flex items-center gap-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors ' + 
-                     (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')"
-            [title]="sidebarCollapsed ? 'Dashboard' : ''">
-            <lucide-icon [img]="HomeIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
-            <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
-                          (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Dashboard</span>
+          <a routerLink="/" routerLinkActive="bg-primary-700 text-white hover:bg-primary-600"
+            [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileSidebar()"
+            [class]="'flex items-center gap-2 py-2 text-sm font-normal rounded-md transition-colors ' +
+                     (sidebarCollapsed ? 'px-2 justify-center text-gray-700 hover:bg-gray-100' : 'px-2.5 text-gray-700 hover:bg-gray-100')"
+            [title]="sidebarCollapsed ? 'Início' : ''">
+            <lucide-icon [img]="HomeIcon" class="w-[18px] h-[18px] flex-shrink-0"></lucide-icon>
+            <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Início</span>
           </a>
         </li>
 
-        <!-- Menu Items with Sub-items -->
         @for (item of menuItems; track item.title) {
-        <li>
-          <!-- Main Item -->
-          <button (click)="toggleMenu(item)" [class]="'w-full flex items-center text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors py-2 ' + 
-                     (sidebarCollapsed ? 'px-2 justify-center' : 'px-3 justify-between') + 
-                     (item.expanded && !sidebarCollapsed ? ' bg-gray-50' : '')"
-            [title]="sidebarCollapsed ? item.title : ''">
-            <div class="flex items-center gap-3 min-w-0">
-              <lucide-icon [img]="getIconComponent(item.icon)" class="w-5 h-5 flex-shrink-0"></lucide-icon>
-              <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
-                            (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">{{ item.title }}</span>
-            </div>
-            <svg [class]="'w-4 h-4 transition-all duration-300 ' + 
-                       (item.expanded ? 'rotate-180 ' : '') + 
-                       (sidebarCollapsed ? 'w-0 opacity-0' : 'w-4 opacity-100')" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          <!-- Sub Items -->
-          <ul class="overflow-hidden transition-all duration-200 ease-in-out"
-            [style.max-height]="(item.expanded && !sidebarCollapsed) ? (item.items?.length || 0) * 40 + 'px' : '0'">
+        <li class="mt-3 first:mt-2">
+          <!-- Section label (uppercase, muted) -->
+          <p [class]="'px-2.5 py-1 text-xs font-normal uppercase tracking-wider text-gray-400 ' + (sidebarCollapsed ? 'sr-only' : '')">
+            {{ item.title }}
+          </p>
+          <ul class="mt-0.5 space-y-1">
             @for (subItem of item.items; track subItem.title) {
-            <li class="ml-8 mt-1">
+            <li>
               @if (!subItem.disabled) {
-              <a [routerLink]="subItem.url" routerLinkActive="bg-primary-50 text-primary-600 font-medium"
-                (click)="closeMobileSidebar()"
-                class="block px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-                {{ subItem.title }}
+              <a [routerLink]="subItem.url" (click)="closeMobileSidebar()"
+                [class]="'flex items-center gap-2 py-2 text-sm font-normal rounded-md transition-colors ' +
+                         (sidebarCollapsed ? 'px-2 justify-center text-gray-700 hover:bg-gray-100' : 'px-2.5 text-gray-700 hover:bg-gray-100')"
+                routerLinkActive="bg-primary-700 text-white hover:bg-primary-600"
+                [title]="sidebarCollapsed ? subItem.title : ''">
+                <lucide-icon [img]="getSubIconComponent(subItem.icon || 'file-text')" class="w-[18px] h-[18px] flex-shrink-0"></lucide-icon>
+                <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap truncate ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">{{ subItem.title }}</span>
               </a>
               }
               @if (subItem.disabled) {
-              <span class="block px-3 py-2 text-sm text-gray-400 rounded-lg cursor-not-allowed"
-                title="Em desenvolvimento">
-                {{ subItem.title }} <span class="text-xs">(em breve)</span>
+              <span [class]="'flex items-center gap-2 py-2 text-sm text-gray-400 rounded-md cursor-not-allowed ' + (sidebarCollapsed ? 'px-2 justify-center' : 'px-2.5')" title="Em desenvolvimento">
+                <lucide-icon [img]="getSubIconComponent(subItem.icon || 'file-text')" class="w-[18px] h-[18px] flex-shrink-0"></lucide-icon>
+                <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">{{ subItem.title }} <span class="text-xs">(em breve)</span></span>
               </span>
               }
             </li>
@@ -186,38 +172,34 @@
     </nav>
 
     <!-- Footer Links -->
-    <div class="border-t border-gray-200 p-3 space-y-1">
-      <button (click)="contactSupport()" [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors w-full ' + 
-                 (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')" [title]="sidebarCollapsed ? 'Suporte' : ''">
-        <lucide-icon [img]="HelpCircleIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
-        <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
-                      (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Suporte</span>
+    <div class="border-t border-gray-200 p-2 space-y-1">
+<button (click)="contactSupport()" [class]="'flex items-center gap-2 py-2 text-sm font-normal text-gray-600 rounded-md hover:bg-gray-50 transition-colors w-full ' +
+                 (sidebarCollapsed ? 'px-2 justify-center' : 'px-2.5')" [title]="sidebarCollapsed ? 'Suporte' : ''">
+        <lucide-icon [img]="HelpCircleIcon" class="w-[18px] h-[18px] flex-shrink-0"></lucide-icon>
+        <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Suporte</span>
       </button>
-      <button (click)="sendFeedback()" [class]="'flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors w-full ' + 
-                 (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')" [title]="sidebarCollapsed ? 'Feedback' : ''">
-        <lucide-icon [img]="MessageCircleIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
-        <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
-                      (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Feedback</span>
+      <button (click)="sendFeedback()" [class]="'flex items-center gap-2 py-2 text-sm font-normal text-gray-600 rounded-md hover:bg-gray-50 transition-colors w-full ' +
+                 (sidebarCollapsed ? 'px-2 justify-center' : 'px-2.5')" [title]="sidebarCollapsed ? 'Feedback' : ''">
+        <lucide-icon [img]="MessageCircleIcon" class="w-[18px] h-[18px] flex-shrink-0"></lucide-icon>
+        <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Feedback</span>
       </button>
     </div>
 
-    <!-- User Profile -->
-    <div class="border-t border-gray-200 p-3">
-      <button (click)="logout()"
-        [class]="'w-full flex items-center gap-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors ' + (sidebarCollapsed ? 'px-2 justify-center' : 'px-3')"
-        [title]="sidebarCollapsed ? 'Sair' : ''">
-        <lucide-icon [img]="LogOutIcon" class="w-5 h-5 flex-shrink-0"></lucide-icon>
-        <span [class]="'transition-all duration-300 overflow-hidden whitespace-nowrap ' + 
-                      (sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100')">Sair</span>
-      </button>
-    </div>
   </aside>
 
   <!-- Right side: top bar + main content -->
   <div class="flex-1 flex flex-col min-w-0">
-    <!-- Top bar (white background, orange accents - project colors). On mobile/tablet: extra left padding so fixed menu button does not overlap search -->
-    <header class="flex items-center gap-4 h-16 pl-14 pr-4 py-3 lg:pl-4 bg-white border-b border-gray-200 flex-shrink-0 shadow-sm">
-      <div class="flex-1 flex justify-center max-w-xl mx-auto">
+    <!-- Top bar: title (left) + search (center) + profile (right) -->
+    <header class="grid grid-cols-[minmax(0,1fr)_minmax(280px,2fr)_minmax(0,1fr)] items-center gap-4 min-h-16 pl-14 pr-4 py-3 lg:pl-4 bg-white border-b border-gray-200 flex-shrink-0 shadow-sm">
+      <div class="min-w-0 flex flex-col justify-center">
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent truncate">
+          {{ (pageTitleService.title | async) || 'Easy Buffet' }}
+        </h1>
+        @if (pageTitleService.subtitle | async; as subtitle) {
+        <p class="text-sm text-gray-600 mt-0.5 truncate">{{ subtitle }}</p>
+        }
+      </div>
+      <div class="min-w-0 w-full px-2">
         <div class="relative w-full">
           <input #searchInput type="search" placeholder="Buscar páginas (ex: parcelas, clientes)... Ctrl+K"
             [value]="searchQuery"
@@ -248,7 +230,7 @@
           }
         </div>
       </div>
-      <div class="relative flex-shrink-0">
+      <div class="relative flex-shrink-0 flex justify-end">
         <button (click)="toggleProfileDropdown()" class="flex items-center gap-3 py-1.5 pl-1 pr-2 rounded-lg hover:bg-primary-50 transition-colors border border-transparent hover:border-primary-100">
           @if (currentUser?.avatar) {
           <img [src]="currentUser?.avatar" [alt]="currentUser?.name" class="w-9 h-9 rounded-full object-cover ring-2 ring-primary-100" />
@@ -266,15 +248,21 @@
         @if (showProfileDropdown) {
         <div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
         <div class="absolute right-0 top-full mt-1 py-1 min-w-[180px] bg-white rounded-lg border border-gray-200 shadow-lg z-50">
-          <a routerLink="/conta" (click)="closeProfileDropdown()" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors">Minha conta</a>
-          <a routerLink="/assinatura" (click)="closeProfileDropdown()" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors">Assinatura</a>
+          <a routerLink="/conta" (click)="closeProfileDropdown()" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Minha conta</a>
+          <a routerLink="/assinatura" (click)="closeProfileDropdown()" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Assinatura</a>
+          <div class="border-t border-gray-100 mt-0.5 pt-0.5">
+            <button type="button" (click)="logout(); closeProfileDropdown()" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2">
+              <lucide-icon [img]="LogOutIcon" class="w-4 h-4"></lucide-icon>
+              Sair
+            </button>
+          </div>
         </div>
         }
       </div>
     </header>
 
     <!-- Main content -->
-    <main class="flex-1 overflow-y-auto bg-gray-50 w-full">
+    <main class="flex-1 overflow-y-auto w-full">
       <div class="p-4 sm:p-6 pt-4">
         <router-outlet />
       </div>

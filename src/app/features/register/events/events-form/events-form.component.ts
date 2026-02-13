@@ -72,7 +72,7 @@ export class EventsFormComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.eventId = this.route.snapshot.paramMap.get('id')
+    this.eventId = this.route.parent?.snapshot.paramMap.get('eventId') || this.route.snapshot.paramMap.get('id')
     this.isEditing = !!this.eventId
 
     await this.loadClientsAndPackages()
@@ -80,8 +80,13 @@ export class EventsFormComponent implements OnInit {
     if (this.isEditing && this.eventId) {
       await this.loadEvent(this.eventId)
     }
-    
+
     this.isLoadingData = false
+  }
+
+  /** Whether this form is shown inside the event hub (visualizar/:eventId/dados) */
+  get isInsideEventHub(): boolean {
+    return !!this.route.parent?.snapshot.paramMap.get('eventId')
   }
 
   /**
@@ -248,7 +253,13 @@ export class EventsFormComponent implements OnInit {
       }
 
       if (response.success) {
-        this.router.navigate(['/cadastros/eventos'])
+        if (this.isInsideEventHub && this.eventId) {
+          this.router.navigate(['/cadastros/eventos/visualizar', this.eventId, 'dados'])
+        } else if (response.data?.id) {
+          this.router.navigate(['/cadastros/eventos/visualizar', response.data.id, 'dados'])
+        } else {
+          this.router.navigate(['/cadastros/eventos'])
+        }
       } else {
         this.errorMessage = 'Erro ao salvar evento'
       }
@@ -260,7 +271,11 @@ export class EventsFormComponent implements OnInit {
   }
 
   handleCancel(): void {
-    this.router.navigate(['/cadastros/eventos'])
+    if (this.isInsideEventHub && this.eventId) {
+      this.router.navigate(['/cadastros/eventos/visualizar', this.eventId, 'dados'])
+    } else {
+      this.router.navigate(['/cadastros/eventos'])
+    }
   }
 
   hasError(fieldName: string): boolean {

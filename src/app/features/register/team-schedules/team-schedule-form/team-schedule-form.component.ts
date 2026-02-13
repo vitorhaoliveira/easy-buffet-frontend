@@ -59,7 +59,7 @@ export class TeamScheduleFormComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.eventId = this.route.snapshot.paramMap.get('eventId') || ''
+    this.eventId = this.route.parent?.snapshot.paramMap.get('eventId') || this.route.snapshot.paramMap.get('eventId') || ''
     this.scheduleId = this.route.snapshot.paramMap.get('scheduleId')
     this.isEditing = !!this.scheduleId
 
@@ -73,6 +73,11 @@ export class TeamScheduleFormComponent implements OnInit {
     if (this.isEditing && this.scheduleId) {
       await this.loadSchedule()
     }
+  }
+
+  /** Whether this form is shown inside the event hub (visualizar/:eventId/equipe/...) */
+  get isInsideEventHub(): boolean {
+    return !!this.route.parent?.snapshot.paramMap.get('eventId')
   }
 
   async loadEvent(): Promise<void> {
@@ -153,7 +158,7 @@ export class TeamScheduleFormComponent implements OnInit {
         
         if (response.success) {
           this.toastService.success('Escala atualizada com sucesso')
-          this.router.navigate(['/cadastros/eventos', this.eventId, 'equipe'])
+          this.router.navigate(this.getEquipePath())
         } else {
           this.errorMessage = 'Erro ao atualizar escala'
         }
@@ -171,7 +176,7 @@ export class TeamScheduleFormComponent implements OnInit {
         
         if (response.success) {
           this.toastService.success('Membro adicionado à escala com sucesso')
-          this.router.navigate(['/cadastros/eventos', this.eventId, 'equipe'])
+          this.router.navigate(this.getEquipePath())
         } else {
           this.errorMessage = 'Erro ao adicionar membro à escala'
         }
@@ -190,8 +195,15 @@ export class TeamScheduleFormComponent implements OnInit {
     }
   }
 
+  getEquipePath(): string[] {
+    const inHub = !!this.route.parent?.snapshot.paramMap.get('eventId')
+    return inHub
+      ? ['/cadastros/eventos/visualizar', this.eventId, 'equipe']
+      : ['/cadastros/eventos', this.eventId, 'equipe']
+  }
+
   handleCancel(): void {
-    this.router.navigate(['/cadastros/eventos', this.eventId, 'equipe'])
+    this.router.navigate(this.getEquipePath())
   }
 
   getFieldError(fieldName: string): string {

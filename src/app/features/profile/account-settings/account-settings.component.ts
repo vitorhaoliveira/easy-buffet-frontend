@@ -8,6 +8,7 @@ import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { phoneValidator } from '@shared/validators'
 import { AuthStateService } from '@core/services/auth-state.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import { UserService } from '@core/services/user.service'
 import { SettingsService } from '@core/services/settings.service'
 import { ChangePasswordComponent } from '../change-password/change-password.component'
@@ -90,7 +91,8 @@ export class AccountSettingsComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private authStateService: AuthStateService,
     private userService: UserService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private pageTitleService: PageTitleService
   ) {
     this.initializeForms()
   }
@@ -102,6 +104,7 @@ export class AccountSettingsComponent implements OnInit, OnDestroy {
    * @returns - Promise<void>
    */
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Minha Conta', 'Gerencie suas informações pessoais, dados da empresa e visualize o histórico de atividades')
     this.authStateService.user$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {

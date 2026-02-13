@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs'
 import { EventChecklistComponent } from '../event-checklist/event-checklist.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EventService } from '@core/services/event.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Event } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -37,12 +38,17 @@ export class EventChecklistPageComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private eventService: EventService
+    private eventService: EventService,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.eventId = this.route.snapshot.paramMap.get('eventId') || ''
-    
+    this.eventId = this.route.parent?.snapshot.paramMap.get('eventId') || this.route.snapshot.paramMap.get('eventId') || ''
+
+    if (!this.isInsideEventHub) {
+      this.pageTitleService.setTitle('Checklist do Evento', 'Gerencie as tarefas deste evento')
+    }
+
     if (!this.eventId) {
       this.error = 'ID do evento não informado'
       this.isLoading = false
@@ -50,6 +56,11 @@ export class EventChecklistPageComponent implements OnInit {
     }
 
     await this.loadEvent()
+  }
+
+  /** Whether this page is shown inside the event hub (visualizar/:eventId/checklist) */
+  get isInsideEventHub(): boolean {
+    return !!this.route.parent?.snapshot.paramMap.get('eventId')
   }
 
   /**
@@ -142,12 +153,17 @@ export class EventChecklistPageComponent implements OnInit {
 
   /**
    * @Function - goBack
-   * @description - Navigates back to events list
+   * @description - Navigates back to event hub or events list
    * @author - Vitor Hugo
    * @returns - void
    */
   goBack(): void {
-    this.router.navigate(['/cadastros/eventos'])
+    const inHub = !!this.route.parent?.snapshot.paramMap.get('eventId')
+    if (inHub) {
+      this.router.navigate(['/cadastros/eventos/visualizar', this.eventId])
+    } else {
+      this.router.navigate(['/cadastros/eventos'])
+    }
   }
 }
 

@@ -20,6 +20,7 @@ export interface GetContractsParams {
   limit?: number
   paymentStatus?: 'received' | 'pending' | 'all'
   status?: string
+  eventId?: string
 }
 
 @Injectable({
@@ -53,6 +54,7 @@ export class ContractService {
       httpParams = httpParams.set('paymentStatus', params.paymentStatus)
     }
     if (params.status) httpParams = httpParams.set('status', params.status)
+    if (params.eventId) httpParams = httpParams.set('eventId', params.eventId)
     return this.http.get<PaginatedResponse<Contract>>(`${this.apiUrl}/contracts`, { params: httpParams })
   }
 
