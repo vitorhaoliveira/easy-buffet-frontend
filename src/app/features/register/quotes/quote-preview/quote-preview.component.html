@@ -140,7 +140,9 @@
             @if (quote.event.eventTime) {
             <div>
               <p class="text-sm text-gray-500">Horário</p>
-              <p class="font-medium">{{ formatTime(quote.event.eventTime) }}</p>
+              <p class="font-medium">
+                {{ formatTime(quote.event.eventTime) }}{{ quote.event.eventEndTime ? ' - ' + formatTime(quote.event.eventEndTime) : '' }}
+              </p>
             </div>
             }
             @if (quote.event.unit?.name) {

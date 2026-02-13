@@ -6,7 +6,6 @@ import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
-import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { TeamScheduleService } from '@core/services/team-schedule.service'
@@ -24,7 +23,6 @@ import { formatDateBR, formatTime as formatTimeUtil } from '@shared/utils/date.u
     LucideAngularModule,
     ButtonComponent,
     ConfirmationModalComponent,
-    MobileCardComponent,
     SkeletonComponent,
     EmptyStateComponent
   ],

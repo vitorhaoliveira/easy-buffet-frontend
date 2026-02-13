@@ -1,20 +1,12 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
-    <button routerLink="/financeiro/parcelas/nova"
-      class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
-      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
-      Nova Parcela
-    </button>
-  </div>
-
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <app-fab routerLink="/financeiro/parcelas/nova" title="Nova Parcela" [inline]="true"></app-fab>
       <div class="flex-1">
         <app-search-bar placeholder="Buscar por cliente, evento ou número..." [(ngModel)]="searchTerm"></app-search-bar>
       </div>
-      <select [(ngModel)]="filterStatus"
+      <select [(ngModel)]="filterStatus" (ngModelChange)="onFilterOrSearchChange()"
         class="flex min-h-[44px] w-full sm:w-48 items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
         <option value="todos">Todos os status</option>
         <option value="pending">Pendente</option>
@@ -40,10 +32,10 @@
   </div>
   }
 
-  <!-- Lista agrupada -->
+  <!-- Lista agrupada por evento (cada evento mostra todas as parcelas; paginação é por evento) -->
   @if (!isLoading && groupedInstallments.length > 0) {
   <div class="space-y-4">
-    @for (group of groupedInstallments; track group.id) {
+    @for (group of paginatedGroups; track group.id) {
     <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
       <button type="button"
         class="flex w-full flex-wrap items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-muted/50"
@@ -205,6 +197,28 @@
       }
     </div>
     }
+  </div>
+  }
+
+  <!-- Pagination (by event) -->
+  @if (!isLoading && groupedInstallments.length > 0 && totalGroupPages >= 1) {
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <p class="text-sm text-gray-600">
+      Página {{ groupPage }} de {{ totalGroupPages }}
+      <span class="text-gray-500">({{ groupedInstallments.length }} evento{{ groupedInstallments.length === 1 ? '' : 's' }})</span>
+    </p>
+    <div class="flex items-center gap-2">
+      <button type="button" (click)="setPage(groupPage - 1)" [disabled]="groupPage <= 1"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors">
+        <lucide-icon [img]="ChevronLeftIcon" class="h-4 w-4"></lucide-icon>
+        Anterior
+      </button>
+      <button type="button" (click)="setPage(groupPage + 1)" [disabled]="groupPage >= totalGroupPages"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors">
+        Próxima
+        <lucide-icon [img]="ChevronRightIcon" class="h-4 w-4"></lucide-icon>
+      </button>
+    </div>
   </div>
   }
 

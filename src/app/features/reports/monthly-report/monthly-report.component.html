@@ -1,25 +1,10 @@
 <div class="min-h-screen">
-  <div>
-    <!-- Header: export buttons -->
-    <div class="mb-6 print:mb-4">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4 mb-4">
-        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto print:hidden">
-          <button (click)="exportToPDF()"
-            class="min-h-[44px] px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2">
-            <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
-            <span>PDF</span>
-          </button>
-          <button (click)="exportToExcel()"
-            class="min-h-[44px] px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
-            <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
-            <span>Excel</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="bg-white rounded-xl shadow-sm p-4 print:hidden">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+  <div class="space-y-6">
+    <!-- Header: export buttons + período (espaçamento padronizado) -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print:mb-4">
+      <!-- Filters: período -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 print:hidden order-2 sm:order-1">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div class="flex items-center gap-2">
             <lucide-icon [img]="CalendarIcon" [size]="20" class="text-gray-500"></lucide-icon>
             <label class="text-sm font-medium text-gray-700">Período:</label>
@@ -37,6 +22,19 @@
             </option>
           </select>
         </div>
+      </div>
+      <!-- Export buttons -->
+      <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto print:hidden order-1 sm:order-2">
+        <button (click)="exportToPDF()"
+          class="min-h-[44px] px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2">
+          <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
+          <span>PDF</span>
+        </button>
+        <button (click)="exportToExcel()"
+          class="min-h-[44px] px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
+          <lucide-icon [img]="DownloadIcon" [size]="18"></lucide-icon>
+          <span>Excel</span>
+        </button>
       </div>
     </div>
 

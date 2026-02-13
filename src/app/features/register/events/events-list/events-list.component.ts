@@ -6,6 +6,8 @@ import { LucideAngularModule, Plus, Trash2 } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { FabComponent } from '@shared/components/ui/fab/fab.component'
+import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
 import { EventService, GetEventsParams } from '@core/services/event.service'
 import { PageTitleService } from '@core/services/page-title.service'
 import { ClientService } from '@core/services/client.service'
@@ -22,7 +24,9 @@ import { formatDateBR } from '@shared/utils/date.utils'
     RouterModule,
     FormsModule,
     LucideAngularModule,
-    ConfirmationModalComponent
+    ConfirmationModalComponent,
+    FabComponent,
+    SearchBarComponent
   ],
   templateUrl: './events-list.component.html'
 })

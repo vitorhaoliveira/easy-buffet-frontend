@@ -190,6 +190,7 @@ export interface Event {
   name: string
   eventDate: string
   eventTime: string
+  eventEndTime?: string | null
   guestCount: number
   status: 'Pendente' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
@@ -519,6 +520,7 @@ export interface CreateEventRequest {
   name: string
   eventDate: string
   eventTime: string
+  eventEndTime?: string
   guestCount: number
   status: 'Pendente' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
@@ -531,6 +533,7 @@ export interface UpdateEventRequest {
   name?: string
   eventDate?: string
   eventTime?: string
+  eventEndTime?: string | null
   guestCount?: number
   status?: 'Pendente' | 'Agendado' | 'Confirmado' | 'Concluído' | 'Cancelado'
   notes?: string
@@ -1227,6 +1230,7 @@ export interface QuoteResponse {
     name: string
     eventDate: string
     eventTime?: string
+    eventEndTime?: string | null
     guestCount?: number
     unit?: {
       id: string
@@ -1353,6 +1357,7 @@ export interface TeamSchedule {
     name: string
     eventDate: string
     eventTime: string
+    eventEndTime?: string | null
     client?: {
       id: string
       name: string
@@ -1404,6 +1409,7 @@ export interface TeamScheduleDayView {
     name: string
     eventDate: string
     eventTime: string
+    eventEndTime?: string | null
     guestCount?: number
     client: {
       id: string

@@ -105,7 +105,9 @@
             <div>
               <p class="text-sm text-gray-500">Data do Evento</p>
               <p class="font-medium text-gray-900">{{ formatDate(schedule.event.eventDate) }}</p>
-              <p class="text-sm text-gray-600">{{ formatTime(schedule.event.eventTime) }}</p>
+              <p class="text-sm text-gray-600">
+                {{ formatTime(schedule.event.eventTime) }}{{ schedule.event.eventEndTime ? ' - ' + formatTime(schedule.event.eventEndTime) : '' }}
+              </p>
             </div>
           </div>
           <div class="flex items-start gap-3">

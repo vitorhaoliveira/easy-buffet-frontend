@@ -11,6 +11,7 @@ import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-ca
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
+import { FabComponent } from '@shared/components/ui/fab/fab.component'
 import {
   TableComponent,
   TableHeaderComponent,
@@ -38,6 +39,7 @@ import { formatDateBR } from '@shared/utils/date.utils'
     ConfirmationModalComponent,
     SkeletonComponent,
     EmptyStateComponent,
+    FabComponent,
     TableComponent,
     TableHeaderComponent,
     TableBodyComponent,

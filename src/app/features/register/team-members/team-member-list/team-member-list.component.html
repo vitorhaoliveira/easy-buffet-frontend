@@ -1,16 +1,8 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
-    <button routerLink="/cadastros/equipe/novo"
-      class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
-      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
-      Novo Membro
-    </button>
-  </div>
-
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <app-fab routerLink="/cadastros/equipe/novo" title="Novo Membro" [inline]="true"></app-fab>
       <div class="flex-1 w-full">
         <app-search-bar placeholder="Buscar por nome, email ou telefone..."
           [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"></app-search-bar>
@@ -158,13 +150,6 @@
   @if (!isLoading && teamMembers.length === 0) {
   <app-empty-state [title]="searchTerm ? 'Nenhum membro encontrado' : 'Nenhum membro cadastrado'"
     [message]="searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece adicionando seu primeiro membro da equipe'">
-    @if (!searchTerm) {
-    <button routerLink="/cadastros/equipe/novo"
-      class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white inline-flex items-center justify-center gap-2 transition-colors">
-      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
-      Novo Membro
-    </button>
-    }
   </app-empty-state>
   }
 

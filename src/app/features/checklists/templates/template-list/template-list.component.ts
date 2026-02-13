@@ -2,10 +2,10 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterLink } from '@angular/router'
 import { LucideAngularModule, Plus, Pencil, Trash2, ClipboardList, Search, Copy } from 'lucide-angular'
+import { FabComponent } from '@shared/components/ui/fab/fab.component'
 import { firstValueFrom } from 'rxjs'
 import { FormsModule } from '@angular/forms'
 
-import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
@@ -21,10 +21,10 @@ import type { ChecklistTemplate, ChecklistPhase } from '@shared/models/api.types
     RouterLink,
     FormsModule,
     LucideAngularModule,
-    ButtonComponent,
     ConfirmationModalComponent,
     SkeletonComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    FabComponent
   ],
   templateUrl: './template-list.component.html'
 })

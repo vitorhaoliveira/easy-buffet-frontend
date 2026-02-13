@@ -70,7 +70,9 @@ import { formatDateBR } from '@shared/utils/date.utils'
               </div>
               <div>
                 <p class="text-sm font-medium text-gray-600">Horário</p>
-                <p class="text-base font-semibold text-gray-900">{{ formatTime(event.eventTime) }}</p>
+                <p class="text-base font-semibold text-gray-900">
+                  {{ formatTime(event.eventTime) }}{{ event.eventEndTime ? ' - ' + formatTime(event.eventEndTime) : '' }}
+                </p>
               </div>
             </div>
 

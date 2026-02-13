@@ -1,19 +1,12 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
-    <button appButton
-      class="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all min-h-[44px]"
-      routerLink="/cadastros/contratos/novo">
-      <lucide-icon [img]="PlusIcon" class="mr-2 h-4 w-4"></lucide-icon>
-      Novo Evento
-    </button>
-  </div>
-
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col gap-2">
-      <div class="flex-1">
-        <app-search-bar placeholder="Buscar por evento ou cliente..." [(ngModel)]="searchTerm"></app-search-bar>
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <app-fab routerLink="/cadastros/contratos/novo" title="Novo Evento" [inline]="true"></app-fab>
+        <div class="flex-1">
+          <app-search-bar placeholder="Buscar por evento ou cliente..." [(ngModel)]="searchTerm"></app-search-bar>
+        </div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <select [(ngModel)]="filterStatus" (ngModelChange)="onStatusFilterChange()"
@@ -225,9 +218,8 @@
   @if (!isLoading && filteredContracts.length === 0) {
   <app-empty-state [icon]="FileTextIcon"
     [title]="searchTerm ? 'Nenhum evento encontrado' : 'Nenhum evento cadastrado'"
-    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece criando seu primeiro evento.'"
-    [actionLabel]="searchTerm ? '' : 'Novo Evento'" [actionIcon]="PlusIcon"
-    (action)="router.navigate(['/cadastros/contratos/novo'])"></app-empty-state>
+    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece criando seu primeiro evento.'">
+  </app-empty-state>
   }
 
   <!-- Confirmation Modal -->

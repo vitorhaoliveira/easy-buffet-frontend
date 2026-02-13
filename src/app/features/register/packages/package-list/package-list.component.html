@@ -1,16 +1,8 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Header -->
-  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4">
-    <button routerLink="/cadastros/pacotes/novo"
-      class="w-full sm:w-auto min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200 inline-flex items-center justify-center gap-2">
-      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
-      Novo Pacote/Serviço
-    </button>
-  </div>
-
   <!-- Filtros -->
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <app-fab routerLink="/cadastros/pacotes/novo" title="Novo Pacote/Serviço" [inline]="true"></app-fab>
       <div class="flex-1">
         <app-search-bar placeholder="Buscar por nome ou descrição..." [(ngModel)]="searchTerm"></app-search-bar>
       </div>
@@ -136,13 +128,6 @@
   @if (!isLoading && filteredPackages.length === 0) {
   <app-empty-state [title]="searchTerm ? 'Nenhum pacote encontrado' : 'Nenhum pacote cadastrado'"
     [message]="searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece adicionando seu primeiro pacote ou serviço'">
-    @if (!searchTerm) {
-    <button routerLink="/cadastros/pacotes/novo"
-      class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white inline-flex items-center justify-center gap-2 transition-colors">
-      <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
-      Novo Pacote/Serviço
-    </button>
-    }
   </app-empty-state>
   }
 

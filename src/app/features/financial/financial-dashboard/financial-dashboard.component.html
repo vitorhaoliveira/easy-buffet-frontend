@@ -1,4 +1,4 @@
-<div class="space-y-4 sm:space-y-6">
+<div class="space-y-6">
   <!-- Error Message -->
   @if (error) {
   <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
@@ -8,7 +8,7 @@
 
   <!-- Loading State -->
   @if (isLoading) {
-  <div class="space-y-4 sm:space-y-6">
+  <div class="space-y-6">
     <!-- Skeleton Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       @for (i of [1,2,3,4]; track i) {
@@ -35,7 +35,7 @@
   <!-- Dashboard Content -->
   @if (!isLoading && stats) {
   <!-- Statistics Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <!-- Upcoming 7 Days -->
     <div
       class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 transform hover:scale-105 transition-transform duration-200">
