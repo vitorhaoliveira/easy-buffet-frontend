@@ -22,6 +22,7 @@ import {
 } from '@shared/components/ui/table/table.component'
 import { InstallmentService } from '@core/services/installment.service'
 import { ToastService } from '@core/services/toast.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Installment, PaymentMethod, UpdateInstallmentRequest } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -114,7 +115,8 @@ export class InstallmentsListComponent implements OnInit {
   constructor(
     private installmentService: InstallmentService,
     private toastService: ToastService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private pageTitleService: PageTitleService
   ) {
     this.paymentForm = this.fb.group({
       paymentDate: [new Date().toISOString().split('T')[0], [Validators.required]],
@@ -133,6 +135,7 @@ export class InstallmentsListComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Parcelas', 'Gerencie as parcelas dos eventos')
     await this.loadInstallments()
   }
 

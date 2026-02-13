@@ -2,24 +2,12 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye, Calendar, MapPin, ClipboardCheck, Users, ChevronLeft, ChevronRight } from 'lucide-angular'
+import { LucideAngularModule, Plus, Trash2 } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
-import { ButtonComponent } from '@shared/components/ui/button/button.component'
-import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
-import { MobileCardComponent } from '@shared/components/ui/mobile-card/mobile-card.component'
-import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
-import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
-import { 
-  TableComponent, 
-  TableHeaderComponent, 
-  TableBodyComponent, 
-  TableRowComponent, 
-  TableHeadComponent, 
-  TableCellComponent 
-} from '@shared/components/ui/table/table.component'
 import { EventService, GetEventsParams } from '@core/services/event.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import { ClientService } from '@core/services/client.service'
 import { PackageService } from '@core/services/package.service'
 import { UnitService } from '@core/services/unit.service'
@@ -34,32 +22,13 @@ import { formatDateBR } from '@shared/utils/date.utils'
     RouterModule,
     FormsModule,
     LucideAngularModule,
-    ButtonComponent,
-    SearchBarComponent,
-    ConfirmationModalComponent,
-    MobileCardComponent,
-    TableComponent,
-    TableHeaderComponent,
-    TableBodyComponent,
-    TableRowComponent,
-    TableHeadComponent,
-    TableCellComponent,
-    SkeletonComponent,
-    EmptyStateComponent
+    ConfirmationModalComponent
   ],
   templateUrl: './events-list.component.html'
 })
 export class EventsListComponent implements OnInit {
   readonly PlusIcon = Plus
-  readonly EditIcon = Edit
   readonly Trash2Icon = Trash2
-  readonly EyeIcon = Eye
-  readonly CalendarIcon = Calendar
-  readonly MapPinIcon = MapPin
-  readonly ClipboardCheckIcon = ClipboardCheck
-  readonly UsersIcon = Users
-  readonly ChevronLeftIcon = ChevronLeft
-  readonly ChevronRightIcon = ChevronRight
 
   events: Event[] = []
   clients: Client[] = []
@@ -83,10 +52,12 @@ export class EventsListComponent implements OnInit {
     private eventService: EventService,
     private clientService: ClientService,
     private packageService: PackageService,
-    private unitService: UnitService
+    private unitService: UnitService,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Eventos', '')
     await this.loadData()
   }
 
@@ -304,6 +275,29 @@ export class EventsListComponent implements OnInit {
    */
   getUnitColor(event: Event): string {
     return event.unit?.color || '#6c757d'
+  }
+
+  /**
+   * @Function - getCardAccentColor
+   * @description - Returns accent color for event card (thin top bar) by status
+   * @author - Vitor Hugo
+   * @param - event: Event
+   * @returns - string - CSS color
+   */
+  getCardAccentColor(event: Event): string {
+    if (event.unit?.color) return event.unit.color
+    switch (event.status) {
+      case 'Confirmado':
+        return '#22c55e'
+      case 'Pendente':
+        return '#eab308'
+      case 'Concluído':
+        return '#3b82f6'
+      case 'Cancelado':
+        return '#ef4444'
+      default:
+        return '#8b5cf6'
+    }
   }
 }
 

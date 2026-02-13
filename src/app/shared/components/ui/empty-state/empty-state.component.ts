@@ -30,11 +30,13 @@ type Icon = any
         {{ message }}
       </p>
 
-      <!-- Action Button -->
+      <!-- Projected action content (e.g. custom button with routerLink) -->
+      <ng-content></ng-content>
+      <!-- Default action button when actionLabel is set (same style as projected CTA buttons) -->
       <button
         *ngIf="actionLabel"
         appButton
-        class="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white"
+        class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white inline-flex items-center justify-center gap-2 transition-colors"
         (click)="action.emit()"
       >
         <lucide-icon 

@@ -1,12 +1,6 @@
-<div class="space-y-4 sm:space-y-6 p-4 sm:p-6">
+<div class="space-y-4 sm:space-y-6">
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
-    <div>
-      <h1
-        class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
-        Templates de Checklist</h1>
-      <p class="text-sm sm:text-base text-gray-600 mt-1">Gerencie templates reutilizáveis para seus eventos</p>
-    </div>
+  <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-4 sm:mb-6">
     <a routerLink="/cadastros/checklists/templates/novo">
       <app-button
         class="w-full sm:w-auto min-h-[44px] bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200">
@@ -51,12 +45,10 @@
   <!-- Empty State -->
   <div *ngIf="!isLoading && filteredTemplates.length === 0">
     <app-empty-state title="Nenhum template encontrado" message="Crie seu primeiro template de checklist para começar">
-      <a routerLink="/cadastros/checklists/templates/novo">
-        <app-button
-          class="min-h-[44px] bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md transform hover:scale-105 transition-all duration-200">
-          <lucide-icon [img]="PlusIcon" class="w-4 h-4 mr-2"></lucide-icon>
-          Criar Template
-        </app-button>
+      <a routerLink="/cadastros/checklists/templates/novo"
+        class="min-h-[44px] px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white inline-flex items-center justify-center gap-2 transition-colors cursor-pointer">
+        <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
+        Criar Template
       </a>
     </app-empty-state>
   </div>

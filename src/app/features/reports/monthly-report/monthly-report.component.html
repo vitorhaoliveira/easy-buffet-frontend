@@ -1,14 +1,8 @@
-<div class="min-h-screen bg-gray-50 p-4 sm:p-6">
+<div class="min-h-screen">
   <div>
-    <!-- Header -->
+    <!-- Header: export buttons -->
     <div class="mb-6 print:mb-4">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-        <div>
-          <h1
-            class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent print:text-gray-900">
-            Relatório Mensal</h1>
-          <p class="text-gray-600 mt-1">Visão completa das finanças do mês</p>
-        </div>
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-4 mb-4">
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto print:hidden">
           <button (click)="exportToPDF()"
             class="min-h-[44px] px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2">
@@ -326,14 +320,14 @@
           class="bg-white rounded-lg shadow-sm p-6 print:shadow-none print:border print:border-gray-300 print:page-break-before">
           <div class="flex items-center gap-2 mb-4">
             <lucide-icon [img]="FileTextIcon" [size]="24" class="text-emerald-600"></lucide-icon>
-            <h2 class="text-xl font-bold text-gray-900">Contratos</h2>
+            <h2 class="text-xl font-bold text-gray-900">Eventos</h2>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <!-- Closed Contracts Card -->
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 print:border print:border-blue-200">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-blue-800">Contratos Fechados no Mês</span>
+                <span class="text-sm font-medium text-blue-800">Eventos Fechados no Mês</span>
                 <lucide-icon [img]="LockIcon" [size]="20" class="text-blue-600"></lucide-icon>
               </div>
               <p class="text-2xl font-bold text-blue-900">
@@ -344,7 +338,7 @@
             <!-- Open Contracts Card -->
             <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 print:border print:border-gray-200">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-800">Contratos Abertos</span>
+                <span class="text-sm font-medium text-gray-800">Eventos Abertos</span>
                 <lucide-icon [img]="FileTextIcon" [size]="20" class="text-gray-600"></lucide-icon>
               </div>
               <p class="text-2xl font-bold text-gray-900">

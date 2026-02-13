@@ -21,6 +21,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { UserService } from '@core/services/user.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import { UserLimitService } from '@core/services/user-limit.service'
 import { SubscriptionService } from '@core/services/subscription.service'
 import { ToastService } from '@core/services/toast.service'
@@ -76,6 +77,7 @@ export class UserListComponent implements OnInit {
     private userLimitService: UserLimitService,
     private subscriptionService: SubscriptionService,
     private toastService: ToastService,
+    private pageTitleService: PageTitleService,
     public router: Router
   ) {}
 
@@ -86,6 +88,7 @@ export class UserListComponent implements OnInit {
    * @returns - Promise<void>
    */
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Usuários', 'Gerencie os usuários e permissões do sistema')
     await Promise.all([this.loadUsers(), this.loadUserLimit(), this.checkLifetimePlan()])
   }
 

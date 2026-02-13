@@ -20,6 +20,7 @@ import {
   TableCellComponent
 } from '@shared/components/ui/table/table.component'
 import { CostService, GetCostsParams } from '@core/services/cost.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Cost, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -67,10 +68,12 @@ export class CostsListComponent implements OnInit {
   pagination: PaginationInfo | null = null
 
   constructor(
-    private costService: CostService
+    private costService: CostService,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Custos e Despesas', 'Gerencie os custos e despesas dos eventos')
     await this.loadCosts()
   }
 

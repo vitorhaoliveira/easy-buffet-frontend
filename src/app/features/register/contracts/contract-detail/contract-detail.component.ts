@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute, RouterModule } from '@angular/router'
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
@@ -62,7 +62,7 @@ interface ContractWithDetails extends Contract {
   ],
   templateUrl: './contract-detail.component.html'
 })
-export class ContractDetailComponent implements OnInit {
+export class ContractDetailComponent implements OnInit, OnChanges {
   readonly ArrowLeftIcon = ArrowLeft
   readonly EditIcon = Edit
   readonly FileTextIcon = FileText
@@ -79,6 +79,11 @@ export class ContractDetailComponent implements OnInit {
   readonly LockIcon = Lock
   readonly DownloadIcon = Download
   readonly PencilIcon = Pencil
+
+  /** When set from parent (e.g. event payments tab), component loads this contract instead of reading from route */
+  @Input() contractIdInput: string | null = null
+  /** When true, header (back button, title, edit/close) is hidden - used when embedded in event hub */
+  @Input() embeddedInEventHub = false
 
   contract: ContractWithDetails | null = null
   contractId: string | null = null
@@ -178,17 +183,36 @@ export class ContractDetailComponent implements OnInit {
 
   /**
    * @Function - ngOnInit
-   * @description - Lifecycle hook that runs when component initializes, loads contract details
+   * @description - Lifecycle hook that runs when component initializes, loads contract details from route or input
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
   async ngOnInit(): Promise<void> {
-    this.contractId = this.route.snapshot.paramMap.get('id')
-    if (this.contractId) {
+    if (this.contractIdInput) {
+      this.contractId = this.contractIdInput
       await this.loadContractDetails(this.contractId)
     } else {
-      this.error = 'ID do contrato não encontrado'
-      this.isLoading = false
+      this.contractId = this.route.snapshot.paramMap.get('id')
+      if (this.contractId) {
+        await this.loadContractDetails(this.contractId)
+      } else {
+        this.error = 'ID do evento não encontrado'
+        this.isLoading = false
+      }
+    }
+  }
+
+  /**
+   * @Function - ngOnChanges
+   * @description - When contractIdInput is set from parent (e.g. event payments tab), load contract
+   * @author - Vitor Hugo
+   * @param - changes: SimpleChanges
+   * @returns - void
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['contractIdInput'] && this.contractIdInput) {
+      this.contractId = this.contractIdInput
+      this.loadContractDetails(this.contractId)
     }
   }
 
@@ -225,7 +249,7 @@ export class ContractDetailComponent implements OnInit {
         // Load sellers for commission form
         await this.loadSellers()
       } else {
-        this.error = 'Erro ao carregar detalhes do contrato'
+        this.error = 'Erro ao carregar detalhes do evento'
       }
     } catch (err: any) {
       if (err.error?.error?.message) {
@@ -233,7 +257,7 @@ export class ContractDetailComponent implements OnInit {
       } else if (err.error?.message) {
         this.error = err.error.message
       } else {
-        this.error = err.message || 'Erro ao carregar detalhes do contrato'
+        this.error = err.message || 'Erro ao carregar detalhes do evento'
       }
     } finally {
       this.isLoading = false
@@ -242,11 +266,12 @@ export class ContractDetailComponent implements OnInit {
 
   /**
    * @Function - handleBack
-   * @description - Navigates back to contracts list
+   * @description - Navigates back to contracts list (no-op when embedded in event hub)
    * @author - Vitor Hugo
    * @returns - void
    */
   handleBack(): void {
+    if (this.embeddedInEventHub) return
     this.router.navigate(['/cadastros/contratos'])
   }
 
@@ -565,6 +590,26 @@ export class ContractDetailComponent implements OnInit {
   }
 
   /**
+   * @Function - getNextInstallments
+   * @description - Returns pending or overdue installments sorted by due date (for embedded view)
+   * @author - Vitor Hugo
+   * @returns - Installment[] - Up to 5 next installments to pay
+   */
+  getNextInstallments(): Installment[] {
+    if (!this.contract?.installments?.length) return []
+    const pendingOrOverdue = this.contract.installments.filter(
+      i => {
+        const s = i.status.toLowerCase()
+        return s === 'pending' || s === 'pendente' || s === 'overdue' || s === 'atrasado'
+      }
+    )
+    const sorted = [...pendingOrOverdue].sort((a, b) =>
+      (a.dueDate || '').localeCompare(b.dueDate || '')
+    )
+    return sorted.slice(0, 5)
+  }
+
+  /**
    * @Function - loadAdditionalPayments
    * @description - Load additional payments for the contract
    * @author - Vitor Hugo
@@ -825,7 +870,7 @@ export class ContractDetailComponent implements OnInit {
         this.contractItems = response.data
       }
     } catch (err: any) {
-      console.error('Erro ao carregar itens do contrato:', err)
+      console.error('Erro ao carregar itens do evento:', err)
     } finally {
       this.isLoadingItems = false
     }
@@ -921,7 +966,7 @@ export class ContractDetailComponent implements OnInit {
           await this.loadContractDetails(this.contractId)
           this.handleCloseItemModal()
         } else {
-          this.error = response.message || 'Erro ao atualizar item do contrato'
+          this.error = response.message || 'Erro ao atualizar item do evento'
         }
       } else {
         const response = await firstValueFrom(
@@ -952,7 +997,7 @@ export class ContractDetailComponent implements OnInit {
             this.handleCloseItemModal()
           }
         } else {
-          this.error = response.message || 'Erro ao adicionar item ao contrato'
+          this.error = response.message || 'Erro ao adicionar item ao evento'
         }
       }
     } catch (err: any) {
@@ -963,7 +1008,7 @@ export class ContractDetailComponent implements OnInit {
       } else if (err.message) {
         this.error = err.message
       } else {
-        this.error = this.isItemEditMode ? 'Erro ao atualizar item do contrato' : 'Erro ao adicionar item ao contrato'
+        this.error = this.isItemEditMode ? 'Erro ao atualizar item do evento' : 'Erro ao adicionar item ao evento'
       }
     } finally {
       this.isSubmittingItem = false
@@ -1014,10 +1059,10 @@ export class ContractDetailComponent implements OnInit {
         await this.loadContractDetails(this.contractId)
         this.handleCancelDeleteItem()
       } else {
-        this.error = response.message || 'Erro ao excluir item do contrato'
+        this.error = response.message || 'Erro ao excluir item do evento'
       }
     } catch (err: any) {
-      this.error = err.error?.message || err.message || 'Erro ao excluir item do contrato'
+      this.error = err.error?.message || err.message || 'Erro ao excluir item do evento'
     } finally {
       this.isDeletingItem = false
     }
@@ -1091,7 +1136,7 @@ export class ContractDetailComponent implements OnInit {
   async handleCloseContract(): Promise<void> {
     if (!this.contractId) return
 
-    if (!confirm('Tem certeza que deseja fechar este contrato? Esta ação não pode ser desfeita.')) {
+    if (!confirm('Tem certeza que deseja fechar este evento? Esta ação não pode ser desfeita.')) {
       return
     }
 
@@ -1104,7 +1149,7 @@ export class ContractDetailComponent implements OnInit {
       if (response.success) {
         await this.loadContractDetails(this.contractId)
       } else {
-        this.error = response.message || 'Erro ao fechar contrato'
+        this.error = response.message || 'Erro ao fechar evento'
       }
     } catch (err: any) {
       if (err.error?.error?.message) {
@@ -1114,7 +1159,7 @@ export class ContractDetailComponent implements OnInit {
       } else if (err.message) {
         this.error = err.message
       } else {
-        this.error = 'Erro ao fechar contrato'
+        this.error = 'Erro ao fechar evento'
       }
     } finally {
       this.isClosingContract = false

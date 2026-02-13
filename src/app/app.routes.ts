@@ -133,10 +133,60 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       {
+        path: 'cadastros/eventos/visualizar/:eventId',
+        loadComponent: () => import('./features/register/events/event-detail-layout/event-detail-layout.component').then(m => m.EventDetailLayoutComponent),
+        data: { module: 'cadastros', action: 'view' },
+        canActivate: [permissionGuard],
+        children: [
+          { path: '', redirectTo: 'dados', pathMatch: 'full' },
+          {
+            path: 'dados',
+            loadComponent: () => import('./features/register/events/events-form/events-form.component').then(m => m.EventsFormComponent),
+            data: { module: 'cadastros', action: 'edit' },
+            canActivate: [permissionGuard]
+          },
+          {
+            path: 'pagamentos',
+            loadComponent: () => import('./features/register/events/event-payments-tab/event-payments-tab.component').then(m => m.EventPaymentsTabComponent),
+            data: { module: 'cadastros', action: 'view' },
+            canActivate: [permissionGuard]
+          },
+          {
+            path: 'equipe',
+            loadComponent: () => import('./features/register/team-schedules/team-schedule-list/team-schedule-list.component').then(m => m.TeamScheduleListComponent),
+            data: { module: 'cadastros', action: 'view' },
+            canActivate: [permissionGuard]
+          },
+          {
+            path: 'equipe/adicionar',
+            loadComponent: () => import('./features/register/team-schedules/team-schedule-form/team-schedule-form.component').then(m => m.TeamScheduleFormComponent),
+            data: { module: 'cadastros', action: 'create' },
+            canActivate: [permissionGuard]
+          },
+          {
+            path: 'equipe/editar/:scheduleId',
+            loadComponent: () => import('./features/register/team-schedules/team-schedule-form/team-schedule-form.component').then(m => m.TeamScheduleFormComponent),
+            data: { module: 'cadastros', action: 'edit' },
+            canActivate: [permissionGuard]
+          },
+          {
+            path: 'equipe/dia',
+            loadComponent: () => import('./features/register/team-schedules/event-day-view/event-day-view.component').then(m => m.EventDayViewComponent),
+            data: { module: 'cadastros', action: 'view' },
+            canActivate: [permissionGuard]
+          },
+          {
+            path: 'checklist',
+            loadComponent: () => import('./features/checklists/event-checklist-page/event-checklist-page.component').then(m => m.EventChecklistPageComponent),
+            data: { module: 'cadastros', action: 'view' },
+            canActivate: [permissionGuard]
+          }
+        ]
+      },
+      {
         path: 'cadastros/eventos/editar/:id',
-        loadComponent: () => import('./features/register/events/events-form/events-form.component').then(m => m.EventsFormComponent),
-        data: { module: 'cadastros', action: 'edit' },
-        canActivate: [permissionGuard]
+        redirectTo: 'cadastros/eventos/visualizar/:id/dados',
+        pathMatch: 'full'
       },
       
       // Users routes
@@ -272,9 +322,8 @@ export const routes: Routes = [
       },
       {
         path: 'cadastros/eventos/:eventId/checklist',
-        loadComponent: () => import('./features/checklists/event-checklist-page/event-checklist-page.component').then(m => m.EventChecklistPageComponent),
-        data: { module: 'cadastros', action: 'view' },
-        canActivate: [permissionGuard]
+        redirectTo: 'cadastros/eventos/visualizar/:eventId/checklist',
+        pathMatch: 'full'
       },
       
       // Team Members routes
@@ -297,36 +346,32 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
-      // Team Schedules routes
+      // Team Schedules routes (redirect to event hub)
       {
         path: 'cadastros/eventos/:eventId/equipe',
-        loadComponent: () => import('./features/register/team-schedules/team-schedule-list/team-schedule-list.component').then(m => m.TeamScheduleListComponent),
-        data: { module: 'cadastros', action: 'view' },
-        canActivate: [permissionGuard]
+        redirectTo: 'cadastros/eventos/visualizar/:eventId/equipe',
+        pathMatch: 'full'
       },
       {
         path: 'cadastros/eventos/:eventId/equipe/adicionar',
-        loadComponent: () => import('./features/register/team-schedules/team-schedule-form/team-schedule-form.component').then(m => m.TeamScheduleFormComponent),
-        data: { module: 'cadastros', action: 'create' },
-        canActivate: [permissionGuard]
+        redirectTo: 'cadastros/eventos/visualizar/:eventId/equipe/adicionar',
+        pathMatch: 'full'
       },
       {
         path: 'cadastros/eventos/:eventId/equipe/editar/:scheduleId',
-        loadComponent: () => import('./features/register/team-schedules/team-schedule-form/team-schedule-form.component').then(m => m.TeamScheduleFormComponent),
-        data: { module: 'cadastros', action: 'edit' },
-        canActivate: [permissionGuard]
+        redirectTo: 'cadastros/eventos/visualizar/:eventId/equipe/editar/:scheduleId',
+        pathMatch: 'full'
       },
       {
         path: 'cadastros/eventos/:eventId/equipe/dia',
-        loadComponent: () => import('./features/register/team-schedules/event-day-view/event-day-view.component').then(m => m.EventDayViewComponent),
-        data: { module: 'cadastros', action: 'view' },
-        canActivate: [permissionGuard]
+        redirectTo: 'cadastros/eventos/visualizar/:eventId/equipe/dia',
+        pathMatch: 'full'
       },
       
       // Financial routes
       {
         path: 'financeiro',
-        loadComponent: () => import('./features/financial/financial-dashboard/financial-dashboard.component').then(m => m.FinancialDashboardComponent),
+        loadComponent: () => import('./features/financial/financial-page/financial-page.component').then(m => m.FinancialPageComponent),
         data: { module: 'financeiro', action: 'view' },
         canActivate: [permissionGuard]
       },
@@ -355,12 +400,11 @@ export const routes: Routes = [
         canActivate: [permissionGuard]
       },
       
-      // Reports route
+      // Reports (redirect to financial page with report tab)
       {
         path: 'relatorios/mensal',
-        loadComponent: () => import('./features/reports/monthly-report/monthly-report.component').then(m => m.MonthlyReportComponent),
-        data: { module: 'relatorios', action: 'view' },
-        canActivate: [permissionGuard]
+        redirectTo: 'financeiro?tab=relatorio',
+        pathMatch: 'full'
       },
       
       // Account settings route

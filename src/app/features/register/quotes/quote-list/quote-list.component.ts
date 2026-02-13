@@ -21,6 +21,7 @@ import {
 } from '@shared/components/ui/table/table.component'
 import { QuoteService, GetQuotesParams } from '@core/services/quote.service'
 import { ClientService } from '@core/services/client.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import { ExportService } from '@shared/utils/export.service'
 import type { Quote, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
@@ -61,6 +62,7 @@ export class QuoteListComponent implements OnInit {
   private readonly quoteService = inject(QuoteService)
   private readonly clientService = inject(ClientService)
   private readonly exportService = inject(ExportService)
+  private readonly pageTitleService = inject(PageTitleService)
   public readonly router = inject(Router)
 
   quotes: Quote[] = []
@@ -77,6 +79,7 @@ export class QuoteListComponent implements OnInit {
   pagination: PaginationInfo | null = null
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Orçamentos e Propostas', 'Gerencie orçamentos personalizados para seus clientes')
     await this.loadData()
   }
 

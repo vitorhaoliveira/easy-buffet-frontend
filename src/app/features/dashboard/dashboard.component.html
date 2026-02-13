@@ -1,14 +1,4 @@
-<div class="space-y-6 sm:space-y-8 p-4 sm:p-6">
-  <!-- Header -->
-  <div>
-    <h1
-      class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
-      Dashboard</h1>
-    <p class="text-sm sm:text-lg text-gray-600 mt-1">
-      Visão geral do seu negócio de buffet
-    </p>
-  </div>
-
+<div class="space-y-6 sm:space-y-8">
   @if (isLoading) {
   <div class="space-y-6 sm:space-y-8">
     <!-- Skeleton for metrics cards -->
@@ -116,7 +106,8 @@
     </div>
   </div>
 
-  <!-- Calendar Section -->
+  <!-- Calendar Section (hidden for now; set showCalendar = true to show) -->
+  @if (showCalendar) {
   <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-2">
@@ -226,6 +217,68 @@
     </div>
     }
   </div>
+  }
+
+  <!-- Eventos recentes -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+      <h2 class="text-lg sm:text-xl font-bold text-gray-900">Eventos recentes</h2>
+      <div class="flex items-center gap-2">
+        <a routerLink="/cadastros/eventos/novo"
+          class="min-h-[44px] px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-sm inline-flex items-center justify-center gap-2 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Adicionar
+        </a>
+        <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+          <button type="button" (click)="scrollRecentEvents('left')"
+            class="min-h-[44px] min-w-[44px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 border-r border-gray-200 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button type="button" (click)="scrollRecentEvents('right')"
+            class="min-h-[44px] min-w-[44px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div #recentEventsScroll
+      class="flex gap-4 overflow-x-auto overflow-y-hidden pb-2 -mx-1 px-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:thin]">
+      <!-- Ver eventos card -->
+      <a routerLink="/cadastros/eventos"
+        class="flex-shrink-0 w-[200px] sm:w-[220px] min-h-[140px] rounded-xl border-2 border-gray-200 bg-white hover:border-primary-300 hover:bg-gray-50 flex flex-col items-center justify-center gap-2 transition-all snap-start">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="text-sm font-medium text-gray-600">Ver eventos</span>
+      </a>
+
+      @for (event of recentEvents; track event.id) {
+      <a [routerLink]="['/cadastros/eventos/visualizar', event.id, 'dados']"
+        class="flex-shrink-0 w-[200px] sm:w-[220px] min-h-[140px] rounded-xl flex flex-col justify-between p-4 transition-transform hover:scale-[1.02] snap-start"
+        [style]="getRecentEventCardStyle(event, $index)">
+        <div class="rounded-lg bg-black/20 px-2 py-1 inline-flex items-center gap-1 w-fit text-xs font-medium text-white">
+          <span>{{ getEventTypeEmoji(event) }}</span>
+          <span class="truncate max-w-[120px]">{{ getEventTypeLabel(event) }}</span>
+        </div>
+        <div>
+          <h3 class="font-semibold text-white text-base leading-tight line-clamp-2">{{ event.name }}</h3>
+          <p class="text-white/80 text-sm mt-1">Ocorrerá em {{ formatDate(event.eventDate) }}</p>
+        </div>
+      </a>
+      }
+    </div>
+
+    @if (!isLoading && recentEvents.length === 0) {
+    <p class="text-sm text-gray-500 mt-2">Nenhum evento próximo. Adicione um evento ou veja a lista completa.</p>
+    }
+  </div>
 
   <!-- Checklists dos Próximos Eventos -->
   <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
@@ -248,7 +301,6 @@
       <div
         class="border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-primary-200">
         <div class="flex flex-col gap-4">
-          <!-- Header -->
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex-1 w-full sm:w-auto">
               <h3 class="font-semibold text-gray-900 text-base sm:text-lg">
@@ -279,7 +331,6 @@
             </span>
           </div>
 
-          <!-- Progress Bar -->
           <div class="space-y-2">
             <div class="flex items-center justify-between text-xs sm:text-sm">
               <span class="text-gray-600">Progresso</span>
@@ -294,7 +345,6 @@
             </div>
           </div>
 
-          <!-- Indicators -->
           <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
             @if (getPendingItemsCount(checklist) > 0) {
             <div class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-yellow-50 text-yellow-700">
@@ -325,7 +375,6 @@
             }
           </div>
 
-          <!-- Action Button -->
           <button (click)="navigateToChecklist(checklist.eventId)"
             class="mt-2 w-full sm:w-auto sm:self-end min-h-[44px] px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 touch-manipulation flex items-center justify-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,156 +394,11 @@
     }
   </div>
 
-  <!-- Installments and Events Section -->
-  <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
-    <!-- Próximas Parcelas -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 w-full">
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h2 class="text-lg sm:text-xl font-bold text-gray-900">Próximas Parcelas</h2>
-        </div>
-        <select [(ngModel)]="installmentsLimit" (change)="onInstallmentsLimitChange($event)"
-          class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[44px] touch-manipulation">
-          <option [value]="5">5</option>
-          <option [value]="10">10</option>
-          <option [value]="15">15</option>
-          <option [value]="20">20</option>
-        </select>
-      </div>
-
-      @if (upcomingInstallments.length > 0) {
-      <!-- Mobile scroll hint -->
-      <div class="sm:hidden text-xs text-gray-500 mb-2 flex items-center gap-1">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-        </svg>
-        <span>Deslize para ver mais</span>
-      </div>
-      <div class="overflow-x-auto -mx-4 sm:mx-0">
-        <table class="w-full min-w-[640px]">
-          <thead class="border-b border-gray-200">
-            <tr class="text-left">
-              <th class="pb-3 text-sm font-semibold text-gray-700">Cliente</th>
-              <th class="pb-3 text-sm font-semibold text-gray-700">Evento</th>
-              <th class="pb-3 text-sm font-semibold text-gray-700">Valor</th>
-              <th class="pb-3 text-sm font-semibold text-gray-700">Vencimento</th>
-              <th class="pb-3 text-sm font-semibold text-gray-700">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            @for (installment of upcomingInstallments; track installment.id) {
-            <tr class="hover:bg-gray-50">
-              <td class="py-4 text-sm text-gray-900">
-                {{ installment.clientName || 'N/A' }}
-              </td>
-              <td class="py-4 text-sm text-gray-900">
-                {{ installment.eventName || 'N/A' }}
-              </td>
-              <td class="py-4 text-sm font-semibold text-gray-900">
-                {{ formatCurrency(installment.amount) }}
-              </td>
-              <td class="py-4 text-sm text-gray-600">
-                {{ formatDate(installment.dueDate) }}
-                <div class="text-xs text-gray-500 mt-1">
-                  Em {{ getDaysUntil(installment.dueDate, installment.daysUntilDue) }} dias
-                </div>
-              </td>
-              <td class="py-4">
-                <span
-                  [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getStatusColor(translateStatus(installment.status))">
-                  {{ translateStatus(installment.status) }}
-                </span>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      } @else {
-      <app-empty-state title="Nenhuma parcela próxima" message="As parcelas com vencimento próximo aparecerão aqui">
-      </app-empty-state>
-      }
-    </div>
-
-    <!-- Eventos Próximos -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
-      <div class="flex items-center gap-2 mb-6">
-        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <h2 class="text-lg sm:text-xl font-bold text-gray-900">Eventos Próximos</h2>
-      </div>
-
-      @if (upcomingEvents.length > 0) {
-      <div class="space-y-4">
-        @for (event of upcomingEvents; track event.id) {
-        <div
-          class="border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-primary-200">
-          <div class="flex flex-col sm:flex-row items-start justify-between gap-3">
-            <div class="flex-1 w-full sm:w-auto">
-              <h3 class="font-semibold text-gray-900 text-base sm:text-lg">{{ event.eventName }}</h3>
-              <p class="text-xs sm:text-sm text-gray-600 mt-1">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Cliente: {{ event.clientName }}
-              </p>
-              <div class="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-gray-600">
-                <div class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>{{ formatDate(event.eventDate) }}</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Em {{ getDaysUntilEvent(event) }} dias</span>
-                </div>
-              </div>
-            </div>
-            <div class="flex sm:flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
-              <span
-                [class]="'px-3 py-1 rounded-full text-xs font-medium flex-1 sm:flex-none text-center ' + getStatusColor(event.status)">
-                {{ event.status }}
-              </span>
-              <a [routerLink]="['/cadastros/eventos']"
-                class="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105 touch-manipulation">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
-        }
-      </div>
-      } @else {
-      <app-empty-state title="Nenhum evento próximo"
-        message="Os eventos agendados para os próximos dias aparecerão aqui">
-      </app-empty-state>
-      }
-    </div>
-  </div>
-
   <!-- Quick Actions -->
   <div>
     <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Ações Rápidas</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      <!-- Novo Contrato -->
+      <!-- Novo Evento -->
       <a routerLink="/cadastros/contratos/novo"
         class="bg-white border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-primary-300 transition-all duration-300 hover:scale-105 cursor-pointer group min-h-[88px] touch-manipulation">
         <div class="flex items-start gap-3 sm:gap-4">
@@ -506,8 +410,8 @@
             </svg>
           </div>
           <div class="min-w-0 flex-1">
-            <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Novo Contrato</h3>
-            <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Criar contrato</p>
+            <h3 class="font-semibold text-gray-900 text-sm sm:text-base">Novo Evento</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Criar evento</p>
           </div>
         </div>
       </a>
@@ -549,7 +453,7 @@
       </a>
 
       <!-- Ver Relatórios -->
-      <a routerLink="/relatorios/mensal"
+      <a routerLink="/financeiro" [queryParams]="{ tab: 'relatorio' }"
         class="bg-white border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg hover:border-orange-300 transition-all duration-300 hover:scale-105 cursor-pointer group min-h-[88px] touch-manipulation">
         <div class="flex items-start gap-3 sm:gap-4">
           <div

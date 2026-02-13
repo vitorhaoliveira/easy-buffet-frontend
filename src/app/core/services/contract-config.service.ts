@@ -45,8 +45,8 @@ export class ContractConfigService {
     return [
       {
         id: 'clause-1',
-        title: 'Objeto do Contrato',
-        content: 'O presente contrato tem como objeto a prestação de serviços de buffet para o evento especificado, incluindo todos os itens descritos na proposta aceita pelo CONTRATANTE.',
+        title: 'Objeto do Evento',
+        content: 'O presente evento tem como objeto a prestação de serviços de buffet para o evento especificado, incluindo todos os itens descritos na proposta aceita pelo CONTRATANTE.',
         order: 1,
         isRequired: true,
         isActive: true
@@ -78,7 +78,7 @@ export class ContractConfigService {
       {
         id: 'clause-5',
         title: 'Penalidades',
-        content: 'O descumprimento das obrigações contratuais por qualquer das partes implicará em multa de 20% sobre o valor total do contrato, sem prejuízo de reparação por perdas e danos.',
+        content: 'O descumprimento das obrigações contratuais por qualquer das partes implicará em multa de 20% sobre o valor total do evento, sem prejuízo de reparação por perdas e danos.',
         order: 5,
         isRequired: false,
         isActive: true

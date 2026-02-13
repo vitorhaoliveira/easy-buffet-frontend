@@ -72,7 +72,7 @@ export class ContractSettingsComponent implements OnInit {
       }
     } catch (error) {
       console.error('Erro ao carregar configuração:', error)
-      this.toastService.error('Erro ao carregar configuração do contrato')
+      this.toastService.error('Erro ao carregar configuração do evento')
     } finally {
       this.isLoading = false
     }

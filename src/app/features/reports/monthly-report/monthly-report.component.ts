@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs'
 
 import { ReportService } from '@core/services/report.service'
 import { ExportService } from '@shared/utils/export.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import type { MonthlyReport } from '@shared/models/api.types'
 
@@ -65,7 +66,8 @@ export class MonthlyReportComponent implements OnInit {
 
   constructor(
     private readonly reportService: ReportService,
-    private readonly exportService: ExportService
+    private readonly exportService: ExportService,
+    private readonly pageTitleService: PageTitleService
   ) {
     this.selectedMonth = this.currentDate.getMonth() + 1
     this.selectedYear = this.currentDate.getFullYear()
@@ -79,6 +81,7 @@ export class MonthlyReportComponent implements OnInit {
    * @returns - Promise<void>
    */
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Relatório do mês', 'Visão completa das finanças do mês')
     await this.loadReport()
   }
 
@@ -201,11 +204,11 @@ export class MonthlyReportComponent implements OnInit {
     // Table 4: Contracts Summary (if available)
     if (contracts) {
       const contractsSummaryTable = {
-        title: 'Resumo de Contratos',
+        title: 'Resumo de Eventos',
         headers: ['Indicador', 'Quantidade'],
         rows: [
-          ['Contratos Fechados no Mês', contracts.closedInMonth.toString()],
-          ['Contratos Abertos', contracts.open.toString()]
+          ['Eventos Fechados no Mês', contracts.closedInMonth.toString()],
+          ['Eventos Abertos', contracts.open.toString()]
         ]
       }
       tables.push(contractsSummaryTable)
@@ -306,8 +309,8 @@ export class MonthlyReportComponent implements OnInit {
 
     if (contracts) {
       eventsData.push(['RESUMO DE CONTRATOS'])
-      eventsData.push(['Contratos Fechados no Mês', contracts.closedInMonth.toString()])
-      eventsData.push(['Contratos Abertos', contracts.open.toString()])
+      eventsData.push(['Eventos Fechados no Mês', contracts.closedInMonth.toString()])
+      eventsData.push(['Eventos Abertos', contracts.open.toString()])
       eventsData.push([''])
 
       if (contracts.withEventsInMonth && contracts.withEventsInMonth.length > 0) {

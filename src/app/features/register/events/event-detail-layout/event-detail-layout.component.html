@@ -1,0 +1,100 @@
+<div class="space-y-4 sm:space-y-6">
+  <!-- Top bar: Event selector -->
+  <div class="flex flex-wrap items-center gap-3">
+    @if (!isLoading && event && !error) {
+    <div class="relative">
+      <button type="button" (click)="toggleEventDropdown()"
+        class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-left font-medium text-gray-900 transition-colors min-w-[200px] sm:min-w-[280px]">
+        <span class="truncate flex-1">{{ event.name }}</span>
+        <lucide-icon [img]="ChevronDownIcon" class="h-4 w-4 flex-shrink-0 transition-transform" [class.rotate-180]="showEventDropdown"></lucide-icon>
+      </button>
+      @if (showEventDropdown) {
+      <div class="fixed inset-0 z-40" (click)="closeEventDropdown()"></div>
+      <div class="absolute left-0 top-full mt-1 z-50 min-w-[200px] sm:min-w-[280px] max-h-72 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+        @if (isLoadingEvents) {
+        <div class="px-4 py-6 text-center text-sm text-muted-foreground">Carregando eventos...</div>
+        } @else if (eventsForDropdown.length === 0) {
+        <div class="px-4 py-6 text-center text-sm text-muted-foreground">Nenhum evento encontrado</div>
+        } @else {
+        @for (ev of eventsForDropdown; track ev.id) {
+        <button type="button" (click)="selectEvent(ev)"
+          [class]="'w-full text-left px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors ' + (ev.id === eventId ? 'bg-primary-50 text-primary-800 font-medium' : 'text-gray-700 hover:bg-gray-50')">
+          <span class="truncate">{{ ev.name }}</span>
+          @if (ev.eventDate) {
+          <span class="text-xs text-muted-foreground flex-shrink-0">{{ formatDate(ev.eventDate) }}</span>
+          }
+        </button>
+        }
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+  <div class="flex items-center justify-center h-48">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+      <p class="mt-2 text-muted-foreground">Carregando evento...</p>
+    </div>
+  </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading && error) {
+  <div class="bg-red-50 border border-red-200 rounded-md p-4">
+    <p class="text-red-600">{{ error }}</p>
+  </div>
+  }
+
+  @if (!isLoading && event && !error) {
+  <!-- Header: single line, no heavy card -->
+  <div class="pb-4 border-b border-gray-200">
+    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">{{ event.name }}</h1>
+    <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+      @if (event.client) {
+      <span class="flex items-center gap-1">
+        <lucide-icon [img]="UserIcon" class="h-4 w-4"></lucide-icon>
+        {{ event.client.name }}
+      </span>
+      }
+      <span class="flex items-center gap-1">
+        <lucide-icon [img]="CalendarIcon" class="h-4 w-4"></lucide-icon>
+        {{ formatDate(event.eventDate) }}
+      </span>
+      <span
+        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+        [ngClass]="getStatusColor(event.status)">
+        {{ event.status }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Tabs: text only, line under selected (link border overlaps nav border so active line shows) -->
+  <nav class="flex border-b border-gray-200 overflow-x-auto">
+    <a routerLink="dados" routerLinkActive="!border-primary-500 !text-primary-600" [routerLinkActiveOptions]="{ exact: true }"
+      class="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap transition-colors -mb-px">
+      Dados
+    </a>
+    <a routerLink="pagamentos" routerLinkActive="!border-primary-500 !text-primary-600" [routerLinkActiveOptions]="{ exact: true }"
+      class="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap transition-colors -mb-px">
+      Pagamentos
+    </a>
+    <a routerLink="equipe" routerLinkActive="!border-primary-500 !text-primary-600" [routerLinkActiveOptions]="{ exact: true }"
+      class="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap transition-colors -mb-px">
+      Equipe
+    </a>
+    <a routerLink="checklist" routerLinkActive="!border-primary-500 !text-primary-600" [routerLinkActiveOptions]="{ exact: true }"
+      class="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap transition-colors -mb-px">
+      Checklist
+    </a>
+  </nav>
+
+  <!-- Tab content: no extra border box -->
+  <div class="pt-4 sm:pt-6 min-h-[200px]">
+    <router-outlet></router-outlet>
+  </div>
+  }
+</div>

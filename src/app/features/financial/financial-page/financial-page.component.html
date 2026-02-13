@@ -1,0 +1,37 @@
+<div class="space-y-4 sm:space-y-6">
+  <!-- Tabs -->
+  <div class="border-b border-gray-200">
+    <nav class="flex gap-1 min-h-[44px] sm:min-h-0" aria-label="Abas financeiro">
+      <button
+        type="button"
+        (click)="setActiveTab('overview')"
+        [attr.aria-selected]="activeTab === 'overview'"
+        [class]="activeTab === 'overview'
+          ? 'border-b-2 border-primary-500 text-primary-600 font-medium'
+          : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+        class="px-4 py-3 text-sm sm:text-base transition-colors">
+        Visão geral
+      </button>
+      @if (canViewReport) {
+        <button
+          type="button"
+          (click)="setActiveTab('report')"
+          [attr.aria-selected]="activeTab === 'report'"
+          [class]="activeTab === 'report'
+            ? 'border-b-2 border-primary-500 text-primary-600 font-medium'
+            : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="px-4 py-3 text-sm sm:text-base transition-colors">
+          Relatório do mês
+        </button>
+      }
+    </nav>
+  </div>
+
+  <!-- Tab content -->
+  @if (activeTab === 'overview') {
+    <app-financial-dashboard />
+  }
+  @if (activeTab === 'report' && canViewReport) {
+    <app-monthly-report />
+  }
+</div>

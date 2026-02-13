@@ -9,7 +9,7 @@ import { AuthStateService } from '@/app/core/services/auth-state.service'
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 sm:p-6">
+    <div class="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6">
       <div class="max-w-md w-full bg-white rounded-xl shadow-xl p-6 sm:p-8 text-center">
         <div class="mb-6">
           <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">

@@ -1,5 +1,6 @@
-<div class="space-y-6 p-4 sm:p-6">
-  <!-- Header -->
+<div class="space-y-6">
+  @if (!isInsideEventHub) {
+  <!-- Header (hidden when inside event hub - Dados tab) -->
   <div class="flex items-center space-x-4">
     <button appButton variant="ghost" size="sm" (click)="handleCancel()">
       <lucide-icon [img]="ArrowLeftIcon" class="h-4 w-4 mr-2"></lucide-icon>
@@ -14,6 +15,7 @@
       </p>
     </div>
   </div>
+  }
 
   <!-- Loading State -->
   @if (isLoadingData) {

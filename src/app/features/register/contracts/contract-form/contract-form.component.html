@@ -7,13 +7,19 @@
     </button>
     <div>
       <h1 class="text-3xl font-bold tracking-tight">
-        {{ isEditing ? 'Editar Contrato' : 'Novo Contrato' }}
+        @if (isFromEventContext && !isEditing) {
+          Definir pagamentos
+        } @else {
+          {{ isEditing ? 'Editar contrato' : 'Novo contrato' }}
+        }
       </h1>
       <p class="text-muted-foreground">
-        @if (quoteIdFromConversion) {
-          Contrato a partir do orçamento aceito. Valor e dados do evento/cliente já preenchidos. Informe as condições de pagamento.
+        @if (isFromEventContext && !isEditing) {
+          Preencha as condições de pagamento.
+        } @else if (quoteIdFromConversion) {
+          Evento a partir do orçamento aceito. Valor e dados do evento/cliente já preenchidos. Informe as condições de pagamento.
         } @else {
-          {{ isEditing ? 'Atualize as informações do contrato' : 'Preencha os dados do novo contrato' }}
+          {{ isEditing ? 'Atualize as informações do contrato' : 'Preencha os dados do contrato' }}
         }
       </p>
     </div>
@@ -33,10 +39,11 @@
       <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
         <h3 class="text-lg font-semibold flex items-center space-x-2">
           <lucide-icon [img]="FileTextIcon" class="h-5 w-5"></lucide-icon>
-          <span>Dados do Contrato</span>
+          <span>{{ isFromEventContext ? 'Condições de pagamento' : 'Dados do Evento' }}</span>
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          @if (!isFromEventContext) {
           <!-- Evento (pesquisa + paginação com Carregar mais) -->
           <div class="space-y-2 relative">
             <label appLabel>Evento *</label>
@@ -110,6 +117,7 @@
             <p class="text-sm text-red-500">{{ getFieldError('clientId') }}</p>
             }
           </div>
+          }
 
           <!-- Vendedor -->
           <div class="space-y-2">
@@ -147,9 +155,9 @@
 
           <!-- Número de Parcelas -->
           <div class="space-y-2">
-            <label appLabel htmlFor="installmentCount">Número de Parcelas *</label>
-            <input type="number" min="1" id="installmentCount" formControlName="installmentCount" placeholder="1"
-              [attr.min]="isEditing && paidInstallmentsCount > 0 ? paidInstallmentsCount : 1"
+            <label appLabel htmlFor="installmentCount">Número de Parcelas {{ isEditing ? '*' : '(opcional)' }}</label>
+            <input type="number" min="0" id="installmentCount" formControlName="installmentCount" [placeholder]="isEditing ? '1' : '1 (padrão)'"
+              [attr.min]="isEditing && paidInstallmentsCount > 0 ? paidInstallmentsCount : 0"
               [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('installmentCount') ? 'border-red-500' : '')" />
             @if (isEditing && paidInstallmentsCount > 0) {
             <p class="text-xs text-muted-foreground">Mínimo: {{ paidInstallmentsCount }} parcela(s) (já pagas)</p>
@@ -161,7 +169,7 @@
 
           <!-- Data da Primeira Parcela -->
           <div class="space-y-2">
-            <label appLabel htmlFor="firstDueDate">Data da Primeira Parcela *</label>
+            <label appLabel htmlFor="firstDueDate">Data da Primeira Parcela {{ isEditing ? '*' : '(opcional)' }}</label>
             <input type="date" id="firstDueDate" formControlName="firstDueDate"
               [class]="'flex min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ' + (hasError('firstDueDate') ? 'border-red-500' : '')" />
             @if (hasError('firstDueDate')) {
@@ -171,7 +179,7 @@
 
           <!-- Periodicidade -->
           <div class="space-y-2">
-            <label appLabel htmlFor="periodicity">Periodicidade *</label>
+            <label appLabel htmlFor="periodicity">Periodicidade {{ isEditing ? '*' : '(opcional)' }}</label>
             <select id="periodicity" formControlName="periodicity"
               class="flex min-h-[44px] w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50">
               <option value="Semanal">Semanal</option>
@@ -187,11 +195,12 @@
           <!-- Observações -->
           <div class="space-y-2 md:col-span-2">
             <label appLabel htmlFor="notes">Observações</label>
-            <textarea id="notes" formControlName="notes" placeholder="Observações adicionais sobre o contrato..."
+            <textarea id="notes" formControlName="notes" placeholder="Observações adicionais sobre o evento..."
               class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
               rows="3"></textarea>
           </div>
 
+          @if (!isFromEventContext || isEditing) {
           <!-- Status -->
           <div class="space-y-2">
             <label appLabel htmlFor="status">Status *</label>
@@ -214,6 +223,7 @@
             }
           </div>
           }
+          }
         </div>
       </div>
 
@@ -231,11 +241,11 @@
     </form>
     }
 
-    <!-- Resumo do Contrato -->
+    <!-- Resumo -->
     <div class="space-y-4">
       <h3 class="text-lg font-semibold flex items-center space-x-2">
         <lucide-icon [img]="FileTextIcon" class="h-5 w-5"></lucide-icon>
-        <span>Resumo do Contrato</span>
+        <span>{{ isFromEventContext ? 'Resumo do pagamento' : 'Resumo do Evento' }}</span>
       </h3>
 
       <div class="bg-blue-50 p-4 rounded-lg space-y-3">
@@ -274,7 +284,7 @@
         </p>
         <p class="text-sm text-green-700">
           O sistema criará automaticamente todas as parcelas baseadas na periodicidade escolhida.
-          Você poderá gerenciar as parcelas na seção Financeiro após a criação do contrato.
+          Você poderá gerenciar as parcelas na seção Financeiro {{ isFromEventContext ? 'ou na aba Pagamentos do evento' : 'após a criação do contrato' }}.
         </p>
       </div>
     </div>

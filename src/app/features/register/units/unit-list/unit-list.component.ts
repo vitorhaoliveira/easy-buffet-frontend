@@ -20,6 +20,7 @@ import {
   TableCellComponent 
 } from '@shared/components/ui/table/table.component'
 import { UnitService } from '@core/services/unit.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import type { Unit } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
@@ -64,10 +65,12 @@ export class UnitListComponent implements OnInit {
 
   constructor(
     private unitService: UnitService,
-    private router: Router
+    private router: Router,
+    private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.pageTitleService.setTitle('Unidades', 'Gerencie as unidades da sua organização')
     await this.loadUnits()
   }
 

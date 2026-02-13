@@ -9,7 +9,7 @@ import { AuthStateService } from '@/app/core/services/auth-state.service'
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+    <div class="flex flex-col items-center justify-center min-h-screen p-4">
       <div class="max-w-md w-full bg-white rounded-xl shadow-xl p-6 sm:p-8">
         <!-- Botão Voltar -->
         <button

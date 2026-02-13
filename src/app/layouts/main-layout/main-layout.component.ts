@@ -2,12 +2,13 @@ import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } fro
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'
 import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, Home, ClipboardList, DollarSign, HelpCircle, MessageCircle, LogOut, Building2, ChevronDown, ChevronUp, Plus, X, Menu, Search, User as LucideUserIcon } from 'lucide-angular'
+import { LucideAngularModule, Home, ClipboardList, DollarSign, HelpCircle, MessageCircle, LogOut, Building2, ChevronDown, ChevronUp, Plus, X, Menu, Search, User as LucideUserIcon, Calendar, Users, Package, FileText, LayoutTemplate, UsersRound, Wallet, CreditCard, Receipt, BarChart3, MapPin, UserCog, Briefcase } from 'lucide-angular'
 import { Subject, takeUntil, firstValueFrom } from 'rxjs'
 import { AuthStateService } from '@core/services/auth-state.service'
 import { AuthService } from '@core/services/auth.service'
 import { OrganizationService } from '@core/services/organization.service'
 import { StorageService } from '@core/services/storage.service'
+import { PageTitleService } from '@core/services/page-title.service'
 import { phoneValidator } from '@shared/validators'
 import type { User } from '@shared/models/api.types'
 import { ToastComponent } from '@shared/components/ui/toast/toast.component'
@@ -23,9 +24,10 @@ interface MenuItem {
 }
 
 interface SubMenuItem {
-  title: string;
-  url: string;
-  disabled?: boolean;
+  title: string
+  url: string
+  disabled?: boolean
+  icon?: string
 }
 
 export interface SearchableItem {
@@ -70,6 +72,19 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   readonly XIcon = X
   readonly MenuIcon = Menu
   readonly ChevronUpIcon = ChevronUp
+  readonly CalendarIcon = Calendar
+  readonly UsersIcon = Users
+  readonly PackageIcon = Package
+  readonly FileTextIcon = FileText
+  readonly LayoutTemplateIcon = LayoutTemplate
+  readonly UsersRoundIcon = UsersRound
+  readonly WalletIcon = Wallet
+  readonly CreditCardIcon = CreditCard
+  readonly ReceiptIcon = Receipt
+  readonly BarChart3Icon = BarChart3
+  readonly MapPinIcon = MapPin
+  readonly UserCogIcon = UserCog
+  readonly BriefcaseIcon = Briefcase
 
   // State
   sidebarCollapsed = false
@@ -102,38 +117,45 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     private organizationService: OrganizationService,
     private storageService: StorageService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    public pageTitleService: PageTitleService
   ) {
     this.initializeCreateOrgForm()
   }
 
+  /** Section label shown in sidebar (uppercase). */
   menuItems: MenuItem[] = [
     {
-      title: 'Cadastros',
+      title: 'EVENTOS',
       icon: 'clipboard-list',
-      expanded: false,
+      expanded: true,
       items: [
-        { title: 'Clientes', url: '/cadastros/clientes' },
-        { title: 'Pacotes/Serviços', url: '/cadastros/pacotes' },
-        { title: 'Eventos/Reservas', url: '/cadastros/eventos' },
-        { title: 'Orçamentos', url: '/cadastros/orcamentos' },
-        { title: 'Unidades', url: '/cadastros/unidades' },
-        { title: 'Usuários', url: '/cadastros/usuarios' },
-        { title: 'Vendedor(a)s', url: '/cadastros/vendedoras' },
-        { title: 'Contratos', url: '/cadastros/contratos' },
-        { title: 'Checklists', url: '/cadastros/checklists/templates' },
-        { title: 'Equipe', url: '/cadastros/equipe' }
+        { title: 'Eventos', url: '/cadastros/eventos', icon: 'calendar' },
+        { title: 'Modelos', url: '/cadastros/checklists/templates', icon: 'layout-template' }
       ]
     },
     {
-      title: 'Financeiro',
-      icon: 'dollar-sign',
-      expanded: false,
+      title: 'CADASTROS',
+      icon: 'clipboard-list',
+      expanded: true,
       items: [
-        { title: 'Dashboard', url: '/financeiro' },
-        { title: 'Parcelas', url: '/financeiro/parcelas' },
-        { title: 'Custos e Despesas', url: '/financeiro/custos' },
-        { title: 'Relatório Mensal', url: '/relatorios/mensal' }
+        { title: 'Clientes', url: '/cadastros/clientes', icon: 'users' },
+        { title: 'Pacotes/Serviços', url: '/cadastros/pacotes', icon: 'package' },
+        { title: 'Orçamentos', url: '/cadastros/orcamentos', icon: 'file-text' },
+        { title: 'Unidades', url: '/cadastros/unidades', icon: 'map-pin' },
+        { title: 'Usuários', url: '/cadastros/usuarios', icon: 'user-cog' },
+        { title: 'Vendedor(a)s', url: '/cadastros/vendedoras', icon: 'briefcase' },
+        { title: 'Equipe', url: '/cadastros/equipe', icon: 'users-round' }
+      ]
+    },
+    {
+      title: 'FINANCEIRO',
+      icon: 'dollar-sign',
+      expanded: true,
+      items: [
+        { title: 'Carteira', url: '/financeiro', icon: 'wallet' },
+        { title: 'Pagamentos', url: '/financeiro/parcelas', icon: 'credit-card' },
+        { title: 'Custos e Despesas', url: '/financeiro/custos', icon: 'receipt' }
       ]
     }
   ]
@@ -310,6 +332,25 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       'dollar-sign': this.DollarSignIcon
     }
     return iconMap[iconName] || this.ClipboardListIcon
+  }
+
+  getSubIconComponent(iconName: string): any {
+    const iconMap: { [key: string]: any } = {
+      calendar: this.CalendarIcon,
+      users: this.UsersIcon,
+      package: this.PackageIcon,
+      'file-text': this.FileTextIcon,
+      'layout-template': this.LayoutTemplateIcon,
+      'users-round': this.UsersRoundIcon,
+      wallet: this.WalletIcon,
+      'credit-card': this.CreditCardIcon,
+      receipt: this.ReceiptIcon,
+      'bar-chart': this.BarChart3Icon,
+      'map-pin': this.MapPinIcon,
+      'user-cog': this.UserCogIcon,
+      briefcase: this.BriefcaseIcon
+    }
+    return iconMap[iconName] || this.FileTextIcon
   }
 
   /**

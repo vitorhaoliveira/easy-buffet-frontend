@@ -66,7 +66,7 @@ export class InstallmentFormComponent implements OnInit {
         this.contracts = response.data as Contract[]
       }
     } catch (error: any) {
-      this.errorMessage = error.message || 'Erro ao carregar contratos'
+      this.errorMessage = error.message || 'Erro ao carregar eventos'
     } finally {
       this.isLoadingData = false
     }
@@ -135,7 +135,7 @@ export class InstallmentFormComponent implements OnInit {
     const field = this.installmentForm.get(fieldName)
     if (field?.hasError('required') && field.touched) {
       const fieldLabels: Record<string, string> = {
-        contractId: 'Contrato',
+        contractId: 'Evento',
         amount: 'Valor',
         dueDate: 'Data de vencimento'
       }
