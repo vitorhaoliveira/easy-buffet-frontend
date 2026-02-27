@@ -106,7 +106,68 @@
     </div>
   </div>
 
-  <!-- Calendar Section (hidden for now; set showCalendar = true to show) -->
+  <!-- Eventos recentes -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+      <h2 class="text-lg sm:text-xl font-bold text-gray-900">Eventos recentes</h2>
+      <div class="flex items-center gap-2">
+        <a routerLink="/cadastros/eventos/novo"
+          class="min-h-[44px] px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-sm inline-flex items-center justify-center gap-2 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Adicionar
+        </a>
+        <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+          <button type="button" (click)="scrollRecentEvents('left')"
+            class="min-h-[44px] min-w-[44px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 border-r border-gray-200 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button type="button" (click)="scrollRecentEvents('right')"
+            class="min-h-[44px] min-w-[44px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div #recentEventsScroll
+      class="flex gap-4 overflow-x-auto overflow-y-hidden pb-2 -mx-1 px-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:thin]">
+      <!-- Ver eventos card -->
+      <a routerLink="/cadastros/eventos"
+        class="flex-shrink-0 w-[200px] sm:w-[220px] min-h-[140px] rounded-xl border-2 border-gray-200 bg-white hover:border-primary-300 hover:bg-gray-50 flex flex-col items-center justify-center gap-2 transition-all snap-start">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="text-sm font-medium text-gray-600">Ver eventos</span>
+      </a>
+
+      @for (event of recentEvents; track event.id) {
+      <a [routerLink]="['/cadastros/eventos/visualizar', event.id, 'dados']"
+        class="flex-shrink-0 w-[200px] sm:w-[220px] min-h-[140px] rounded-xl flex flex-col justify-between p-4 transition-transform hover:scale-[1.02] snap-start"
+        [style]="getRecentEventCardStyle(event, $index)">
+        <div class="rounded-lg bg-black/20 px-2 py-1 inline-flex items-center gap-1 w-fit text-xs font-medium text-white">
+          <span>{{ getEventTypeEmoji(event) }}</span>
+          <span class="truncate max-w-[120px]">{{ getEventTypeLabel(event) }}</span>
+        </div>
+        <div>
+          <h3 class="font-semibold text-white text-base leading-tight line-clamp-2">{{ event.name }}</h3>
+          <p class="text-white/80 text-sm mt-1">Ocorrerá em {{ formatDate(event.eventDate) }}</p>
+        </div>
+      </a>
+      }
+    </div>
+
+    @if (!isLoading && recentEvents.length === 0) {
+    <p class="text-sm text-gray-500 mt-2">Nenhum evento próximo. Adicione um evento ou veja a lista completa.</p>
+    }
+  </div>
+
+  <!-- Calendário de Eventos (abaixo da seção de eventos) -->
   @if (showCalendar) {
   <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
     <div class="flex items-center justify-between mb-6">
@@ -218,67 +279,6 @@
     }
   </div>
   }
-
-  <!-- Eventos recentes -->
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-      <h2 class="text-lg sm:text-xl font-bold text-gray-900">Eventos recentes</h2>
-      <div class="flex items-center gap-2">
-        <a routerLink="/cadastros/eventos/novo"
-          class="min-h-[44px] px-4 py-2 rounded-lg font-medium bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-sm inline-flex items-center justify-center gap-2 transition-all">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Adicionar
-        </a>
-        <div class="flex rounded-lg border border-gray-200 overflow-hidden">
-          <button type="button" (click)="scrollRecentEvents('left')"
-            class="min-h-[44px] min-w-[44px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 border-r border-gray-200 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button type="button" (click)="scrollRecentEvents('right')"
-            class="min-h-[44px] min-w-[44px] flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div #recentEventsScroll
-      class="flex gap-4 overflow-x-auto overflow-y-hidden pb-2 -mx-1 px-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:thin]">
-      <!-- Ver eventos card -->
-      <a routerLink="/cadastros/eventos"
-        class="flex-shrink-0 w-[200px] sm:w-[220px] min-h-[140px] rounded-xl border-2 border-gray-200 bg-white hover:border-primary-300 hover:bg-gray-50 flex flex-col items-center justify-center gap-2 transition-all snap-start">
-        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-        <span class="text-sm font-medium text-gray-600">Ver eventos</span>
-      </a>
-
-      @for (event of recentEvents; track event.id) {
-      <a [routerLink]="['/cadastros/eventos/visualizar', event.id, 'dados']"
-        class="flex-shrink-0 w-[200px] sm:w-[220px] min-h-[140px] rounded-xl flex flex-col justify-between p-4 transition-transform hover:scale-[1.02] snap-start"
-        [style]="getRecentEventCardStyle(event, $index)">
-        <div class="rounded-lg bg-black/20 px-2 py-1 inline-flex items-center gap-1 w-fit text-xs font-medium text-white">
-          <span>{{ getEventTypeEmoji(event) }}</span>
-          <span class="truncate max-w-[120px]">{{ getEventTypeLabel(event) }}</span>
-        </div>
-        <div>
-          <h3 class="font-semibold text-white text-base leading-tight line-clamp-2">{{ event.name }}</h3>
-          <p class="text-white/80 text-sm mt-1">Ocorrerá em {{ formatDate(event.eventDate) }}</p>
-        </div>
-      </a>
-      }
-    </div>
-
-    @if (!isLoading && recentEvents.length === 0) {
-    <p class="text-sm text-gray-500 mt-2">Nenhum evento próximo. Adicione um evento ou veja a lista completa.</p>
-    }
-  </div>
 
   <!-- Checklists dos Próximos Eventos -->
   <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
