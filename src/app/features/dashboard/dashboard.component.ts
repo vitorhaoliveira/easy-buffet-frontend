@@ -60,7 +60,7 @@ export class DashboardComponent implements OnInit {
   weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
   
   /** Set to true to show the calendar section on the dashboard */
-  showCalendar = false
+  showCalendar = true
 
   // Event detail modal
   showEventModal = false
