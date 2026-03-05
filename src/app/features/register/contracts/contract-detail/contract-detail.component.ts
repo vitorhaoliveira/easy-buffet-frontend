@@ -23,7 +23,7 @@ import { CommissionService } from '@core/services/commission.service'
 import { SellerService } from '@core/services/seller.service'
 import { ContractCommissionCardComponent } from '../contract-commission-card/contract-commission-card.component'
 import { ContractCommissionFormComponent } from '../contract-commission-form/contract-commission-form.component'
-import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem, CommissionDetails, Seller, UpdateInstallmentRequest } from '@shared/models/api.types'
+import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem, CommissionDetails, Seller, UpdateInstallmentRequest, UpdateContractRequest } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 interface ContractWithDetails extends Contract {
@@ -127,6 +127,11 @@ export class ContractDetailComponent implements OnInit, OnChanges {
   isEditInstallmentProcessing: boolean = false
   installmentEditForm!: FormGroup
 
+  // Edit contract installments (number of installments, totalAmount, firstDueDate, periodicity)
+  showEditInstallmentsModal: boolean = false
+  isSubmittingEditInstallments: boolean = false
+  editInstallmentsForm!: FormGroup
+
   // Commission
   commission: CommissionDetails | null = null
   isLoadingCommission: boolean = false
@@ -146,6 +151,16 @@ export class ContractDetailComponent implements OnInit, OnChanges {
     'Boleto',
     'Cheque',
     'Outro'
+  ]
+
+  readonly periodicityOptions: Array<'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual' | 'Semanal' | 'Quinzenal'> = [
+    'Mensal',
+    'Bimestral',
+    'Trimestral',
+    'Semestral',
+    'Anual',
+    'Semanal',
+    'Quinzenal'
   ]
 
   constructor(
@@ -178,6 +193,13 @@ export class ContractDetailComponent implements OnInit, OnChanges {
       paymentAmount: [''],
       paymentMethod: [''],
       notes: ['']
+    })
+
+    this.editInstallmentsForm = this.fb.group({
+      installmentCount: [1, [Validators.required, Validators.min(1)]],
+      totalAmount: [null as number | null],
+      firstDueDate: ['', [Validators.required]],
+      periodicity: ['Mensal' as const, [Validators.required]]
     })
   }
 
@@ -507,6 +529,116 @@ export class ContractDetailComponent implements OnInit, OnChanges {
   handleCancelEditInstallment(): void {
     this.showEditInstallmentModal = false
     this.installmentToEdit = null
+  }
+
+  /**
+   * @Function - getMinInstallmentCount
+   * @description - Minimum allowed installment count (cannot be less than already paid installments)
+   * @author - Vitor Hugo
+   * @returns - number - Minimum value for installmentCount field
+   */
+  getMinInstallmentCount(): number {
+    return Math.max(1, this.getPaidInstallmentsCount())
+  }
+
+  /**
+   * @Function - handleEditInstallmentsClick
+   * @description - Open modal to edit contract installments (count, totalAmount, firstDueDate, periodicity)
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleEditInstallmentsClick(): void {
+    if (!this.contract) return
+    const minCount = this.getMinInstallmentCount()
+    this.editInstallmentsForm.patchValue({
+      installmentCount: this.contract.installmentCount ?? 1,
+      totalAmount: this.contract.totalAmount ?? null,
+      firstDueDate: this.contract.firstDueDate?.includes('T')
+        ? this.contract.firstDueDate.split('T')[0]
+        : (this.contract.firstDueDate || ''),
+      periodicity: this.contract.periodicity || 'Mensal'
+    })
+    this.editInstallmentsForm.get('installmentCount')?.setValidators([
+      Validators.required,
+      Validators.min(minCount)
+    ])
+    this.editInstallmentsForm.get('installmentCount')?.updateValueAndValidity()
+    this.showEditInstallmentsModal = true
+    this.error = ''
+  }
+
+  /**
+   * @Function - handleCloseEditInstallmentsModal
+   * @description - Close edit installments modal
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  handleCloseEditInstallmentsModal(): void {
+    this.showEditInstallmentsModal = false
+  }
+
+  /**
+   * @Function - handleSubmitEditInstallments
+   * @description - Update contract installments via PUT /contracts/:id (installmentCount and optional totalAmount, firstDueDate, periodicity). Ensures installmentCount >= paid count.
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async handleSubmitEditInstallments(): Promise<void> {
+    if (!this.contractId || this.editInstallmentsForm.invalid) {
+      Object.keys(this.editInstallmentsForm.controls).forEach(key =>
+        this.editInstallmentsForm.get(key)?.markAsTouched()
+      )
+      return
+    }
+
+    const paidCount = this.getPaidInstallmentsCount()
+    const newCount = Number(this.editInstallmentsForm.value.installmentCount)
+
+    if (newCount < paidCount) {
+      this.error = `O número de parcelas não pode ser menor que a quantidade já paga (${paidCount}). Não é permitido apagar parcelas que já foram pagas.`
+      return
+    }
+
+    try {
+      this.isSubmittingEditInstallments = true
+      this.error = ''
+
+      const payload: UpdateContractRequest = {
+        installmentCount: newCount
+      }
+
+      const formValue = this.editInstallmentsForm.value
+      if (formValue.totalAmount != null && formValue.totalAmount !== '') {
+        payload.totalAmount = parseFloat(formValue.totalAmount)
+      }
+      if (formValue.firstDueDate) {
+        payload.firstDueDate = formValue.firstDueDate
+      }
+      if (formValue.periodicity) {
+        payload.periodicity = formValue.periodicity
+      }
+
+      const response = await firstValueFrom(
+        this.contractService.updateContract(this.contractId, payload)
+      )
+
+      if (response.success) {
+        await this.loadContractDetails(this.contractId)
+        this.handleCloseEditInstallmentsModal()
+      } else {
+        this.error = response.message || 'Erro ao atualizar parcelas do contrato'
+      }
+    } catch (err: any) {
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
+      } else {
+        this.error = err.message || 'Erro ao atualizar parcelas do contrato'
+      }
+    } finally {
+      this.isSubmittingEditInstallments = false
+    }
   }
 
   /**
