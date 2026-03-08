@@ -103,10 +103,6 @@ export class InstallmentsListComponent implements OnInit {
 
   expandedGroups: Record<string, boolean> = {}
 
-  /** Backend message when contract has 2+ installments and paid amount is less than total */
-  readonly PAYMENT_FULL_AMOUNT_MESSAGE =
-    'Com mais de uma parcela, o valor pago deve ser igual ao valor total da parcela.'
-
   paymentMethods: PaymentMethod[] = [
     'Dinheiro',
     'PIX',
@@ -133,8 +129,9 @@ export class InstallmentsListComponent implements OnInit {
     this.editForm = this.fb.group({
       status: ['pending', [Validators.required]],
       dueDate: ['', [Validators.required]],
+      amount: ['', [Validators.required, Validators.min(0.01)]],
       paymentDate: [''],
-      paymentAmount: [''],
+      paymentAmount: ['', [Validators.min(0)]],
       paymentMethod: [''],
       notes: ['']
     })
@@ -391,7 +388,7 @@ export class InstallmentsListComponent implements OnInit {
 
   /**
    * @Function - handleConfirmPayment
-   * @description - Process payment for installment. With 1 parcel partial payment is allowed; with 2+ must pay full amount.
+   * @description - Process payment for installment. Partial payment is allowed; remainder is added to the next installment (or a new one is created).
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
@@ -405,16 +402,6 @@ export class InstallmentsListComponent implements OnInit {
 
     const formValue = this.paymentForm.value
     const paidAmount = parseFloat(formValue.paymentAmount)
-    const installmentAmount = this.installmentToPay.amount ?? 0
-    const contractInstallmentsCount = this.getInstallmentCountForContract(this.installmentToPay.contractId)
-
-    if (contractInstallmentsCount >= 2) {
-      const epsilon = 0.005
-      if (paidAmount < installmentAmount - epsilon || paidAmount > installmentAmount + epsilon) {
-        this.error = this.PAYMENT_FULL_AMOUNT_MESSAGE
-        return
-      }
-    }
 
     try {
       this.isPaymentProcessing = true
@@ -443,12 +430,7 @@ export class InstallmentsListComponent implements OnInit {
         this.error = response.message || 'Erro ao processar pagamento'
       }
     } catch (err: any) {
-      const status = err?.status ?? err?.error?.status
-      if (status === 422) {
-        this.error = this.PAYMENT_FULL_AMOUNT_MESSAGE
-      } else {
-        this.error = err.error?.message || err.message || 'Erro ao processar pagamento'
-      }
+      this.error = err.error?.message || err.message || 'Erro ao processar pagamento'
     } finally {
       this.isPaymentProcessing = false
     }
@@ -464,18 +446,6 @@ export class InstallmentsListComponent implements OnInit {
     this.showPaymentModal = false
     this.installmentToPay = null
     this.paymentForm.reset()
-  }
-
-  /** True when contract has 2+ installments (must pay full amount) */
-  get paymentRequiresFullAmount(): boolean {
-    if (!this.installmentToPay) return false
-    return this.getInstallmentCountForContract(this.installmentToPay.contractId) >= 2
-  }
-
-  /** True when contract has 2+ installments (edit: paid amount must equal total) */
-  get editRequiresFullAmount(): boolean {
-    if (!this.installmentToEdit) return false
-    return this.getInstallmentCountForContract(this.installmentToEdit.contractId) >= 2
   }
 
   /**
@@ -519,6 +489,7 @@ export class InstallmentsListComponent implements OnInit {
     this.editForm.patchValue({
       status: statusApi,
       dueDate,
+      amount: installment.amount ?? '',
       paymentDate: installment.paymentDate?.split('T')[0] || '',
       paymentAmount: installment.paymentAmount ?? installment.amount ?? '',
       paymentMethod: installment.paymentMethod || '',
@@ -530,7 +501,7 @@ export class InstallmentsListComponent implements OnInit {
 
   /**
    * @Function - handleConfirmEdit
-   * @description - Submit installment update (status, due date, payment data). Amount is not editable; use additional payment on contract to reduce/pay installments.
+   * @description - Submit installment update (status, due date, amount, payment data).
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
@@ -544,13 +515,17 @@ export class InstallmentsListComponent implements OnInit {
     const statusApi = this.normalizeStatusToApi(formValue.status)
     const payload: UpdateInstallmentRequest = {
       status: statusApi,
-      dueDate: formValue.dueDate
+      dueDate: formValue.dueDate,
+      amount: formValue.amount != null && formValue.amount !== '' ? parseFloat(String(formValue.amount)) : undefined
     }
 
     if (statusApi === 'paid') {
       if (formValue.paymentDate) payload.paymentDate = formValue.paymentDate
       else payload.paymentDate = new Date().toISOString().split('T')[0]
-      payload.paymentAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : Number(this.installmentToEdit.amount)
+      const rawPaid = formValue.paymentAmount
+      payload.paymentAmount = (rawPaid !== '' && rawPaid != null)
+        ? parseFloat(String(rawPaid))
+        : Number(this.installmentToEdit.amount)
       payload.paymentMethod = formValue.paymentMethod || null
       payload.notes = formValue.notes || null
     } else {
@@ -558,17 +533,6 @@ export class InstallmentsListComponent implements OnInit {
       payload.paymentAmount = null
       payload.paymentMethod = null
       payload.notes = formValue.notes || null
-    }
-
-    const installmentCount = this.getInstallmentCountForContract(this.installmentToEdit.contractId)
-    if (installmentCount >= 2 && payload.paymentAmount != null) {
-      const effectivePaid = payload.paymentAmount
-      const totalAmount = Number(this.installmentToEdit.amount)
-      const epsilon = 0.005
-      if (effectivePaid < totalAmount - epsilon) {
-        this.error = this.PAYMENT_FULL_AMOUNT_MESSAGE
-        return
-      }
     }
 
     try {
@@ -588,11 +552,12 @@ export class InstallmentsListComponent implements OnInit {
         this.error = response.message || 'Erro ao atualizar parcela'
       }
     } catch (err: any) {
-      const status = err?.status ?? err?.error?.status
-      if (status === 422) {
-        this.error = this.PAYMENT_FULL_AMOUNT_MESSAGE
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
       } else {
-        this.error = err.error?.message || err.message || 'Erro ao atualizar parcela'
+        this.error = err.message || 'Erro ao atualizar parcela'
       }
     } finally {
       this.isEditProcessing = false

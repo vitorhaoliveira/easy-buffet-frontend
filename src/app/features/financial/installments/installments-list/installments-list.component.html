@@ -269,10 +269,13 @@
             }
           </div>
           <div class="space-y-2 sm:col-span-2">
-            <p class="text-sm text-muted-foreground">
-              <strong>Valor da parcela:</strong> {{ formatCurrency(installmentToEdit.amount) }}
-            </p>
-            <p class="text-xs text-muted-foreground">Para alterar o valor das parcelas, use pagamento adicional no evento.</p>
+            <label appLabel htmlFor="editAmount">Valor da parcela (R$) *</label>
+            <input type="number" id="editAmount" formControlName="amount" step="0.01" min="0.01"
+              class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm" />
+            @if (editForm.get('amount')?.invalid && editForm.get('amount')?.touched) {
+            <p class="text-xs text-red-500">Informe um valor maior que zero.</p>
+            }
+            <p class="text-xs text-muted-foreground">Ao alterar o valor, a diferença é aplicada nas parcelas seguintes para manter o total do contrato.</p>
           </div>
         </div>
         @if (isPaidStatusInEditForm) {
@@ -288,9 +291,7 @@
               <label appLabel htmlFor="editPaymentAmount">Valor pago (R$)</label>
               <input type="number" id="editPaymentAmount" formControlName="paymentAmount" step="0.01"
                 class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm" />
-              @if (editRequiresFullAmount) {
-              <p class="text-xs text-amber-700">Com mais de uma parcela, o valor pago deve ser igual ao valor total da parcela.</p>
-              }
+              <p class="text-xs text-muted-foreground">Pagamento parcial permitido: o restante é somado à próxima parcela (ou criada uma nova).</p>
             </div>
             <div class="space-y-2 sm:col-span-2">
               <label appLabel htmlFor="editPaymentMethod">Forma de pagamento</label>
@@ -350,9 +351,7 @@
           <label appLabel htmlFor="paymentAmount">Valor Pago *</label>
           <input type="number" id="paymentAmount" formControlName="paymentAmount" step="0.01" placeholder="0.00"
             [class]="'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ' + (hasError('paymentAmount') ? 'border-red-500' : '')" />
-          @if (paymentRequiresFullAmount) {
-          <p class="text-xs text-amber-700">Com mais de uma parcela, o valor pago deve ser igual ao valor total da parcela.</p>
-          }
+          <p class="text-xs text-muted-foreground">Pagamento parcial permitido: o restante é somado à próxima parcela (ou criada uma nova).</p>
           @if (hasError('paymentAmount')) {
           <p class="text-sm text-red-500">{{ getFieldError('paymentAmount') }}</p>
           }

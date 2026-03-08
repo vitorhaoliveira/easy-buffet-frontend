@@ -516,10 +516,13 @@
               }
             </div>
             <div class="space-y-2 sm:col-span-2">
-              <p class="text-sm text-muted-foreground">
-                <strong>Valor da parcela:</strong> {{ formatCurrency(installmentToEdit.amount) }}
-              </p>
-              <p class="text-xs text-muted-foreground">Para alterar o valor das parcelas, use pagamento adicional no evento.</p>
+              <label appLabel htmlFor="installmentEditAmount">Valor da parcela (R$) *</label>
+              <input type="number" id="installmentEditAmount" formControlName="amount" step="0.01" min="0.01"
+                class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm" />
+              @if (installmentEditForm.get('amount')?.invalid && installmentEditForm.get('amount')?.touched) {
+              <p class="text-xs text-red-500">Informe um valor maior que zero.</p>
+              }
+              <p class="text-xs text-muted-foreground">Ao alterar o valor, a diferença é aplicada nas parcelas seguintes para manter o total do contrato.</p>
             </div>
           </div>
           @if (isPaidStatusInInstallmentEditForm) {
@@ -535,6 +538,7 @@
                 <label appLabel htmlFor="installmentEditPaymentAmount">Valor pago (R$)</label>
                 <input type="number" id="installmentEditPaymentAmount" formControlName="paymentAmount" step="0.01"
                   class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm" />
+                <p class="text-xs text-muted-foreground">Pagamento parcial permitido: o restante é somado à próxima parcela (ou criada uma nova).</p>
               </div>
               <div class="space-y-2 sm:col-span-2">
                 <label appLabel htmlFor="installmentEditPaymentMethod">Forma de pagamento</label>

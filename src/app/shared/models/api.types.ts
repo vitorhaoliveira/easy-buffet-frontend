@@ -577,8 +577,9 @@ export interface CreateInstallmentRequest {
   dueDate: string
 }
 
-/** amount is not editable via PUT; use additional payment on the contract to reduce/pay off installments */
 export interface UpdateInstallmentRequest {
+  /** Installment amount (valor da parcela). When sent, backend updates the installment value. */
+  amount?: number
   dueDate?: string
   /** API expects 'pending' | 'paid' | 'overdue'. When status is pending/overdue, backend clears payment fields. */
   status?: 'pending' | 'paid' | 'overdue'
