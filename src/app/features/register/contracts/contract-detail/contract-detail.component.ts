@@ -21,6 +21,7 @@ import { InstallmentService } from '@core/services/installment.service'
 import { AdditionalPaymentService } from '@core/services/additional-payment.service'
 import { CommissionService } from '@core/services/commission.service'
 import { SellerService } from '@core/services/seller.service'
+import { ToastService } from '@core/services/toast.service'
 import { ContractCommissionCardComponent } from '../contract-commission-card/contract-commission-card.component'
 import { ContractCommissionFormComponent } from '../contract-commission-form/contract-commission-form.component'
 import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem, CommissionDetails, Seller, UpdateInstallmentRequest, UpdateContractRequest } from '@shared/models/api.types'
@@ -169,6 +170,7 @@ export class ContractDetailComponent implements OnInit, OnChanges {
     private additionalPaymentService: AdditionalPaymentService,
     private commissionService: CommissionService,
     private sellerService: SellerService,
+    private toastService: ToastService,
     private router: Router,
     private route: ActivatedRoute,
     private fb: FormBuilder
@@ -189,8 +191,9 @@ export class ContractDetailComponent implements OnInit, OnChanges {
     this.installmentEditForm = this.fb.group({
       status: ['pending', [Validators.required]],
       dueDate: ['', [Validators.required]],
+      amount: ['', [Validators.required, Validators.min(0.01)]],
       paymentDate: [''],
-      paymentAmount: [''],
+      paymentAmount: ['', [Validators.min(0)]],
       paymentMethod: [''],
       notes: ['']
     })
@@ -441,6 +444,7 @@ export class ContractDetailComponent implements OnInit, OnChanges {
     this.installmentEditForm.patchValue({
       status: statusApi,
       dueDate,
+      amount: installment.amount ?? '',
       paymentDate: installment.paymentDate?.split('T')[0] || '',
       paymentAmount: installment.paymentAmount ?? installment.amount ?? '',
       paymentMethod: installment.paymentMethod || '',
@@ -464,17 +468,6 @@ export class ContractDetailComponent implements OnInit, OnChanges {
 
     const formValue = this.installmentEditForm.value
     const statusApi = this.normalizeInstallmentStatusToApi(formValue.status)
-    const installmentCount = this.contract?.installments?.length ?? 0
-    const paidAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : Number(this.installmentToEdit.amount)
-    const installmentAmount = Number(this.installmentToEdit.amount)
-
-    if (statusApi === 'paid' && installmentCount > 1) {
-      const epsilon = 0.005
-      if (paidAmount < installmentAmount - epsilon || paidAmount > installmentAmount + epsilon) {
-        this.error = 'Com mais de uma parcela, pague o valor total da parcela.'
-        return
-      }
-    }
 
     try {
       this.isEditInstallmentProcessing = true
@@ -482,12 +475,16 @@ export class ContractDetailComponent implements OnInit, OnChanges {
 
       const payload: UpdateInstallmentRequest = {
         status: statusApi,
-        dueDate: formValue.dueDate
+        dueDate: formValue.dueDate,
+        amount: formValue.amount != null && formValue.amount !== '' ? parseFloat(String(formValue.amount)) : undefined
       }
 
       if (statusApi === 'paid') {
         payload.paymentDate = formValue.paymentDate || new Date().toISOString().split('T')[0]
-        payload.paymentAmount = formValue.paymentAmount ? parseFloat(formValue.paymentAmount) : Number(this.installmentToEdit.amount)
+        const rawPaid = formValue.paymentAmount
+        payload.paymentAmount = (rawPaid !== '' && rawPaid != null)
+          ? parseFloat(String(rawPaid))
+          : Number(this.installmentToEdit.amount)
         payload.paymentMethod = formValue.paymentMethod || null
         payload.notes = formValue.notes || null
       } else {
@@ -505,15 +502,17 @@ export class ContractDetailComponent implements OnInit, OnChanges {
         await this.loadContractDetails(this.contractId)
         this.showEditInstallmentModal = false
         this.installmentToEdit = null
+        this.toastService.success('Parcela atualizada com sucesso')
       } else {
         this.error = response.message || 'Erro ao atualizar parcela'
       }
     } catch (err: any) {
-      const status = err?.status ?? err?.error?.status
-      if (status === 422) {
-        this.error = 'Com mais de uma parcela, pague o valor total da parcela.'
+      if (err.error?.error?.message) {
+        this.error = err.error.error.message
+      } else if (err.error?.message) {
+        this.error = err.error.message
       } else {
-        this.error = err.error?.message || err.message || 'Erro ao atualizar parcela'
+        this.error = err.message || 'Erro ao atualizar parcela'
       }
     } finally {
       this.isEditInstallmentProcessing = false
