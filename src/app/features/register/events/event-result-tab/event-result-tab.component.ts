@@ -7,7 +7,7 @@ import { EventMarginService } from '@core/services/event-margin.service'
 import type { EventMarginSummary } from '@shared/models/api.types'
 
 const CATEGORY_LABELS: Record<string, string> = {
-  staff: 'Pessoal',
+  staff: 'Equipe',
   food: 'Alimentação',
   decoration: 'Decoração',
   other: 'Outros'

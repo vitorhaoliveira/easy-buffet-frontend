@@ -259,7 +259,7 @@ export class CostsListComponent implements OnInit {
    */
   translateCategory(category: string): string {
     const translations: Record<string, string> = {
-      'staff': 'Pessoal',
+      'staff': 'Equipe',
       'food': 'Alimentação',
       'decoration': 'Decoração',
       'other': 'Outros'
