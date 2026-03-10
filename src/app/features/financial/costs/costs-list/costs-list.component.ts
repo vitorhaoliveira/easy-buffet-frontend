@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { RouterModule } from '@angular/router'
+import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Eye, Trash2, ChevronLeft, ChevronRight } from 'lucide-angular'
+import { LucideAngularModule, Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -51,7 +51,7 @@ import { formatDateBR } from '@shared/utils/date.utils'
 })
 export class CostsListComponent implements OnInit {
   readonly PlusIcon = Plus
-  readonly EyeIcon = Eye
+  readonly PencilIcon = Pencil
   readonly Trash2Icon = Trash2
   readonly ChevronLeftIcon = ChevronLeft
   readonly ChevronRightIcon = ChevronRight
@@ -71,7 +71,8 @@ export class CostsListComponent implements OnInit {
 
   constructor(
     private costService: CostService,
-    private pageTitleService: PageTitleService
+    private pageTitleService: PageTitleService,
+    private router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -142,6 +143,17 @@ export class CostsListComponent implements OnInit {
       (cost.description ?? '').toLowerCase().includes(searchLower) ||
       (cost.event?.name ?? '').toLowerCase().includes(searchLower)
     )
+  }
+
+  /**
+   * @Function - goToEdit
+   * @description - Navigates to the cost edit form
+   * @author - Vitor Hugo
+   * @param - cost: Cost - Cost to edit
+   * @returns - void
+   */
+  goToEdit(cost: Cost): void {
+    this.router.navigate(['/financeiro/custos/editar', cost.id])
   }
 
   /**

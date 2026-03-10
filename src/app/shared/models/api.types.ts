@@ -395,6 +395,19 @@ export interface Cost {
   }
 }
 
+/** Summary of revenue, costs and margin for a single event (computed client-side or from API) */
+export interface EventMarginSummary {
+  revenue: number
+  totalCosts: number
+  costsByCategory: { staff: number; food: number; decoration: number; other: number }
+  teamCost: number
+  suppliesCost: number
+  profit: number
+  marginPercent: number
+  /** Individual cost items for this event (for listing on Result tab) */
+  costs: Cost[]
+}
+
 // Dashboard Types
 export interface DashboardData {
   totalEvents: number

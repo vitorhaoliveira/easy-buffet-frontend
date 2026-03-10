@@ -176,6 +176,12 @@ export const routes: Routes = [
             canActivate: [permissionGuard]
           },
           {
+            path: 'resultado',
+            loadComponent: () => import('./features/register/events/event-result-tab/event-result-tab.component').then(m => m.EventResultTabComponent),
+            data: { module: 'cadastros', action: 'view' },
+            canActivate: [permissionGuard]
+          },
+          {
             path: 'checklist',
             loadComponent: () => import('./features/checklists/event-checklist-page/event-checklist-page.component').then(m => m.EventChecklistPageComponent),
             data: { module: 'cadastros', action: 'view' },
@@ -397,6 +403,12 @@ export const routes: Routes = [
         path: 'financeiro/custos/novo',
         loadComponent: () => import('./features/financial/costs/cost-form/cost-form.component').then(m => m.CostFormComponent),
         data: { module: 'financeiro', action: 'create' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'financeiro/custos/editar/:id',
+        loadComponent: () => import('./features/financial/costs/cost-form/cost-form.component').then(m => m.CostFormComponent),
+        data: { module: 'financeiro', action: 'edit' },
         canActivate: [permissionGuard]
       },
       
