@@ -64,8 +64,8 @@
           <td appTableCell>{{ formatDate(cost.createdAt) }}</td>
           <td appTableCell class="text-right">
             <div class="flex items-center justify-end space-x-2">
-              <button appButton variant="ghost" size="sm" title="Ver detalhes">
-                <lucide-icon [img]="EyeIcon" class="h-4 w-4"></lucide-icon>
+              <button appButton variant="ghost" size="sm" (click)="goToEdit(cost)" title="Editar">
+                <lucide-icon [img]="PencilIcon" class="h-4 w-4"></lucide-icon>
               </button>
               <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(cost)" title="Excluir">
                 <lucide-icon [img]="Trash2Icon" class="h-4 w-4"></lucide-icon>
@@ -106,9 +106,9 @@
         </div>
 
         <div class="flex items-center gap-2 pt-2 border-t">
-          <button appButton variant="outline" size="sm" class="flex-1">
-            <lucide-icon [img]="EyeIcon" class="mr-1.5 h-4 w-4"></lucide-icon>
-            Ver Detalhes
+          <button appButton variant="outline" size="sm" class="flex-1" (click)="goToEdit(cost)">
+            <lucide-icon [img]="PencilIcon" class="mr-1.5 h-4 w-4"></lucide-icon>
+            Editar
           </button>
           <button appButton variant="ghost" size="sm" (click)="handleDeleteClick(cost)">
             <lucide-icon [img]="Trash2Icon" class="h-4 w-4 text-red-500"></lucide-icon>

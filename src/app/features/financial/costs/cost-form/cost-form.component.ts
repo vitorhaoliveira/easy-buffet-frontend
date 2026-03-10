@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { Router } from '@angular/router'
+import { Router, ActivatedRoute } from '@angular/router'
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 import { LucideAngularModule, ArrowLeft, Save, X } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
@@ -9,7 +9,7 @@ import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { CostService } from '@core/services/cost.service'
 import { EventService } from '@core/services/event.service'
-import type { CreateCostRequest, Event } from '@shared/models/api.types'
+import type { CreateCostRequest, UpdateCostRequest, Event } from '@shared/models/api.types'
 
 @Component({
   selector: 'app-cost-form',
@@ -33,6 +33,8 @@ export class CostFormComponent implements OnInit {
   isLoading: boolean = false
   isLoadingData: boolean = false
   errorMessage: string = ''
+  costId: string | null = null
+  isEditing: boolean = false
 
   categories = [
     { value: 'staff', label: 'Pessoal' },
@@ -45,7 +47,8 @@ export class CostFormComponent implements OnInit {
     private fb: FormBuilder,
     private costService: CostService,
     private eventService: EventService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.costForm = this.fb.group({
       description: ['', [Validators.required]],
@@ -57,7 +60,44 @@ export class CostFormComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.costId = this.route.snapshot.paramMap.get('id')
+    this.isEditing = !!this.costId
     await this.loadEvents()
+    if (this.isEditing && this.costId) {
+      await this.loadCost(this.costId)
+    }
+  }
+
+  /**
+   * @Function - loadCost
+   * @description - Load cost by ID and patch form for edit mode
+   * @author - Vitor Hugo
+   * @param - id: string - Cost ID
+   * @returns - Promise<void>
+   */
+  async loadCost(id: string): Promise<void> {
+    try {
+      this.isLoadingData = true
+      this.errorMessage = ''
+      const response = await firstValueFrom(this.costService.getCostById(id))
+      if (response.success && response.data) {
+        const cost = response.data
+        const amount = typeof cost.amount === 'number' ? cost.amount : parseFloat(String(cost.amount))
+        this.costForm.patchValue({
+          description: cost.description,
+          eventId: cost.eventId || '',
+          amount: Number.isFinite(amount) ? amount : '',
+          category: cost.category,
+          notes: cost.notes || ''
+        })
+      } else {
+        this.errorMessage = 'Custo não encontrado'
+      }
+    } catch (err: unknown) {
+      this.errorMessage = err instanceof Error ? err.message : 'Erro ao carregar custo'
+    } finally {
+      this.isLoadingData = false
+    }
   }
 
   /**
@@ -82,7 +122,7 @@ export class CostFormComponent implements OnInit {
 
   /**
    * @Function - handleSubmit
-   * @description - Handle form submission to create new cost
+   * @description - Handle form submission to create or update cost
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
@@ -99,26 +139,44 @@ export class CostFormComponent implements OnInit {
 
     try {
       const formValue = this.costForm.value
-      
-      const createData: CreateCostRequest = {
-        description: formValue.description,
-        amount: parseFloat(formValue.amount),
-        category: formValue.category,
-        eventId: formValue.eventId || undefined,
-        notes: formValue.notes || undefined
-      }
-      
-      const response = await firstValueFrom(
-        this.costService.createCost(createData)
-      )
-      
-      if (response.success) {
-        this.router.navigate(['/financeiro/custos'])
+      const amount = parseFloat(formValue.amount)
+
+      if (this.isEditing && this.costId) {
+        const updateData: UpdateCostRequest = {
+          description: formValue.description,
+          amount: Number.isFinite(amount) ? amount : undefined,
+          category: formValue.category,
+          eventId: formValue.eventId || undefined,
+          notes: formValue.notes || undefined
+        }
+        const response = await firstValueFrom(
+          this.costService.updateCost(this.costId, updateData)
+        )
+        if (response.success) {
+          this.router.navigate(['/financeiro/custos'])
+        } else {
+          this.errorMessage = 'Erro ao atualizar custo'
+        }
       } else {
-        this.errorMessage = 'Erro ao criar custo'
+        const createData: CreateCostRequest = {
+          description: formValue.description,
+          amount: Number.isFinite(amount) ? amount : 0,
+          category: formValue.category,
+          eventId: formValue.eventId || undefined,
+          notes: formValue.notes || undefined
+        }
+        const response = await firstValueFrom(
+          this.costService.createCost(createData)
+        )
+        if (response.success) {
+          this.router.navigate(['/financeiro/custos'])
+        } else {
+          this.errorMessage = 'Erro ao criar custo'
+        }
       }
-    } catch (error: any) {
-      this.errorMessage = error.error?.message || error.message || 'Erro ao criar custo'
+    } catch (error: unknown) {
+      const err = error as { error?: { message?: string }; message?: string }
+      this.errorMessage = err?.error?.message || err?.message || (this.isEditing ? 'Erro ao atualizar custo' : 'Erro ao criar custo')
     } finally {
       this.isLoading = false
     }

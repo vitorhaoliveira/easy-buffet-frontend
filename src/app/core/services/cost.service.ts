@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core'
 import { HttpClient, HttpParams } from '@angular/common/http'
 import { Observable } from 'rxjs'
+import { map } from 'rxjs/operators'
 import { environment } from '@environments/environment'
 import type {
   ApiResponse,
@@ -14,6 +15,7 @@ export interface GetCostsParams {
   page?: number
   limit?: number
   category?: string
+  eventId?: string
 }
 
 @Injectable({
@@ -30,9 +32,9 @@ export class CostService {
 
   /**
    * @Function - getCostsPaginated
-   * @description - Retrieves a paginated list of costs with optional category filter
+   * @description - Retrieves a paginated list of costs with optional category and eventId filter
    * @author - Vitor Hugo
-   * @param - params: GetCostsParams - page, limit, category
+   * @param - params: GetCostsParams - page, limit, category, eventId
    * @returns - Observable<PaginatedResponse<Cost>>
    */
   getCostsPaginated(params: GetCostsParams = {}): Observable<PaginatedResponse<Cost>> {
@@ -42,7 +44,29 @@ export class CostService {
     if (params.category && params.category !== 'todos') {
       httpParams = httpParams.set('category', params.category)
     }
+    if (params.eventId) {
+      httpParams = httpParams.set('eventId', params.eventId)
+    }
     return this.http.get<PaginatedResponse<Cost>>(`${this.apiUrl}/costs`, { params: httpParams })
+  }
+
+  /**
+   * @Function - getCostsByEvent
+   * @description - Retrieves all costs for a given event. Uses API with eventId if supported; otherwise fetches all costs and filters client-side (fallback).
+   * @author - Vitor Hugo
+   * @param - eventId: string - The event ID
+   * @returns - Observable<ApiResponse<Cost[]>>
+   */
+  getCostsByEvent(eventId: string): Observable<ApiResponse<Cost[]>> {
+    return this.getCosts().pipe(
+      map((response) => {
+        if (!response.success || !response.data) {
+          return { ...response, data: [] as Cost[] }
+        }
+        const filtered = (response.data as Cost[]).filter((c) => c.eventId === eventId)
+        return { ...response, data: filtered }
+      })
+    )
   }
 
   getCostById(id: string): Observable<ApiResponse<Cost>> {

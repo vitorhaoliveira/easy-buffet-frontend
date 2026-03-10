@@ -6,9 +6,9 @@
       Voltar
     </button>
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Novo Custo</h1>
+      <h1 class="text-3xl font-bold tracking-tight">{{ isEditing ? 'Editar Custo' : 'Novo Custo' }}</h1>
       <p class="text-muted-foreground">
-        Preencha os dados do novo custo ou despesa
+        {{ isEditing ? 'Atualize os dados do custo ou despesa' : 'Preencha os dados do novo custo ou despesa' }}
       </p>
     </div>
   </div>
