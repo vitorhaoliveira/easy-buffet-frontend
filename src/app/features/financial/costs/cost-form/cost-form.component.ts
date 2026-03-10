@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, ActivatedRoute } from '@angular/router'
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms'
 import { LucideAngularModule, ArrowLeft, Save, X } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
@@ -9,7 +9,7 @@ import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { CostService } from '@core/services/cost.service'
 import { EventService } from '@core/services/event.service'
-import type { CreateCostRequest, UpdateCostRequest, Event } from '@shared/models/api.types'
+import type { CreateCostRequest, UpdateCostRequest, Event, PaginationInfo } from '@shared/models/api.types'
 
 @Component({
   selector: 'app-cost-form',
@@ -17,6 +17,7 @@ import type { CreateCostRequest, UpdateCostRequest, Event } from '@shared/models
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     LucideAngularModule,
     ButtonComponent,
     LabelComponent
@@ -36,8 +37,15 @@ export class CostFormComponent implements OnInit {
   costId: string | null = null
   isEditing: boolean = false
 
+  readonly eventsPageSize = 20
+  eventsPage = 1
+  eventsPagination: PaginationInfo | null = null
+  eventSearchTerm = ''
+  eventDropdownOpen = false
+  isLoadingMoreEvents = false
+
   categories = [
-    { value: 'staff', label: 'Pessoal' },
+    { value: 'staff', label: 'Equipe' },
     { value: 'food', label: 'Alimentação' },
     { value: 'decoration', label: 'Decoração' },
     { value: 'other', label: 'Outros' }
@@ -90,6 +98,12 @@ export class CostFormComponent implements OnInit {
           category: cost.category,
           notes: cost.notes || ''
         })
+        if (cost.eventId && !this.events.some(e => e.id === cost.eventId)) {
+          const eventRes = await firstValueFrom(this.eventService.getEventById(cost.eventId))
+          if (eventRes.success && eventRes.data) {
+            this.events = [eventRes.data as Event, ...this.events]
+          }
+        }
       } else {
         this.errorMessage = 'Custo não encontrado'
       }
@@ -102,22 +116,73 @@ export class CostFormComponent implements OnInit {
 
   /**
    * @Function - loadEvents
-   * @description - Load all events for dropdown selection
+   * @description - Load first page of events for dropdown (paginated, same pattern as contract form)
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
   async loadEvents(): Promise<void> {
     try {
       this.isLoadingData = true
-      const response = await firstValueFrom(this.eventService.getEvents())
+      this.eventsPage = 1
+      const response = await firstValueFrom(
+        this.eventService.getEventsPaginated({ page: 1, limit: this.eventsPageSize })
+      )
       if (response.success && response.data) {
-        this.events = response.data as Event[]
+        this.events = response.data
+        this.eventsPagination = response.pagination ?? null
       }
-    } catch (error: any) {
-      this.errorMessage = error.message || 'Erro ao carregar eventos'
+    } catch (err: unknown) {
+      this.errorMessage = err instanceof Error ? err.message : 'Erro ao carregar eventos'
     } finally {
       this.isLoadingData = false
     }
+  }
+
+  /**
+   * @Function - loadMoreEvents
+   * @description - Loads next page of events and appends to the list
+   * @author - Vitor Hugo
+   * @returns - Promise<void>
+   */
+  async loadMoreEvents(): Promise<void> {
+    if (this.isLoadingMoreEvents || !this.eventsPagination || this.eventsPage >= this.eventsPagination.totalPages) return
+    this.isLoadingMoreEvents = true
+    try {
+      const nextPage = this.eventsPage + 1
+      const res = await firstValueFrom(
+        this.eventService.getEventsPaginated({ page: nextPage, limit: this.eventsPageSize })
+      )
+      if (res.success && res.data?.length) {
+        this.events = [...this.events, ...res.data]
+        this.eventsPage = nextPage
+        this.eventsPagination = res.pagination ?? this.eventsPagination
+      }
+    } finally {
+      this.isLoadingMoreEvents = false
+    }
+  }
+
+  get filteredEvents(): Event[] {
+    if (!this.eventSearchTerm.trim()) return this.events
+    const q = this.eventSearchTerm.toLowerCase().trim()
+    return this.events.filter(e => e.name.toLowerCase().includes(q))
+  }
+
+  getSelectedEventName(): string {
+    const id = this.costForm.get('eventId')?.value
+    if (!id) return 'Nenhum (opcional)'
+    const e = this.events.find(ev => ev.id === id)
+    return e?.name ?? 'Nenhum (opcional)'
+  }
+
+  selectEvent(event: Event | null): void {
+    this.costForm.patchValue({ eventId: event?.id ?? '' })
+    this.eventDropdownOpen = false
+    this.eventSearchTerm = ''
+  }
+
+  closeEventDropdown(): void {
+    this.eventDropdownOpen = false
   }
 
   /**
