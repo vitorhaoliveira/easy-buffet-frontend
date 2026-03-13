@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterLink } from '@angular/router'
-import { LucideAngularModule, TrendingUp, TrendingDown, Clock, DollarSign, AlertCircle, Calendar } from 'lucide-angular'
+import { LucideAngularModule, TrendingUp, TrendingDown, Clock, DollarSign, AlertCircle, Calendar, BarChart3 } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 import { NgApexchartsModule } from 'ng-apexcharts'
 import type { ApexOptions } from 'ng-apexcharts'
@@ -52,6 +52,7 @@ export class FinancialDashboardComponent implements OnInit {
   readonly DollarSignIcon = DollarSign
   readonly AlertCircleIcon = AlertCircle
   readonly CalendarIcon = Calendar
+  readonly BarChart3Icon = BarChart3
 
   stats: DashboardStats | null = null
   upcomingInstallments: DashboardInstallment[] = []
@@ -178,7 +179,7 @@ export class FinancialDashboardComponent implements OnInit {
 
   /**
    * @Function - loadDashboardData
-   * @description - Load all financial dashboard data from API
+   * @description - Load all financial dashboard data from API in parallel so content (and chart/empty state) appears as soon as possible
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
@@ -187,34 +188,29 @@ export class FinancialDashboardComponent implements OnInit {
       this.isLoading = true
       this.error = ''
 
-      // Load stats
-      const statsResponse = await firstValueFrom(this.dashboardService.getStats())
+      const [statsResponse, installmentsResponse, overdueResponse, evolutionResponse] = await Promise.all([
+        firstValueFrom(this.dashboardService.getStats()),
+        firstValueFrom(this.dashboardService.getUpcomingInstallments(10)),
+        firstValueFrom(this.installmentService.getOverdueInstallments()),
+        firstValueFrom(this.dashboardService.getMonthlyEvolution(12))
+      ])
+
       if (statsResponse.success && statsResponse.data) {
         this.stats = statsResponse.data
       }
-
-      // Load upcoming installments
-      const installmentsResponse = await firstValueFrom(
-        this.dashboardService.getUpcomingInstallments(10)
-      )
       if (installmentsResponse.success && installmentsResponse.data) {
         this.upcomingInstallments = installmentsResponse.data
       }
-
-      // Load overdue installments count
-      const overdueResponse = await firstValueFrom(
-        this.installmentService.getOverdueInstallments()
-      )
       if (overdueResponse.success && overdueResponse.data) {
         const overdueCount = (overdueResponse.data as any[]).length
         if (this.stats) {
           this.stats.overdueInstallments = overdueCount
         }
       }
-
-      // Load monthly evolution
-      await this.loadMonthlyEvolution()
-
+      if (evolutionResponse.success && evolutionResponse.data) {
+        this.monthlyEvolution = evolutionResponse.data
+        this.updateChart()
+      }
     } catch (err: any) {
       console.error('Error loading financial dashboard:', err)
       this.error = err.message || 'Erro ao carregar dados do dashboard financeiro'

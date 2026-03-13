@@ -1,14 +1,16 @@
-import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core'
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef, inject } from '@angular/core'
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'
 import { CommonModule } from '@angular/common'
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
 import { LucideAngularModule, Home, ClipboardList, DollarSign, HelpCircle, MessageCircle, LogOut, Building2, ChevronDown, ChevronUp, Plus, X, Menu, Search, User as LucideUserIcon, Calendar, Users, Package, FileText, LayoutTemplate, UsersRound, Wallet, CreditCard, Receipt, BarChart3, MapPin, UserCog, Briefcase } from 'lucide-angular'
-import { Subject, takeUntil, firstValueFrom } from 'rxjs'
+import { Subject, takeUntil, firstValueFrom, combineLatest, map } from 'rxjs'
 import { AuthStateService } from '@core/services/auth-state.service'
 import { AuthService } from '@core/services/auth.service'
 import { OrganizationService } from '@core/services/organization.service'
 import { StorageService } from '@core/services/storage.service'
 import { PageTitleService } from '@core/services/page-title.service'
+import { SubscriptionService } from '@core/services/subscription.service'
+import { ToastService } from '@core/services/toast.service'
 import { phoneValidator } from '@shared/validators'
 import type { User } from '@shared/models/api.types'
 import { ToastComponent } from '@shared/components/ui/toast/toast.component'
@@ -111,8 +113,38 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>
 
+  private readonly authStateService = inject(AuthStateService)
+  readonly subscriptionService = inject(SubscriptionService)
+  private readonly toastService = inject(ToastService)
+
+  /** When true, user is on trial and already has one organization — cannot create another. */
+  readonly canCreateOrganization$ = combineLatest([
+    this.subscriptionService.getSubscription(),
+    this.authStateService.user$
+  ]).pipe(
+    map(([sub, user]) => {
+      if (sub?.status === 'trialing' && (user?.organizations?.length ?? 0) >= 1) {
+        return false
+      }
+      return true
+    })
+  )
+
+  readonly trialBanner$ = combineLatest([
+    this.subscriptionService.getSubscription(),
+    this.subscriptionService.getDaysUntilExpiration(),
+    this.subscriptionService.getExpirationDate(),
+    this.subscriptionService.shouldShowWarning()
+  ]).pipe(
+    map(([sub, daysLeft, expirationDate, showWarning]) => ({
+      show: sub?.status === 'trialing' && daysLeft !== null && daysLeft > 0,
+      daysLeft: daysLeft ?? 0,
+      expirationDate: expirationDate ?? '',
+      showWarning: showWarning ?? false
+    }))
+  )
+
   constructor(
-    private authStateService: AuthStateService,
     private authService: AuthService,
     private organizationService: OrganizationService,
     private storageService: StorageService,
@@ -719,16 +751,25 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   /**
    * @Function - openCreateOrgModal
-   * @description - Opens the create organization modal
+   * @description - Opens the create organization modal; blocks when on trial and user already has one organization
    * @author - Vitor Hugo
    * @returns - void
    */
   openCreateOrgModal(): void {
-    this.showCreateOrgModal = true
-    this.showOrgDropdown = false
-    this.createOrgError = ''
-    this.createOrgSuccess = ''
-    this.createOrgForm.reset()
+    firstValueFrom(this.canCreateOrganization$).then(canCreate => {
+      if (!canCreate) {
+        this.showOrgDropdown = false
+        this.toastService.warning(
+          'No período de trial você pode ter apenas uma organização. Assine um plano para criar mais.'
+        )
+        return
+      }
+      this.showCreateOrgModal = true
+      this.showOrgDropdown = false
+      this.createOrgError = ''
+      this.createOrgSuccess = ''
+      this.createOrgForm.reset()
+    })
   }
 
   /**
@@ -751,6 +792,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
    * @returns - Promise<void>
    */
   async createOrganization(): Promise<void> {
+    const canCreate = await firstValueFrom(this.canCreateOrganization$)
+    if (!canCreate) {
+      this.createOrgError = 'No período de trial você pode ter apenas uma organização. Assine um plano para criar mais.'
+      return
+    }
+
     if (this.createOrgForm.invalid) {
       Object.keys(this.createOrgForm.controls).forEach(key => {
         this.createOrgForm.controls[key].markAsTouched()

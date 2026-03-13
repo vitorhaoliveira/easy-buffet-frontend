@@ -18,17 +18,25 @@
 
   <!-- Error Message -->
   @if (error) {
-  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+  <div class="w-full p-3 sm:p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg shadow-sm">
     {{ error }}
   </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons -->
   @if (isLoading) {
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-    <app-skeleton class="h-24 mb-4"></app-skeleton>
-    <app-skeleton class="h-24 mb-4"></app-skeleton>
-    <app-skeleton class="h-24"></app-skeleton>
+  <div class="space-y-3">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="p-4 bg-white rounded-lg border shadow-sm">
+      <div class="flex items-center gap-4">
+        <app-skeleton [width]="'48px'" [height]="'48px'" [shape]="'circle'"></app-skeleton>
+        <div class="flex-1 space-y-2">
+          <app-skeleton [width]="'60%'" [height]="'20px'"></app-skeleton>
+          <app-skeleton [width]="'40%'" [height]="'16px'"></app-skeleton>
+        </div>
+      </div>
+    </div>
+    }
   </div>
   }
 
@@ -224,7 +232,7 @@
 
   <!-- Empty State -->
   @if (!isLoading && groupedInstallments.length === 0) {
-  <app-empty-state
+  <app-empty-state [icon]="CircleDollarSignIcon"
     [title]="searchTerm || filterStatus !== 'todos' ? 'Nenhuma parcela encontrada' : 'Nenhuma parcela cadastrada'"
     [message]="searchTerm || filterStatus !== 'todos' ? 'Tente ajustar os filtros de busca' : 'As parcelas dos eventos aparecerão aqui'">
   </app-empty-state>

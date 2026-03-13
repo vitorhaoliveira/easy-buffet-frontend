@@ -20,12 +20,12 @@ export const subscriptionInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 402) {
         console.warn('⚠️ Subscription Interceptor: Erro 402 detectado', error)
         
-        const errorMessage = error.error?.message || 
-          'Sua assinatura expirou ou está inativa. Por favor, renove para continuar.'
+        const errorMessage = error.error?.message ||
+          'Seu período de teste acabou. Cadastre um cartão para continuar.'
         
         // Não mostrar toast se já estiver na página de payment-required
         const currentUrl = router.url
-        if (!currentUrl.includes('/payment-required') && !currentUrl.includes('/checkout')) {
+        if (!currentUrl.includes('/payment-required')) {
           toastService.errorWithSupport(errorMessage, environment.supportUrl)
           
           // Redirecionar para página de payment-required apenas se não estiver em rotas de pagamento

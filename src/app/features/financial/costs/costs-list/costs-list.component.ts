@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-angular'
+import { LucideAngularModule, Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Receipt } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -53,6 +53,7 @@ export class CostsListComponent implements OnInit {
   readonly PlusIcon = Plus
   readonly PencilIcon = Pencil
   readonly Trash2Icon = Trash2
+  readonly ReceiptIcon = Receipt
   readonly ChevronLeftIcon = ChevronLeft
   readonly ChevronRightIcon = ChevronRight
 

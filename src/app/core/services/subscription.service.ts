@@ -1,6 +1,7 @@
 import { Injectable, inject, NgZone } from '@angular/core'
 import { HttpErrorResponse } from '@angular/common/http'
-import { BehaviorSubject, Observable, map, combineLatest } from 'rxjs'
+import { BehaviorSubject, Observable, map, combineLatest, of } from 'rxjs'
+import { tap, catchError } from 'rxjs/operators'
 import { PaymentService } from './payment.service'
 import { AuthStateService } from './auth-state.service'
 import { ToastService } from './toast.service'
@@ -27,31 +28,60 @@ export class SubscriptionService {
    * Carrega os dados da assinatura do usuário autenticado
    */
   private loadSubscriptionFromUser(): void {
-    this.authStateService.user$.subscribe(user => {
-      if (user?.subscription) {
-        this.loadSubscriptionFromBackend()
-      } else {
-        this.loadSubscriptionFromBackend()
-      }
+    this.authStateService.user$.subscribe(() => {
+      this.loadSubscriptionFromBackend().subscribe()
     })
   }
 
   /**
-   * Carrega os dados da assinatura do backend (fallback)
+   * Normalizes API subscription payload to SubscriptionResponse (supports flat trialEndsAt or nested trial.endsAt)
    */
-  private loadSubscriptionFromBackend(): void {
+  private normalizeSubscriptionResponse(data: Record<string, unknown> | null): SubscriptionResponse | null {
+    if (!data || typeof data !== 'object') return null
+    const status = data['status'] as SubscriptionResponse['status']
+    const hasSubscription = Boolean(data['hasSubscription'])
+    const trialObj = data['trial'] as Record<string, unknown> | undefined
+    const subObj = data['subscription'] as Record<string, unknown> | undefined
+    const trialEndsAt = (data['trialEndsAt'] as string | undefined) ?? (trialObj?.['endsAt'] as string | undefined)
+    const subscriptionEndsAt = (data['subscriptionEndsAt'] as string | undefined) ?? (subObj?.['endsAt'] as string | undefined)
+    const trial: SubscriptionResponse['trial'] = {
+      isActive: status === 'trialing',
+      endsAt: (trialEndsAt ?? (trialObj?.['endsAt'] as string)) ?? null
+    }
+    const subscription: SubscriptionResponse['subscription'] = {
+      endsAt: (subscriptionEndsAt ?? (subObj?.['endsAt'] as string)) ?? null,
+      canceledAt: (subObj?.['canceledAt'] as string) ?? null,
+      willRenew: (subObj?.['willRenew'] as boolean) ?? null
+    }
+    return {
+      hasSubscription,
+      status: status ?? null,
+      plan: (data['plan'] as SubscriptionResponse['plan']) ?? null,
+      trial,
+      subscription,
+      cancellation: (data['cancellation'] as SubscriptionResponse['cancellation']) ?? null
+    }
+  }
+
+  /**
+   * Carrega os dados da assinatura do backend (GET subscription - dispara sincronização no backend)
+   * @returns Observable que emite os dados normalizados quando a chamada terminar
+   */
+  private loadSubscriptionFromBackend(): Observable<SubscriptionResponse | null> {
     this.loading$.next(true)
-    this.paymentService.getSubscription().subscribe({
-      next: (response) => {
-        this.subscription$.next(response.data as SubscriptionResponse)
+    return this.paymentService.getSubscription().pipe(
+      map((response) => this.normalizeSubscriptionResponse(response.data as unknown as Record<string, unknown>)),
+      tap((normalized) => {
+        this.subscription$.next(normalized)
         this.loading$.next(false)
-      },
-      error: (error) => {
+      }),
+      catchError((error) => {
         console.error('Erro ao carregar assinatura:', error)
         this.subscription$.next(null)
         this.loading$.next(false)
-      },
-    })
+        return of(null)
+      })
+    )
   }
 
   /**
@@ -208,10 +238,11 @@ export class SubscriptionService {
   }
 
   /**
-   * Recarrega os dados da assinatura
+   * Recarrega os dados da assinatura (chama GET /payments/subscription e dispara sincronização no backend)
+   * @returns Observable que emite os dados atualizados quando a chamada terminar
    */
-  refresh(): void {
-    this.loadSubscriptionFromBackend()
+  refresh(): Observable<SubscriptionResponse | null> {
+    return this.loadSubscriptionFromBackend()
   }
 
   /**

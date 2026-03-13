@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { Router } from '@angular/router'
+import { PaymentService } from '@/app/core/services/payment.service'
+import { ToastService } from '@/app/core/services/toast.service'
 
 @Component({
   selector: 'app-payment-failed',
@@ -17,16 +18,17 @@ import { Router } from '@angular/router'
           </div>
           <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Pagamento Falhou</h1>
           <p class="text-sm sm:text-base text-gray-600 mb-6">
-            Não foi possível confirmar seu pagamento. Por favor, tente novamente ou entre em contato com o suporte.
+            Não foi possível confirmar seu pagamento. O trial não exige cartão — basta ter uma conta. Tente novamente ou entre em contato com o suporte.
           </p>
         </div>
 
         <div class="space-y-3">
           <button
             (click)="tryAgain()"
-            class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-md"
+            [disabled]="checkoutLoading"
+            class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 disabled:scale-100 shadow-md"
           >
-            Tentar Novamente
+            {{ checkoutLoading ? 'Redirecionando...' : 'Tentar Novamente' }}
           </button>
           <button
             (click)="contactSupport()"
@@ -40,10 +42,27 @@ import { Router } from '@angular/router'
   `,
 })
 export class PaymentFailedComponent {
-  private readonly router = inject(Router)
+  private readonly paymentService = inject(PaymentService)
+  private readonly toastService = inject(ToastService)
+
+  checkoutLoading = false
 
   tryAgain(): void {
-    this.router.navigate(['/checkout'])
+    this.checkoutLoading = true
+    this.paymentService.createCheckoutSession().subscribe({
+      next: (response) => {
+        if (response?.data?.url) {
+          window.location.href = response.data.url
+        } else {
+          this.checkoutLoading = false
+          this.toastService.error('URL de checkout não recebida. Tente novamente.')
+        }
+      },
+      error: (err) => {
+        this.checkoutLoading = false
+        this.toastService.error(err?.error?.message || 'Erro ao iniciar checkout. Tente novamente.')
+      }
+    })
   }
 
   contactSupport(): void {

@@ -2,12 +2,14 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Trash2 } from 'lucide-angular'
+import { LucideAngularModule, CalendarDays, Plus, Trash2 } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
+import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
 import { FabComponent } from '@shared/components/ui/fab/fab.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
+import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EventService, GetEventsParams } from '@core/services/event.service'
 import { PageTitleService } from '@core/services/page-title.service'
 import { ClientService } from '@core/services/client.service'
@@ -25,12 +27,15 @@ import { formatDateBR } from '@shared/utils/date.utils'
     FormsModule,
     LucideAngularModule,
     ConfirmationModalComponent,
+    EmptyStateComponent,
     FabComponent,
-    SearchBarComponent
+    SearchBarComponent,
+    SkeletonComponent
   ],
   templateUrl: './events-list.component.html'
 })
 export class EventsListComponent implements OnInit {
+  readonly CalendarDaysIcon = CalendarDays
   readonly PlusIcon = Plus
   readonly Trash2Icon = Trash2
 
