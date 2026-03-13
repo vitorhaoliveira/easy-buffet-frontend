@@ -1,8 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { Router, ActivatedRoute } from '@angular/router'
+import { Router } from '@angular/router'
+import { take } from 'rxjs/operators'
 import { AuthStateService } from '@/app/core/services/auth-state.service'
 import { SubscriptionService } from '@/app/core/services/subscription.service'
+import { PaymentService } from '@/app/core/services/payment.service'
+import { ToastService } from '@/app/core/services/toast.service'
 
 @Component({
   selector: 'app-payment-required',
@@ -70,10 +73,11 @@ import { SubscriptionService } from '@/app/core/services/subscription.service'
 
         <div class="space-y-3">
           <button
-            (click)="goToPlans()"
-            class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-md"
+            (click)="goToStripeCheckout()"
+            [disabled]="checkoutLoading"
+            class="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 disabled:scale-100 shadow-md"
           >
-            {{ buttonText }}
+            {{ checkoutLoading ? 'Redirecionando...' : buttonText }}
           </button>
           <button
             (click)="logout()"
@@ -88,15 +92,17 @@ import { SubscriptionService } from '@/app/core/services/subscription.service'
 })
 export class PaymentRequiredComponent implements OnInit {
   private readonly router = inject(Router)
-  private readonly route = inject(ActivatedRoute)
   private readonly authStateService = inject(AuthStateService)
   private readonly subscriptionService = inject(SubscriptionService)
+  private readonly paymentService = inject(PaymentService)
+  private readonly toastService = inject(ToastService)
 
   subscriptionStatus: string | null = null
   expirationDate: string | null = null
+  checkoutLoading = false
   pageTitle = 'Assinatura Necessária'
-  pageDescription = 'Você precisa de uma assinatura ativa para acessar este recurso.'
-  ctaMessage = 'Experimente gratuitamente por 7 dias!'
+  pageDescription = 'Você precisa de uma assinatura ativa para acessar este recurso. O trial de 7 dias não exige cartão — basta ter uma conta criada.'
+  ctaMessage = 'Experimente gratuitamente por 7 dias (sem cadastrar cartão):'
   buttonText = 'Começar Trial Gratuito'
 
   ngOnInit(): void {
@@ -106,15 +112,42 @@ export class PaymentRequiredComponent implements OnInit {
 
   private async refreshUserData(): Promise<void> {
     try {
-      // Atualizar dados do usuário do backend
       await this.authStateService.refreshUser()
-      // Depois verificar o status
       this.checkSubscriptionStatus()
+      if (!this.subscriptionStatus) {
+        this.applySubscriptionFromService()
+      }
     } catch (error) {
       console.error('Erro ao atualizar dados do usuário:', error)
-      // Mesmo com erro, tenta mostrar os dados que tem
       this.checkSubscriptionStatus()
+      if (!this.subscriptionStatus) {
+        this.applySubscriptionFromService()
+      }
     }
+  }
+
+  private applySubscriptionFromService(): void {
+    this.subscriptionService.getSubscription().pipe(take(1)).subscribe((sub) => {
+      if (!sub?.status) return
+      this.subscriptionStatus = sub.status
+      this.expirationDate = sub.trial?.endsAt ?? sub.subscription?.endsAt ?? null
+      if (sub.status === 'trialing' || sub.status === 'expired') {
+        this.pageTitle = 'Seu período de teste acabou'
+        this.pageDescription = 'Cadastre um cartão para continuar usando o sistema. O trial não exige cartão — você já aproveitou os 7 dias com sua conta.'
+        this.ctaMessage = 'Continue aproveitando todos os recursos:'
+        this.buttonText = 'Cadastre um cartão para continuar'
+      } else if (sub.status === 'canceled') {
+        this.pageTitle = 'Assinatura Cancelada'
+        this.pageDescription = 'Sua assinatura foi cancelada.'
+        this.ctaMessage = 'Reative sua assinatura:'
+        this.buttonText = 'Reativar Assinatura'
+      } else if (sub.status === 'past_due') {
+        this.pageTitle = 'Pagamento Pendente'
+        this.pageDescription = 'Há um problema com seu pagamento.'
+        this.ctaMessage = 'Atualize seu método de pagamento:'
+        this.buttonText = 'Atualizar Pagamento'
+      }
+    })
   }
 
   private checkSubscriptionStatus(): void {
@@ -125,13 +158,13 @@ export class PaymentRequiredComponent implements OnInit {
 
     if (subscription) {
       this.subscriptionStatus = subscription.status
-      
-      if (subscription.status === 'trialing') {
-        this.expirationDate = subscription.trialEndsAt
-        this.pageTitle = 'Trial Expirado'
-        this.pageDescription = 'Seu período de teste gratuito terminou.'
+      this.expirationDate = subscription.trialEndsAt ?? subscription.trial?.endsAt ?? subscription.subscriptionEndsAt ?? null
+
+      if (subscription.status === 'trialing' || subscription.status === 'expired') {
+        this.pageTitle = 'Seu período de teste acabou'
+        this.pageDescription = 'Cadastre um cartão para continuar usando o sistema. O trial não exige cartão — você já aproveitou os 7 dias com sua conta.'
         this.ctaMessage = 'Continue aproveitando todos os recursos:'
-        this.buttonText = 'Assinar Agora'
+        this.buttonText = 'Cadastre um cartão para continuar'
       } else if (subscription.status === 'canceled') {
         this.pageTitle = 'Assinatura Cancelada'
         this.pageDescription = 'Sua assinatura foi cancelada.'
@@ -150,6 +183,8 @@ export class PaymentRequiredComponent implements OnInit {
     switch (this.subscriptionStatus) {
       case 'trialing':
         return 'Trial Expirado'
+      case 'expired':
+        return 'Período de teste encerrado'
       case 'active':
         return 'Assinatura Expirada'
       case 'canceled':
@@ -176,8 +211,25 @@ export class PaymentRequiredComponent implements OnInit {
     }
   }
 
-  goToPlans(): void {
-    this.router.navigate(['/checkout'])
+  goToStripeCheckout(): void {
+    this.checkoutLoading = true
+    this.paymentService.createCheckoutSession().subscribe({
+      next: (response) => {
+        if (response?.data?.url) {
+          window.location.href = response.data.url
+        } else {
+          this.checkoutLoading = false
+          this.toastService.error('URL de checkout não recebida. Tente novamente.')
+        }
+      },
+      error: (err) => {
+        this.checkoutLoading = false
+        const message = err?.status === 401
+          ? 'Você precisa estar autenticado.'
+          : err?.error?.message || 'Erro ao iniciar checkout. Tente novamente.'
+        this.toastService.error(message)
+      }
+    })
   }
 
   logout(): void {

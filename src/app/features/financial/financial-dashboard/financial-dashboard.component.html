@@ -1,12 +1,12 @@
 <div class="space-y-6">
   <!-- Error Message -->
   @if (error) {
-  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+  <div class="w-full p-3 sm:p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg shadow-sm">
     {{ error }}
   </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons (same pattern as list pages) -->
   @if (isLoading) {
   <div class="space-y-6">
     <!-- Skeleton Cards -->
@@ -188,7 +188,8 @@
       }
     </div>
     } @else {
-    <app-empty-state title="Nenhuma parcela próxima" message="Não há parcelas a vencer nos próximos dias" />
+    <app-empty-state [icon]="CalendarIcon" title="Nenhuma parcela próxima"
+      message="Não há parcelas a vencer nos próximos dias" />
     }
   </div>
 
@@ -238,7 +239,7 @@
       </div>
     </div>
     } @else {
-    <app-empty-state title="Sem dados de evolução"
+    <app-empty-state [icon]="BarChart3Icon" title="Sem dados de evolução"
       message="Ainda não há dados suficientes para exibir a evolução mensal" />
     }
   </div>

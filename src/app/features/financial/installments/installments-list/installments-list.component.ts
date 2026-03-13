@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2, ChevronDown, ChevronRight, ChevronLeft, Pencil } from 'lucide-angular'
+import { LucideAngularModule, Plus, Eye, Trash2, CheckCircle2, ChevronDown, ChevronRight, ChevronLeft, Pencil, CircleDollarSign } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -70,6 +70,7 @@ export class InstallmentsListComponent implements OnInit {
   readonly EyeIcon = Eye
   readonly Trash2Icon = Trash2
   readonly CheckCircle2Icon = CheckCircle2
+  readonly CircleDollarSignIcon = CircleDollarSign
   readonly ChevronDownIcon = ChevronDown
   readonly ChevronRightIcon = ChevronRight
   readonly ChevronLeftIcon = ChevronLeft

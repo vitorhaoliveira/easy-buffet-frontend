@@ -41,6 +41,8 @@ export interface UserPermissions {
 
 export interface UserSubscription {
   status: 'active' | 'trialing' | 'canceled' | 'expired' | 'past_due'
+  trialEndsAt?: string | null
+  subscriptionEndsAt?: string | null
 }
 
 export interface User {

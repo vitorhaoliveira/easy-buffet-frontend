@@ -107,8 +107,8 @@
             </div>
             }
 
-            <!-- Create New Organization Button -->
-            @if (isAdmin()) {
+            <!-- Create New Organization Button (hidden on trial when user already has one organization) -->
+            @if (isAdmin() && (canCreateOrganization$ | async)) {
             <div [class]="hasMultipleOrganizations() || !hasMultipleOrganizations() ? 'border-t border-gray-200' : ''">
               <button (click)="openCreateOrgModal()"
                 class="w-full text-left px-3 py-2.5 text-sm text-primary-600 hover:bg-primary-50 transition-colors flex items-center gap-2 font-medium">
@@ -261,6 +261,16 @@
         }
       </div>
     </header>
+
+    <!-- Trial banner: show when user is in active trial -->
+    @if ((trialBanner$ | async); as banner) {
+      @if (banner.show) {
+    <div [class]="'px-4 py-2 text-center text-sm ' + (banner.showWarning ? 'bg-amber-100 text-amber-900 border-b border-amber-200' : 'bg-primary-50 text-primary-800 border-b border-primary-100')">
+      <span>Acesso trial até {{ banner.expirationDate }}</span>
+      <span class="ml-2">({{ banner.daysLeft }} dia(s) restante(s) no período de teste)</span>
+    </div>
+      }
+    }
 
     <!-- Main content -->
     <main class="flex-1 overflow-y-auto w-full">

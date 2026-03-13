@@ -135,7 +135,7 @@ export class SignupComponent implements OnInit, OnDestroy {
       )
       
       if (success) {
-        this.router.navigate(['/checkout'])
+        this.router.navigate(['/'])
       } else {
         this.error = 'Erro ao criar conta. Tente novamente.'
       }

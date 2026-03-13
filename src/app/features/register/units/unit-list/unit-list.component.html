@@ -18,24 +18,31 @@
 
   <!-- Error Message -->
   @if (error) {
-  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+  <div class="w-full p-3 sm:p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg shadow-sm">
     {{ error }}
   </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons -->
   @if (isLoading) {
-  <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-3">
-    <app-skeleton width="100%" height="60px"></app-skeleton>
-    <app-skeleton width="100%" height="60px"></app-skeleton>
-    <app-skeleton width="100%" height="60px"></app-skeleton>
-    <app-skeleton width="100%" height="60px"></app-skeleton>
+  <div class="space-y-3">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="p-4 bg-white rounded-lg border shadow-sm">
+      <div class="flex items-center gap-4">
+        <app-skeleton [width]="'48px'" [height]="'48px'" [shape]="'circle'"></app-skeleton>
+        <div class="flex-1 space-y-2">
+          <app-skeleton [width]="'60%'" [height]="'20px'"></app-skeleton>
+          <app-skeleton [width]="'40%'" [height]="'16px'"></app-skeleton>
+        </div>
+      </div>
+    </div>
+    }
   </div>
   }
 
-  <!-- Tabela - Desktop -->
-  @if (!isLoading) {
-  <div class="hidden lg:block bg-white rounded-xl shadow-sm border overflow-hidden">
+  <!-- Desktop Table (hidden on mobile) -->
+  @if (!isLoading && filteredUnits.length > 0) {
+  <div class="hidden lg:block rounded-xl border shadow-sm overflow-hidden bg-white">
     <app-table>
       <thead appTableHeader>
         <tr appTableRow>
@@ -148,7 +155,8 @@
 
   <!-- Empty State -->
   @if (!isLoading && filteredUnits.length === 0) {
-  <app-empty-state [title]="searchTerm ? 'Nenhuma unidade encontrada' : 'Nenhuma unidade cadastrada'"
+  <app-empty-state [icon]="Building2Icon"
+    [title]="searchTerm ? 'Nenhuma unidade encontrada' : 'Nenhuma unidade cadastrada'"
     [message]="searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece criando sua primeira unidade'" />
   }
 

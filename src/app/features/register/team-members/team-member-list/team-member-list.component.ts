@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Users } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -53,6 +53,7 @@ export class TeamMemberListComponent implements OnInit {
   readonly PlusIcon = Plus
   readonly EditIcon = Edit
   readonly Trash2Icon = Trash2
+  readonly UsersIcon = Users
   readonly ChevronLeftIcon = ChevronLeft
   readonly ChevronRightIcon = ChevronRight
 

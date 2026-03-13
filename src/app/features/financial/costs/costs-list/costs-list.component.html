@@ -19,25 +19,31 @@
 
   <!-- Error Message -->
   @if (error) {
-  <div class="w-full p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+  <div class="w-full p-3 sm:p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg shadow-sm">
     {{ error }}
   </div>
   }
 
-  <!-- Loading State -->
+  <!-- Loading State with Skeletons -->
   @if (isLoading) {
-  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-    <app-skeleton class="h-16 mb-3"></app-skeleton>
-    <app-skeleton class="h-16 mb-3"></app-skeleton>
-    <app-skeleton class="h-16 mb-3"></app-skeleton>
-    <app-skeleton class="h-16"></app-skeleton>
+  <div class="space-y-3">
+    @for (i of [1,2,3,4,5]; track i) {
+    <div class="p-4 bg-white rounded-lg border shadow-sm">
+      <div class="flex items-center gap-4">
+        <app-skeleton [width]="'48px'" [height]="'48px'" [shape]="'circle'"></app-skeleton>
+        <div class="flex-1 space-y-2">
+          <app-skeleton [width]="'60%'" [height]="'20px'"></app-skeleton>
+          <app-skeleton [width]="'40%'" [height]="'16px'"></app-skeleton>
+        </div>
+      </div>
+    </div>
+    }
   </div>
   }
 
-  <!-- Tabela Desktop -->
-  @if (!isLoading) {
-  <!-- Desktop Table -->
-  <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+  <!-- Desktop Table (hidden on mobile) -->
+  @if (!isLoading && filteredCosts.length > 0) {
+  <div class="hidden lg:block rounded-xl border shadow-sm overflow-hidden bg-white">
     <app-table>
       <thead appTableHeader>
         <tr appTableRow>
@@ -78,7 +84,7 @@
     </app-table>
   </div>
 
-  <!-- Mobile Card View -->
+  <!-- Mobile Cards (visible on mobile only) -->
   <div class="lg:hidden">
     @for (cost of filteredCosts; track cost.id) {
     <app-mobile-card class="mb-4">
@@ -118,10 +124,9 @@
     </app-mobile-card>
     }
   </div>
-  }
 
   <!-- Pagination -->
-  @if (!isLoading && pagination && pagination.total > 0) {
+  @if (pagination && pagination.total > 0) {
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
     <p class="text-sm text-gray-600">
       Página {{ pagination.page }} de {{ pagination.totalPages }}
@@ -141,10 +146,11 @@
     </div>
   </div>
   }
+  }
 
   <!-- Empty State -->
   @if (!isLoading && filteredCosts.length === 0) {
-  <app-empty-state
+  <app-empty-state [icon]="ReceiptIcon"
     [title]="searchTerm || filterCategory !== 'todos' ? 'Nenhum custo encontrado' : 'Nenhum custo cadastrado'"
     [message]="searchTerm || filterCategory !== 'todos' ? 'Tente ajustar os filtros de busca' : 'Os custos e despesas dos eventos aparecerão aqui'">
   </app-empty-state>

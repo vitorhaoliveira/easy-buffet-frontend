@@ -18,35 +18,30 @@ export const subscriptionGuard: CanActivateFn = () => {
     }),
     take(1), // Pega apenas o primeiro valor não-null
     map((subscription) => {
-      // Verificar se tem subscription
-      if (!subscription?.hasSubscription || !subscription.status) {
-        console.warn('⚠️ Subscription Guard: Usuário sem assinatura')
-        router.navigate(['/payment-required'])
-        return false
-      }
-
       const now = new Date()
 
-      // Verificar se está em trial
-      if (subscription.status === 'trialing') {
-        if (!subscription.trial.endsAt) {
+      // Allow access when trialing and trial end date is in the future (even if hasSubscription is false)
+      if (subscription?.status === 'trialing') {
+        const endsAt = subscription.trial?.endsAt
+        if (!endsAt) {
           console.warn('⚠️ Subscription Guard: Trial sem data de expiração')
           router.navigate(['/payment-required'])
           return false
         }
-
-        const trialEndsAt = new Date(subscription.trial.endsAt)
-        
-        if (now > trialEndsAt) {
-          console.warn('⚠️ Subscription Guard: Trial expirado', {
-            trialEndsAt: subscription.trial.endsAt,
-            now: now.toISOString()
-          })
-          router.navigate(['/payment-required'])
-          return false
+        const trialEndsAt = new Date(endsAt)
+        if (now <= trialEndsAt) {
+          return true
         }
+        console.warn('⚠️ Subscription Guard: Trial expirado', { trialEndsAt: endsAt, now: now.toISOString() })
+        router.navigate(['/payment-required'])
+        return false
+      }
 
-        return true
+      // Require subscription for non-trialing statuses
+      if (!subscription?.hasSubscription || !subscription.status) {
+        console.warn('⚠️ Subscription Guard: Usuário sem assinatura')
+        router.navigate(['/payment-required'])
+        return false
       }
 
       // Verificar se subscription está ativa

@@ -28,11 +28,6 @@ export const routes: Routes = [
 
   // Payment routes (with auth guard only)
   {
-    path: 'checkout',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/payments/checkout/checkout.component').then(m => m.CheckoutComponent)
-  },
-  {
     path: 'payment-success',
     canActivate: [authGuard],
     loadComponent: () => import('./features/payments/payment-success/payment-success.component').then(m => m.PaymentSuccessComponent)

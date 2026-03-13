@@ -51,75 +51,54 @@ export class PaymentSuccessComponent implements OnInit {
   private async verifyPaymentWithRetry(): Promise<void> {
     this.currentAttempt++
     try {
-      // Recarrega os dados do usuário para pegar a subscription atualizada
-      const refreshed = await this.authStateService.refreshUser()
-      
-      if (refreshed) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rawUser = this.authStateService.user as any
-        
-        // Extrair o user correto da estrutura (pode vir como {success, data} ou direto)
-        const userData = rawUser?.data || rawUser
-        const subscription = userData?.subscription
-        
-        if (subscription?.status) {
-          if (subscription.status === 'trialing' || subscription.status === 'active') {
-            // Recarrega a subscription no serviço
-            this.subscriptionService.refresh()
-            
-            // Aguarda um pouco antes de redirecionar para garantir que tudo foi atualizado
-            setTimeout(() => {
-              this.router.navigate(['/dashboard'])
-            }, 500)
-            return
-          } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
-            // Status que indica problema definitivo
-            this.router.navigate(['/payment-failed'], {
-              queryParams: { 
-                reason: `Assinatura com status: ${subscription.status}. Por favor, tente novamente ou contate o suporte.`
+      // 1) Chama o endpoint de assinatura (GET /payments/subscription) para disparar a sincronização no backend
+      this.subscriptionService.refresh().subscribe({
+        next: async () => {
+          // 2) Recarrega os dados do usuário (/me) para pegar subscription atualizada (stripeSubscriptionId, hasSubscription, etc.)
+          const refreshed = await this.authStateService.refreshUser()
+
+          if (refreshed) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rawUser = this.authStateService.user as any
+            const userData = rawUser?.data || rawUser
+            const subscription = userData?.subscription
+
+            if (subscription?.status) {
+              if (subscription.status === 'trialing' || subscription.status === 'active') {
+                // Redireciona para a tela de assinatura para o usuário ver os dados atualizados (hasSubscription: true, etc.)
+                this.router.navigate(['/assinatura'])
+                return
+              } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
+                this.router.navigate(['/payment-failed'], {
+                  queryParams: {
+                    reason: `Assinatura com status: ${subscription.status}. Por favor, tente novamente ou contate o suporte.`
+                  }
+                })
+                return
               }
-            })
-            return
-          } else {
-            console.warn('⚠️ Status inesperado:', subscription.status)
+            }
           }
-        } else {
-          console.warn('⚠️ Subscription não encontrada ou sem status. User:', userData)
-        }
-      } else {
-        console.warn('⚠️ Refresh do usuário falhou')
-      }
-      
-      // Se não encontrou subscription ativa, tenta novamente
-      if (this.currentAttempt < this.maxAttempts) {
-        setTimeout(() => {
-          this.verifyPaymentWithRetry()
-        }, 3000)
-      } else {
-        console.error('❌ Número máximo de tentativas atingido. Assinatura não encontrada.')
-        this.router.navigate(['/payment-failed'], {
-          queryParams: { 
-            reason: 'Não foi possível confirmar sua assinatura. O webhook pode estar demorando para processar.',
-            attempts: this.maxAttempts
-          }
-        })
-      }
+
+          this.retryOrFail()
+        },
+        error: () => this.retryOrFail()
+      })
     } catch (err) {
       console.error('❌ Erro ao verificar assinatura:', err)
-      
-      if (this.currentAttempt < this.maxAttempts) {
-        setTimeout(() => {
-          this.verifyPaymentWithRetry()
-        }, 3000)
-      } else {
-        console.error('❌ Número máximo de tentativas atingido após erro.')
-        this.router.navigate(['/payment-failed'], {
-          queryParams: { 
-            reason: 'Erro ao verificar o status da assinatura. Por favor, contate o suporte.',
-            error: 'verification_error'
-          }
-        })
-      }
+      this.retryOrFail()
+    }
+  }
+
+  private retryOrFail(): void {
+    if (this.currentAttempt < this.maxAttempts) {
+      setTimeout(() => this.verifyPaymentWithRetry(), 3000)
+    } else {
+      this.router.navigate(['/payment-failed'], {
+        queryParams: {
+          reason: 'Não foi possível confirmar sua assinatura. O webhook pode estar demorando para processar.',
+          attempts: this.maxAttempts
+        }
+      })
     }
   }
 }

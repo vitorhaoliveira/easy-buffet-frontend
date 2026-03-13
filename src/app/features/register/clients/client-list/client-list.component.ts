@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
-import { LucideAngularModule, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-angular'
+import { LucideAngularModule, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, User } from 'lucide-angular'
 import { firstValueFrom } from 'rxjs'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
@@ -54,6 +54,7 @@ export class ClientListComponent implements OnInit {
   readonly EditIcon = Edit
   readonly Trash2Icon = Trash2
   readonly EyeIcon = Eye
+  readonly UserIcon = User
   readonly ChevronLeftIcon = ChevronLeft
   readonly ChevronRightIcon = ChevronRight
 
