@@ -1,0 +1,51 @@
+<div class="space-y-4 sm:space-y-6">
+  @if (error) {
+    <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ error }}</div>
+  }
+
+  @if (isLoading) {
+    <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">Carregando kanban...</div>
+  }
+
+  @if (!isLoading) {
+    <div class="overflow-x-auto">
+      <div class="min-w-[1000px] grid gap-4" [style.gridTemplateColumns]="'repeat(' + stages.length + ', minmax(260px, 1fr))'">
+        @for (stage of stages; track stage.id) {
+          <div class="bg-white rounded-xl border border-gray-200 p-3 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900">{{ stage.name }}</h3>
+              <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">{{ getLeadsByStage(stage.id).length }}</span>
+            </div>
+
+            @for (lead of getLeadsByStage(stage.id); track lead.id) {
+              <div class="rounded-lg border border-gray-200 p-3 space-y-2 bg-gray-50">
+                <a [routerLink]="['/crm/leads', lead.id]" class="block font-medium text-gray-900 hover:text-primary-600">
+                  {{ lead.name }}
+                </a>
+                <p class="text-xs text-gray-500">{{ lead.whatsapp || lead.phone || lead.email || '-' }}</p>
+                <div class="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    [disabled]="!getPreviousStage(stage.id)"
+                    (click)="moveLeadToStage(lead.id, getPreviousStage(stage.id)!.id)"
+                    class="h-8 px-2 rounded border border-gray-300 text-xs text-gray-700 disabled:opacity-40"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    type="button"
+                    [disabled]="!getNextStage(stage.id)"
+                    (click)="moveLeadToStage(lead.id, getNextStage(stage.id)!.id)"
+                    class="h-8 px-2 rounded bg-primary-600 text-white text-xs disabled:opacity-40"
+                  >
+                    Avançar
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

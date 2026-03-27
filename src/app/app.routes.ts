@@ -74,6 +74,32 @@ export const routes: Routes = [
         data: { module: 'dashboard', action: 'view' },
         canActivate: [permissionGuard]
       },
+
+      // CRM routes
+      {
+        path: 'crm',
+        loadComponent: () => import('./features/crm/leads-list/crm-leads-list.component').then(m => m.CrmLeadsListComponent),
+        data: { module: 'crm', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'crm/kanban',
+        loadComponent: () => import('./features/crm/leads-kanban/crm-leads-kanban.component').then(m => m.CrmLeadsKanbanComponent),
+        data: { module: 'crm', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'crm/dashboard',
+        loadComponent: () => import('./features/crm/dashboard/crm-dashboard.component').then(m => m.CrmDashboardComponent),
+        data: { module: 'crm', action: 'view' },
+        canActivate: [permissionGuard]
+      },
+      {
+        path: 'crm/leads/:id',
+        loadComponent: () => import('./features/crm/lead-detail/crm-lead-detail.component').then(m => m.CrmLeadDetailComponent),
+        data: { module: 'crm', action: 'view' },
+        canActivate: [permissionGuard]
+      },
       
       // Clients routes
       {

@@ -21,6 +21,12 @@ export interface UserPermissions {
   dashboard: {
     view: boolean
   }
+  crm: {
+    create: boolean
+    edit: boolean
+    delete: boolean
+    view: boolean
+  }
   cadastros: {
     create: boolean
     edit: boolean
@@ -116,6 +122,94 @@ export interface Client {
   address?: string
   createdAt: string
   updatedAt?: string
+}
+
+// CRM Types
+export type CrmLeadStatus = 'ativo' | 'perdido' | 'convertido'
+export type CrmPipelineStageName =
+  | 'Novo Lead'
+  | 'Contato feito'
+  | 'Proposta enviada'
+  | 'Negociação'
+  | 'Fechado'
+  | 'Perdido'
+export type CrmInteractionType = 'ligacao' | 'whatsapp' | 'reuniao' | 'nota' | 'sistema'
+export type CrmFollowUpStatus = 'pending' | 'done'
+
+export interface CrmPipelineStage {
+  id: string
+  organizationId: string
+  name: CrmPipelineStageName | string
+  orderIndex: number
+  isDefault: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface CrmLead {
+  id: string
+  organizationId: string
+  clientId?: string | null
+  ownerId?: string | null
+  currentStageId?: string | null
+  name: string
+  phone?: string
+  whatsapp?: string
+  email?: string
+  origin: string
+  status: CrmLeadStatus
+  notes?: string
+  createdAt: string
+  updatedAt?: string
+  currentStage?: CrmPipelineStage | null
+  owner?: {
+    id: string
+    name: string
+  } | null
+}
+
+export interface CrmDeal {
+  id: string
+  organizationId: string
+  leadId: string
+  stageId: string
+  value?: number | null
+  eventDate?: string | null
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface CrmInteraction {
+  id: string
+  organizationId: string
+  leadId: string
+  type: CrmInteractionType
+  description: string
+  createdBy: string
+  createdAt: string
+}
+
+export interface CrmFollowUp {
+  id: string
+  organizationId: string
+  leadId: string
+  dueDate: string
+  note: string
+  status: CrmFollowUpStatus
+  isOverdue?: boolean
+  createdBy: string
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface CrmDashboardSummary {
+  totalLeads: number
+  conversionRate: number
+  leadsByOrigin: Array<{
+    origin: string
+    total: number
+  }>
+  overdueFollowUps: number
 }
 
 // Seller Types
@@ -548,6 +642,74 @@ export interface UpdateClientRequest {
   phone?: string
   cpf?: string
   address?: string
+}
+
+// CRM Request Types
+export interface GetCrmLeadsParams {
+  page?: number
+  limit?: number
+  search?: string
+  status?: CrmLeadStatus
+  stageId?: string
+  ownerId?: string
+  origin?: string
+}
+
+export interface CreateCrmLeadRequest {
+  clientId?: string
+  ownerId?: string
+  currentStageId?: string
+  name: string
+  phone?: string
+  whatsapp?: string
+  email?: string
+  origin: string
+  status?: CrmLeadStatus
+  notes?: string
+}
+
+export interface UpdateCrmLeadRequest {
+  clientId?: string | null
+  ownerId?: string | null
+  currentStageId?: string | null
+  name?: string
+  phone?: string
+  whatsapp?: string
+  email?: string
+  origin?: string
+  status?: CrmLeadStatus
+  notes?: string
+}
+
+export interface MoveCrmLeadStageRequest {
+  stageId: string
+}
+
+export interface ConvertCrmLeadRequest {
+  createQuoteDraft?: boolean
+}
+
+export interface ConvertCrmLeadResponse {
+  leadId: string
+  clientId: string
+  quoteId?: string | null
+  contractId?: string | null
+}
+
+export interface CreateCrmInteractionRequest {
+  type: CrmInteractionType
+  description: string
+}
+
+export interface CreateCrmFollowUpRequest {
+  dueDate: string
+  note: string
+}
+
+export interface UpdateCrmFollowUpRequest {
+  dueDate?: string
+  note?: string
+  status?: CrmFollowUpStatus
 }
 
 export interface CreateSellerRequest {

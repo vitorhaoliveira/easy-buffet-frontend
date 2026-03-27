@@ -1,0 +1,143 @@
+<div class="space-y-4 sm:space-y-6">
+  <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+    <h2 class="font-semibold text-gray-900">Novo lead rápido</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+      <input
+        type="text"
+        [(ngModel)]="createLeadModel.name"
+        placeholder="Nome"
+        class="h-11 rounded-lg border border-gray-300 px-3 text-sm"
+      />
+      <input
+        type="text"
+        [(ngModel)]="createLeadModel.whatsapp"
+        placeholder="WhatsApp"
+        class="h-11 rounded-lg border border-gray-300 px-3 text-sm"
+      />
+      <input
+        type="email"
+        [(ngModel)]="createLeadModel.email"
+        placeholder="Email (opcional)"
+        class="h-11 rounded-lg border border-gray-300 px-3 text-sm"
+      />
+      <div class="flex gap-2">
+        <select [(ngModel)]="createLeadModel.origin" class="h-11 rounded-lg border border-gray-300 px-3 text-sm flex-1">
+          <option value="whatsapp">WhatsApp</option>
+          <option value="instagram">Instagram</option>
+          <option value="site">Site</option>
+          <option value="indicacao">Indicação</option>
+          <option value="outros">Outros</option>
+        </select>
+        <button
+          type="button"
+          (click)="createLead()"
+          [disabled]="isCreatingLead"
+          class="h-11 px-4 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 disabled:opacity-50"
+        >
+          <lucide-icon [img]="PlusIcon" class="h-4 w-4"></lucide-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 p-4">
+    <div class="flex flex-col sm:flex-row gap-2">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Buscar por nome, telefone ou email"
+        class="h-11 rounded-lg border border-gray-300 px-3 text-sm flex-1"
+      />
+      <select [(ngModel)]="selectedStatus" (change)="onStatusChange()" class="h-11 rounded-lg border border-gray-300 px-3 text-sm sm:w-56">
+        <option value="all">Todos os status</option>
+        <option value="ativo">Ativo</option>
+        <option value="convertido">Convertido</option>
+        <option value="perdido">Perdido</option>
+      </select>
+      <button
+        type="button"
+        (click)="loadLeads()"
+        class="h-11 px-4 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+      >
+        <lucide-icon [img]="RefreshCwIcon" class="h-4 w-4"></lucide-icon>
+      </button>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ error }}</div>
+  }
+
+  @if (isLoading) {
+    <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">Carregando leads...</div>
+  }
+
+  @if (!isLoading && leads.length > 0) {
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="text-left font-medium text-gray-700 px-4 py-3">Lead</th>
+              <th class="text-left font-medium text-gray-700 px-4 py-3">Origem</th>
+              <th class="text-left font-medium text-gray-700 px-4 py-3">Status</th>
+              <th class="text-left font-medium text-gray-700 px-4 py-3">Etapa</th>
+              <th class="text-left font-medium text-gray-700 px-4 py-3">Criado em</th>
+              <th class="text-right font-medium text-gray-700 px-4 py-3">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lead of leads; track lead.id) {
+              <tr class="border-t">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-900">{{ lead.name }}</div>
+                  <div class="text-xs text-gray-500">{{ lead.whatsapp || lead.phone || lead.email || '-' }}</div>
+                </td>
+                <td class="px-4 py-3 capitalize">{{ lead.origin }}</td>
+                <td class="px-4 py-3 capitalize">{{ lead.status }}</td>
+                <td class="px-4 py-3">{{ lead.currentStage?.name || '-' }}</td>
+                <td class="px-4 py-3">{{ lead.createdAt | date:'dd/MM/yyyy' }}</td>
+                <td class="px-4 py-3 text-right">
+                  <a [routerLink]="['/crm/leads', lead.id]" class="text-primary-600 hover:underline">Abrir</a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  @if (!isLoading && leads.length === 0) {
+    <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">
+      Nenhum lead encontrado com os filtros atuais.
+    </div>
+  }
+
+  @if (!isLoading && pagination) {
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between">
+      <p class="text-sm text-gray-600">
+        Página {{ pagination.page }} de {{ pagination.totalPages }} ({{ pagination.total }} leads)
+      </p>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          [disabled]="pagination.page <= 1"
+          (click)="setPage(page - 1)"
+          class="h-9 px-3 rounded-lg border border-gray-300 text-sm disabled:opacity-50"
+        >
+          Anterior
+        </button>
+        <button
+          type="button"
+          [disabled]="pagination.page >= pagination.totalPages"
+          (click)="setPage(page + 1)"
+          class="h-9 px-3 rounded-lg border border-gray-300 text-sm disabled:opacity-50"
+        >
+          Próxima
+        </button>
+      </div>
+    </div>
+  }
+</div>

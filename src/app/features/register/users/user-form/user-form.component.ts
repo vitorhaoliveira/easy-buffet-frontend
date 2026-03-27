@@ -81,6 +81,10 @@ export class UserFormComponent implements OnInit {
 
     this.permissionsForm = this.fb.group({
       dashboardView: [true],
+      crmCreate: [false],
+      crmEdit: [false],
+      crmDelete: [false],
+      crmView: [true],
       cadastrosCreate: [false],
       cadastrosEdit: [false],
       cadastrosDelete: [false],
@@ -182,7 +186,11 @@ export class UserFormComponent implements OnInit {
             financeiroDelete: user.permissions.financeiro.delete,
             financeiroView: user.permissions.financeiro.view,
             relatoriosView: user.permissions.relatorios.view,
-            relatoriosExport: user.permissions.relatorios.export
+            relatoriosExport: user.permissions.relatorios.export,
+            crmCreate: user.permissions.crm?.create ?? false,
+            crmEdit: user.permissions.crm?.edit ?? false,
+            crmDelete: user.permissions.crm?.delete ?? false,
+            crmView: user.permissions.crm?.view ?? true
           })
         }
       }
@@ -204,6 +212,12 @@ export class UserFormComponent implements OnInit {
     return {
       dashboard: {
         view: perms.dashboardView
+      },
+      crm: {
+        create: perms.crmCreate,
+        edit: perms.crmEdit,
+        delete: perms.crmDelete,
+        view: perms.crmView
       },
       cadastros: {
         create: perms.cadastrosCreate,

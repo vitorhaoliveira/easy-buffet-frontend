@@ -275,6 +275,7 @@ export class AuthStateService {
 
         const defaultPermissions = {
           dashboard: { view: true },
+          crm: { create: true, edit: true, delete: true, view: true },
           cadastros: { create: true, edit: true, delete: true, view: true },
           financeiro: { create: true, edit: true, delete: true, view: true },
           relatorios: { view: true, export: true }
