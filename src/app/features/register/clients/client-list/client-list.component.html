@@ -4,8 +4,11 @@
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
       <app-fab routerLink="/cadastros/clientes/novo" title="Novo Cliente" [inline]="true"></app-fab>
       <div class="flex-1 w-full">
-        <app-search-bar placeholder="Buscar por nome, email, telefone ou CPF..."
-          [(ngModel)]="searchTerm"></app-search-bar>
+        <app-search-bar
+          [placeholder]="'Buscar em ' + (pagination?.total ?? clientes.length) + ' cliente' + ((pagination?.total ?? clientes.length) !== 1 ? 's' : '') + ' (nome, email, telefone, CPF)...'"
+          [(ngModel)]="searchTerm"
+          (valueChange)="onSearchChange($event)">
+        </app-search-bar>
       </div>
     </div>
   </div>
@@ -35,7 +38,7 @@
   }
 
   <!-- Desktop Table (hidden on mobile) -->
-  @if (!isLoading && filteredClientes.length > 0) {
+  @if (!isLoading && clientes.length > 0) {
   <div class="hidden lg:block rounded-xl border shadow-sm overflow-hidden bg-white">
     <app-table>
       <thead appTableHeader>
@@ -49,7 +52,7 @@
         </tr>
       </thead>
       <tbody appTableBody>
-        @for (cliente of filteredClientes; track cliente.id) {
+        @for (cliente of clientes; track cliente.id) {
         <tr appTableRow>
           <td appTableCell class="font-medium">{{ cliente.name }}</td>
           <td appTableCell>{{ cliente.email || '-' }}</td>
@@ -77,7 +80,7 @@
 
   <!-- Mobile Cards (visible on mobile only) -->
   <div class="lg:hidden">
-    @for (cliente of filteredClientes; track cliente.id) {
+    @for (cliente of clientes; track cliente.id) {
     <app-mobile-card class="hover:shadow-md mb-4">
       <div class="space-y-3">
         <div class="flex justify-between items-start gap-3">
@@ -140,10 +143,10 @@
   }
 
   <!-- Empty State -->
-  @if (!isLoading && filteredClientes.length === 0) {
+  @if (!isLoading && clientes.length === 0) {
   <app-empty-state [icon]="UserIcon"
-    [title]="searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'"
-    [message]="searchTerm ? 'Tente ajustar os filtros de busca' : 'Comece adicionando seu primeiro cliente'">
+    [title]="searchTerm.trim() ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'"
+    [message]="searchTerm.trim() ? 'Tente ajustar os filtros de busca' : 'Comece adicionando seu primeiro cliente'">
   </app-empty-state>
   }
 

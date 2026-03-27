@@ -2,6 +2,7 @@ import { Routes } from '@angular/router'
 import { authGuard } from './core/guards/auth.guard'
 import { permissionGuard } from './core/guards/permission.guard'
 import { subscriptionGuard } from './core/guards/subscription.guard'
+import { eventHubResolver } from './core/resolvers/event-hub.resolver'
 
 export const routes: Routes = [
   // Auth routes (no guard)
@@ -132,6 +133,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/register/events/event-detail-layout/event-detail-layout.component').then(m => m.EventDetailLayoutComponent),
         data: { module: 'cadastros', action: 'view' },
         canActivate: [permissionGuard],
+        resolve: { eventHub: eventHubResolver },
         children: [
           { path: '', redirectTo: 'dados', pathMatch: 'full' },
           {

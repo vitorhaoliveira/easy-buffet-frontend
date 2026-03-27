@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core'
+import { Injectable, inject, Injector } from '@angular/core'
 import { HttpClient, HttpParams } from '@angular/common/http'
-import { Observable } from 'rxjs'
+import { Observable, tap } from 'rxjs'
+import { ReferenceDataCacheService } from './reference-data-cache.service'
 import { environment } from '@environments/environment'
 import type {
   ApiResponse,
@@ -14,8 +15,17 @@ import type {
 })
 export class UnitService {
   private readonly apiUrl = environment.apiBaseUrl
+  private readonly http = inject(HttpClient)
+  private readonly injector = inject(Injector)
 
-  constructor(private http: HttpClient) {}
+  /**
+   * @Function - invalidateReferenceCache
+   * @description - Clears reference list cache after mutating units
+   * @returns - void
+   */
+  private invalidateReferenceCache(): void {
+    void this.injector.get(ReferenceDataCacheService).invalidateUnits()
+  }
 
   /**
    * @Function - getUnits
@@ -51,7 +61,11 @@ export class UnitService {
    * @returns - Observable<ApiResponse<Unit>>
    */
   createUnit(unitData: CreateUnitRequest): Observable<ApiResponse<Unit>> {
-    return this.http.post<ApiResponse<Unit>>(`${this.apiUrl}/units`, unitData)
+    return this.http.post<ApiResponse<Unit>>(`${this.apiUrl}/units`, unitData).pipe(
+      tap(res => {
+        if (res.success) this.invalidateReferenceCache()
+      })
+    )
   }
 
   /**
@@ -63,7 +77,11 @@ export class UnitService {
    * @returns - Observable<ApiResponse<Unit>>
    */
   updateUnit(id: string, unitData: UpdateUnitRequest): Observable<ApiResponse<Unit>> {
-    return this.http.put<ApiResponse<Unit>>(`${this.apiUrl}/units/${id}`, unitData)
+    return this.http.put<ApiResponse<Unit>>(`${this.apiUrl}/units/${id}`, unitData).pipe(
+      tap(res => {
+        if (res.success) this.invalidateReferenceCache()
+      })
+    )
   }
 
   /**
@@ -74,7 +92,11 @@ export class UnitService {
    * @returns - Observable<ApiResponse<null>>
    */
   deleteUnit(id: string): Observable<ApiResponse<null>> {
-    return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/units/${id}`)
+    return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/units/${id}`).pipe(
+      tap(res => {
+        if (res.success) this.invalidateReferenceCache()
+      })
+    )
   }
 }
 

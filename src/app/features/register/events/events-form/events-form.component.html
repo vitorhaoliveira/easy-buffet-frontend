@@ -37,6 +37,32 @@
   <!-- Formulário -->
   @if (!isLoadingData) {
   <form [formGroup]="eventForm" (ngSubmit)="handleSubmit()" class="space-y-6">
+    @if (isInsideEventHub) {
+      @if (isLoadingHubContract) {
+      <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 animate-pulse h-24" aria-hidden="true"></div>
+      } @else if (hubContract) {
+      <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-3">
+        <h3 class="text-lg font-semibold text-gray-900">Situação do evento</h3>
+        @if (isHubContractClosed()) {
+        <p class="text-sm text-muted-foreground">Evento fechado em {{ formatHubContractClosedDate() }}. Reabra para permitir alterações financeiras (aba Pagamentos).</p>
+        <button type="button" appButton variant="outline" (click)="openReopenHubModal()" [disabled]="isOpeningHubContract || isClosingHubContract || isLoading">
+          <lucide-icon [img]="UnlockIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          {{ isOpeningHubContract ? 'Reabrindo...' : 'Reabrir evento' }}
+        </button>
+        } @else {
+        <p class="text-sm text-muted-foreground">Quando o evento estiver concluído, feche-o para indicar que não há mais alterações pendentes nos pagamentos.</p>
+        <button type="button" appButton variant="outline" (click)="openCloseHubModal()" [disabled]="isClosingHubContract || isOpeningHubContract || isLoading">
+          <lucide-icon [img]="LockIcon" class="h-4 w-4 mr-2"></lucide-icon>
+          {{ isClosingHubContract ? 'Fechando...' : 'Fechar evento' }}
+        </button>
+        }
+      </div>
+      } @else {
+      <p class="text-sm text-muted-foreground rounded-lg border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3">
+        As condições de pagamento deste evento ainda não foram definidas. Defina-as na aba <strong>Pagamentos</strong>.
+      </p>
+      }
+    }
     <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Cliente (pesquisa + paginação com Carregar mais) -->
@@ -192,4 +218,18 @@
     </div>
   </form>
   }
+
+  <app-confirmation-modal
+    [isOpen]="hubConfirmAction !== null"
+    [title]="hubConfirmAction === 'close' ? 'Fechar evento' : 'Reabrir evento'"
+    [message]="hubConfirmAction === 'close'
+      ? 'Tem certeza que deseja fechar este evento? Você poderá reabrir depois nesta tela.'
+      : 'Deseja reabrir este evento para permitir alterações financeiras?'"
+    [confirmText]="hubConfirmAction === 'close' ? 'Fechar' : 'Reabrir'"
+    cancelText="Cancelar"
+    [variant]="hubConfirmAction === 'close' ? 'warning' : 'info'"
+    [loading]="isClosingHubContract || isOpeningHubContract"
+    (onClose)="closeHubConfirmModal()"
+    (onConfirm)="confirmHubAction()">
+  </app-confirmation-modal>
 </div>

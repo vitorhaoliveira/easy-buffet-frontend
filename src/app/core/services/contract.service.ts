@@ -5,6 +5,7 @@ import { environment } from '@environments/environment'
 import type {
   ApiResponse,
   Contract,
+  ContractDetailPayload,
   CreateContractRequest,
   UpdateContractRequest,
   CreateContractResponse,
@@ -21,6 +22,11 @@ export interface GetContractsParams {
   paymentStatus?: 'received' | 'pending' | 'all'
   status?: string
   eventId?: string
+}
+
+/** Query for GET /contracts/:id/detail (includeSellers as string on wire) */
+export interface ContractDetailQueryOptions {
+  includeSellers?: boolean
 }
 
 @Injectable({
@@ -62,6 +68,21 @@ export class ContractService {
     return this.http.get<ApiResponse<Contract>>(`${this.apiUrl}/contracts/${id}`)
   }
 
+  /**
+   * @Function - getContractDetail
+   * @description - Aggregated contract screen payload: contract, installments, items, additional payments, commission, sellers
+   * @param - id: string - contract UUID
+   * @param - options: ContractDetailQueryOptions - includeSellers (default true on backend; send false to omit sellers list)
+   * @returns - Observable<ApiResponse<ContractDetailPayload>>
+   */
+  getContractDetail(id: string, options: ContractDetailQueryOptions = {}): Observable<ApiResponse<ContractDetailPayload>> {
+    let params = new HttpParams()
+    if (options.includeSellers === false) {
+      params = params.set('includeSellers', 'false')
+    }
+    return this.http.get<ApiResponse<ContractDetailPayload>>(`${this.apiUrl}/contracts/${id}/detail`, { params })
+  }
+
   createContract(contractData: CreateContractRequest): Observable<ApiResponse<CreateContractResponse>> {
     return this.http.post<ApiResponse<CreateContractResponse>>(`${this.apiUrl}/contracts`, contractData)
   }
@@ -99,9 +120,27 @@ export class ContractService {
     return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/contracts/${contractId}/items/${itemId}`)
   }
 
-  // Close Contract
+  /**
+   * @Function - closeContract
+   * @description - Financial closure: POST `{apiBaseUrl}/contracts/{contractId}/close` (apiBaseUrl already includes `/api`).
+   * Request body: `{}`. Same auth/org headers as other contract routes (via HttpClient interceptors).
+   * Success 200: `{ success: true, data: Contract, message }`. 422 `CONTRACT_ALREADY_CLOSED` if already closed.
+   * @param - contractId: string - UUID
+   * @returns - Observable<ApiResponse<Contract>>
+   */
   closeContract(contractId: string): Observable<ApiResponse<Contract>> {
     return this.http.post<ApiResponse<Contract>>(`${this.apiUrl}/contracts/${contractId}/close`, {})
+  }
+
+  /**
+   * @Function - openContract
+   * @description - Reopen contract: POST `{apiBaseUrl}/contracts/{contractId}/open`. Body `{}`.
+   * Success 200: `{ success: true, data: Contract, message }`. 422 `CONTRACT_ALREADY_OPEN` if `closedAt` is already null.
+   * @param - contractId: string - UUID
+   * @returns - Observable<ApiResponse<Contract>>
+   */
+  openContract(contractId: string): Observable<ApiResponse<Contract>> {
+    return this.http.post<ApiResponse<Contract>>(`${this.apiUrl}/contracts/${contractId}/open`, {})
   }
 
   // Export Installments PDF

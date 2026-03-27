@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core'
+import { Injectable, inject } from '@angular/core'
 import { BehaviorSubject } from 'rxjs'
 import { StorageService } from './storage.service'
+import { ReferenceDataCacheService } from './reference-data-cache.service'
 import type { Organization, UserPermissions } from '@shared/models/api.types'
 
 export interface UserOrganizationRole {
@@ -13,6 +14,9 @@ export interface UserOrganizationRole {
   providedIn: 'root'
 })
 export class OrganizationStateService {
+  private readonly storageService = inject(StorageService)
+  private readonly referenceDataCache = inject(ReferenceDataCacheService)
+
   private currentOrganizationSubject = new BehaviorSubject<Organization | null>(null)
   private userOrganizationsSubject = new BehaviorSubject<Organization[]>([])
   private loadingSubject = new BehaviorSubject<boolean>(true)
@@ -29,7 +33,7 @@ export class OrganizationStateService {
     return this.userOrganizationsSubject.value
   }
 
-  constructor(private storageService: StorageService) {
+  constructor() {
     this.loadOrganizations()
   }
 
@@ -68,6 +72,7 @@ export class OrganizationStateService {
   switchOrganization(organizationId: string): void {
     const success = this.storageService.switchOrganization(organizationId)
     if (success) {
+      this.referenceDataCache.invalidateAll()
       const newOrg = this.storageService.getOrganization()
       if (newOrg) {
         this.currentOrganizationSubject.next(newOrg)
