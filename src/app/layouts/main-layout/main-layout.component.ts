@@ -158,6 +158,16 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   /** Section label shown in sidebar (uppercase). */
   menuItems: MenuItem[] = [
     {
+      title: 'CRM',
+      icon: 'clipboard-list',
+      expanded: true,
+      items: [
+        { title: 'Leads', url: '/crm', icon: 'users' },
+        { title: 'Kanban', url: '/crm/kanban', icon: 'file-text' },
+        { title: 'Dashboard CRM', url: '/crm/dashboard', icon: 'bar-chart' }
+      ]
+    },
+    {
       title: 'EVENTOS',
       icon: 'clipboard-list',
       expanded: true,
@@ -278,6 +288,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             role: org.role || 'Operador',
             permissions: org.permissions || {
               dashboard: { view: true },
+              crm: { create: false, edit: false, delete: false, view: true },
               cadastros: { create: false, edit: false, delete: false, view: true },
               financeiro: { create: false, edit: false, delete: false, view: true },
               relatorios: { view: true, export: false }

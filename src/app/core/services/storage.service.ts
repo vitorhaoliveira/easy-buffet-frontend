@@ -149,7 +149,14 @@ export class StorageService {
     if (!permissions) return false
 
     const modulePermissions = permissions[module]
-    if (!modulePermissions) return false
+    if (!modulePermissions) {
+      // Backward compatibility for users persisted before CRM permissions existed.
+      // Reuse "cadastros" permission matrix as the closest equivalent access model.
+      if (module === 'crm' && permissions.cadastros) {
+        return (permissions.cadastros as Record<string, boolean>)[action] === true
+      }
+      return false
+    }
 
     return (modulePermissions as any)[action] === true
   }

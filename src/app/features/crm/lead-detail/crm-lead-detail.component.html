@@ -1,0 +1,135 @@
+<div class="space-y-4 sm:space-y-6">
+  @if (error) {
+    <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{{ error }}</div>
+  }
+
+  @if (isLoading) {
+    <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">Carregando detalhes do lead...</div>
+  }
+
+  @if (!isLoading && lead) {
+    <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">{{ lead.name }}</h2>
+          <p class="text-sm text-gray-500">{{ lead.whatsapp || lead.phone || lead.email || '-' }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" (click)="sendWhatsappTemplate('Olá {{nome}}, tudo bem? Sobre seu orçamento...')" class="h-10 px-3 rounded-lg border border-gray-300 text-sm">
+            Enviar proposta
+          </button>
+          <button type="button" (click)="sendWhatsappTemplate('Oi {{nome}}, passando para confirmar seu evento...')" class="h-10 px-3 rounded-lg border border-gray-300 text-sm">
+            Fazer follow-up
+          </button>
+          <button type="button" (click)="sendWhatsappTemplate('Olá {{nome}}, podemos retomar a conversa sobre seu evento?')" class="h-10 px-3 rounded-lg border border-gray-300 text-sm">
+            Reativar lead
+          </button>
+          <button
+            type="button"
+            (click)="convertLead()"
+            [disabled]="isConvertingLead || isLeadConverted()"
+            class="h-10 px-3 rounded-lg bg-primary-600 text-white text-sm disabled:opacity-50"
+          >
+            {{ isConvertingLead ? 'Convertendo...' : (isLeadConverted() ? 'Lead convertido' : 'Converter lead') }}
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div class="rounded-lg bg-gray-50 p-3">
+          <p class="text-xs text-gray-500">Origem</p>
+          <p class="font-medium text-gray-900 capitalize">{{ lead.origin }}</p>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3">
+          <p class="text-xs text-gray-500">Status</p>
+          <p class="font-medium text-gray-900 capitalize">{{ getDisplayStatus() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+      <h3 class="font-semibold text-gray-900">Etapa do funil</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        @for (stage of stages; track stage.id) {
+          <button
+            type="button"
+            (click)="moveStage(stage.id)"
+            class="h-11 px-3 rounded-lg border text-sm text-left"
+            [class.border-primary-500]="lead.currentStageId === stage.id"
+            [class.bg-primary-50]="lead.currentStageId === stage.id"
+            [class.border-gray-300]="lead.currentStageId !== stage.id"
+          >
+            {{ stage.name }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+        <h3 class="font-semibold text-gray-900">Histórico de interações</h3>
+        <div class="grid grid-cols-1 gap-2">
+          <select [(ngModel)]="newInteraction.type" class="h-10 rounded-lg border border-gray-300 px-3 text-sm">
+            <option value="ligacao">Ligação</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="reuniao">Reunião</option>
+            <option value="nota">Nota</option>
+          </select>
+          <textarea [(ngModel)]="newInteraction.description" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" rows="3" placeholder="Descreva a interação"></textarea>
+          <button
+            type="button"
+            (click)="saveInteraction()"
+            [disabled]="isSavingInteraction"
+            class="h-10 px-3 rounded-lg bg-primary-600 text-white text-sm disabled:opacity-50"
+          >
+            {{ isSavingInteraction ? 'Salvando...' : 'Adicionar interação' }}
+          </button>
+        </div>
+        <div class="space-y-2 max-h-72 overflow-auto">
+          @for (interaction of interactions; track interaction.id) {
+            <div class="rounded-lg border border-gray-200 p-3">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-gray-800 capitalize">{{ interaction.type }}</p>
+                <p class="text-xs text-gray-500">{{ formatDateTime(interaction.createdAt) }}</p>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">{{ interaction.description }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+        <h3 class="font-semibold text-gray-900">Follow-ups</h3>
+        <div class="grid grid-cols-1 gap-2">
+          <input type="date" [(ngModel)]="newFollowUp.dueDate" class="h-10 rounded-lg border border-gray-300 px-3 text-sm" />
+          <textarea [(ngModel)]="newFollowUp.note" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" rows="3" placeholder="Nota do follow-up"></textarea>
+          <button
+            type="button"
+            (click)="saveFollowUp()"
+            [disabled]="isSavingFollowUp"
+            class="h-10 px-3 rounded-lg bg-primary-600 text-white text-sm disabled:opacity-50"
+          >
+            {{ isSavingFollowUp ? 'Salvando...' : 'Adicionar follow-up' }}
+          </button>
+        </div>
+        <div class="space-y-2 max-h-72 overflow-auto">
+          @for (followUp of followUps; track followUp.id) {
+            <div class="rounded-lg border p-3" [class.border-red-300]="isFollowUpOverdue(followUp)" [class.bg-red-50]="isFollowUpOverdue(followUp)" [class.border-gray-200]="!isFollowUpOverdue(followUp)">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-gray-800">{{ formatFollowUpDueDate(followUp.dueDate) }}</p>
+                <button
+                  type="button"
+                  (click)="toggleFollowUpDone(followUp)"
+                  class="h-8 px-2 rounded border border-gray-300 text-xs"
+                >
+                  {{ followUp.status === 'done' ? 'Reabrir' : 'Concluir' }}
+                </button>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">{{ followUp.note }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
