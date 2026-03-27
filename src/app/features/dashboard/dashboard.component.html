@@ -1,20 +1,13 @@
 <div class="space-y-6 sm:space-y-8">
-  @if (isLoading) {
-  <div class="space-y-6 sm:space-y-8">
-    <!-- Skeleton for metrics cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
-      @for (i of [1,2,3,4,5]; track i) {
-      <app-skeleton class="h-32 rounded-2xl"></app-skeleton>
-      }
-    </div>
-    <!-- Skeleton for calendar -->
-    <app-skeleton class="h-96 rounded-2xl"></app-skeleton>
-    <!-- Skeleton for tables -->
-    <app-skeleton class="h-64 rounded-2xl"></app-skeleton>
+  @if (isLoadingStats) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+    @for (i of [1,2,3,4,5]; track i) {
+    <app-skeleton class="h-32 rounded-2xl"></app-skeleton>
+    }
   </div>
   }
 
-  @if (!isLoading) {
+  @if (!isLoadingStats) {
   <!-- Metric Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
     <!-- Parcelas (7 dias) -->
@@ -105,6 +98,7 @@
       </div>
     </div>
   </div>
+  }
 
   <!-- Eventos recentes -->
   <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
@@ -135,6 +129,9 @@
       </div>
     </div>
 
+    @if (isLoadingRecent) {
+    <app-skeleton class="h-40 w-full rounded-xl"></app-skeleton>
+    } @else {
     <div #recentEventsScroll
       class="flex gap-4 overflow-x-auto overflow-y-hidden pb-2 -mx-1 px-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:thin]">
       <!-- Ver eventos card -->
@@ -161,8 +158,9 @@
       </a>
       }
     </div>
+    }
 
-    @if (!isLoading && recentEvents.length === 0) {
+    @if (!isLoadingRecent && recentEvents.length === 0) {
     <p class="text-sm text-gray-500 mt-2">Nenhum evento próximo. Adicione um evento ou veja a lista completa.</p>
     }
   </div>
@@ -183,13 +181,14 @@
     <div class="mb-6 flex items-center justify-between">
       <h3 class="text-xl font-semibold text-gray-900">{{ getCurrentMonthYear() }}</h3>
       <div class="flex gap-2">
-        <button (click)="previousMonth()"
-          class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors">
+        <button type="button" (click)="previousMonth()" [disabled]="isLoadingCalendar"
+          class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors disabled:opacity-50">
           <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <button (click)="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors">
+        <button type="button" (click)="nextMonth()" [disabled]="isLoadingCalendar"
+          class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors disabled:opacity-50">
           <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -197,6 +196,9 @@
       </div>
     </div>
 
+    @if (isLoadingCalendar) {
+    <app-skeleton class="h-96 w-full rounded-xl"></app-skeleton>
+    } @else {
     <!-- Calendar Grid -->
     <div class="relative">
       <!-- Scroll indicator for mobile -->
@@ -243,9 +245,10 @@
         </div>
       </div>
     </div>
+    }
 
     <!-- Calendar Legend - Units -->
-    @if (units.length > 0) {
+    @if (!isLoadingCalendar && units.length > 0) {
     <div class="mt-6 flex items-center justify-center gap-3 sm:gap-6 flex-wrap px-2">
       @for (unit of units; track unit.id) {
       <div class="flex items-center gap-1.5 sm:gap-2">
@@ -260,7 +263,7 @@
       </div>
       }
     </div>
-    } @else {
+    } @else if (!isLoadingCalendar) {
     <!-- Fallback to status legend if no units -->
     <div class="mt-6 flex items-center justify-center gap-6">
       <div class="flex items-center gap-2">
@@ -471,7 +474,6 @@
       </a>
     </div>
   </div>
-  }
 
   <!-- Event Detail Modal -->
   <app-event-detail-modal [isOpen]="showEventModal" [event]="selectedEvent" [isLoading]="isLoadingEventDetails"

@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core'
+import { Injectable, inject } from '@angular/core'
 import { BehaviorSubject, firstValueFrom } from 'rxjs'
 import { Router } from '@angular/router'
 import { AuthService } from './auth.service'
 import { StorageService } from './storage.service'
+import { ReferenceDataCacheService } from './reference-data-cache.service'
 import type { User, Organization } from '@shared/models/api.types'
 
 @Injectable({
@@ -34,6 +35,8 @@ export class AuthStateService {
   get isLoading(): boolean {
     return this.loadingSubject.value
   }
+
+  private readonly referenceDataCache = inject(ReferenceDataCacheService)
 
   constructor(
     private authService: AuthService,
@@ -237,6 +240,7 @@ export class AuthStateService {
     } catch (error) {
       // Silent fail on logout error
     } finally {
+      void this.referenceDataCache.clearAllStorage()
       this.storageService.clearAll()
       this.tokenSubject.next(null)
       this.userSubject.next(null)

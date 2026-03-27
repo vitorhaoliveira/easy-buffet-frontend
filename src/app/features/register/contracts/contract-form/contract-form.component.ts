@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs'
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { LabelComponent } from '@shared/components/ui/label/label.component'
 import { ContractService } from '@core/services/contract.service'
+import { EventHubRefreshService } from '@core/services/event-hub-refresh.service'
 import { ToastService } from '@core/services/toast.service'
 import { QuoteService } from '@core/services/quote.service'
 import { EventService, GetEventsParams } from '@core/services/event.service'
@@ -76,6 +77,7 @@ export class ContractFormComponent implements OnInit {
     private clientService: ClientService,
     private sellerService: SellerService,
     private toastService: ToastService,
+    private eventHubRefresh: EventHubRefreshService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -494,6 +496,7 @@ export class ContractFormComponent implements OnInit {
           }
           if (this.isFromEventContext && this.eventIdFromContext) {
             this.toastService.success('Pagamentos definidos com sucesso')
+            this.eventHubRefresh.notifyEventUpdated(this.eventIdFromContext)
             this.router.navigate(['/cadastros/eventos/visualizar', this.eventIdFromContext, 'pagamentos'])
           } else {
             this.toastService.success('Contrato criado com sucesso')

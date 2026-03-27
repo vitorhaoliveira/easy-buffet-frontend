@@ -24,8 +24,15 @@ import {
 import { InstallmentService } from '@core/services/installment.service'
 import { ToastService } from '@core/services/toast.service'
 import { PageTitleService } from '@core/services/page-title.service'
-import type { Installment, PaymentMethod, UpdateInstallmentRequest, PaginationInfo } from '@shared/models/api.types'
+import type {
+  Installment,
+  PaymentMethod,
+  PayInstallmentRequest,
+  UpdateInstallmentRequest,
+  PaginationInfo
+} from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
+import { getApiErrorMessage } from '@shared/utils/api-error.utils'
 
 interface InstallmentGroup {
   id: string
@@ -377,6 +384,13 @@ export class InstallmentsListComponent implements OnInit {
    */
   handlePaymentClick(installment: Installment): void {
     this.installmentToPay = installment
+    const balance = Number(installment.amount)
+    this.paymentForm.get('paymentAmount')?.setValidators([
+      Validators.required,
+      Validators.min(0.01),
+      Validators.max(balance)
+    ])
+    this.paymentForm.get('paymentAmount')?.updateValueAndValidity()
     this.paymentForm.patchValue({
       paymentDate: new Date().toISOString().split('T')[0],
       paymentAmount: installment.amount,
@@ -389,7 +403,7 @@ export class InstallmentsListComponent implements OnInit {
 
   /**
    * @Function - handleConfirmPayment
-   * @description - Process payment for installment. Partial payment is allowed; remainder is added to the next installment (or a new one is created).
+   * @description - Registers full or partial payment via PATCH /installments/:id/pay. Partial payment creates an additional payment and keeps the installment pending with the remaining balance.
    * @author - Vitor Hugo
    * @returns - Promise<void>
    */
@@ -403,11 +417,12 @@ export class InstallmentsListComponent implements OnInit {
 
     const formValue = this.paymentForm.value
     const paidAmount = parseFloat(formValue.paymentAmount)
+    const installmentBalance = Number(this.installmentToPay.amount)
 
     try {
       this.isPaymentProcessing = true
       this.error = ''
-      const paymentData: any = {
+      const paymentData: PayInstallmentRequest = {
         paymentDate: formValue.paymentDate,
         paymentAmount: paidAmount
       }
@@ -422,16 +437,20 @@ export class InstallmentsListComponent implements OnInit {
       )
 
       if (response.success) {
-        this.toastService.success('Parcela paga com sucesso')
+        const fromApi = response.message?.trim()
+        const isFull = paidAmount >= installmentBalance - 1e-6
+        const fallback = isFull ? 'Parcela marcada como paga' : 'Pagamento parcial registrado'
+        this.toastService.success(fromApi || fallback)
         await this.loadInstallments()
         this.showPaymentModal = false
         this.installmentToPay = null
+        this.resetPaymentFormValidators()
         this.paymentForm.reset()
       } else {
         this.error = response.message || 'Erro ao processar pagamento'
       }
-    } catch (err: any) {
-      this.error = err.error?.message || err.message || 'Erro ao processar pagamento'
+    } catch (err: unknown) {
+      this.error = getApiErrorMessage(err, 'Erro ao processar pagamento')
     } finally {
       this.isPaymentProcessing = false
     }
@@ -446,7 +465,19 @@ export class InstallmentsListComponent implements OnInit {
   handleCancelPayment(): void {
     this.showPaymentModal = false
     this.installmentToPay = null
+    this.resetPaymentFormValidators()
     this.paymentForm.reset()
+  }
+
+  /**
+   * @Function - resetPaymentFormValidators
+   * @description - Restores paymentAmount validators after modal (max is set per installment when opening pay modal).
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  private resetPaymentFormValidators(): void {
+    this.paymentForm.get('paymentAmount')?.setValidators([Validators.required, Validators.min(0.01)])
+    this.paymentForm.get('paymentAmount')?.updateValueAndValidity()
   }
 
   /**
@@ -514,6 +545,52 @@ export class InstallmentsListComponent implements OnInit {
 
     const formValue = this.editForm.value
     const statusApi = this.normalizeStatusToApi(formValue.status)
+    const installmentAmount =
+      formValue.amount != null && formValue.amount !== '' ? parseFloat(String(formValue.amount)) : NaN
+    const rawPaid = formValue.paymentAmount
+    const paidAmount =
+      rawPaid !== '' && rawPaid != null ? parseFloat(String(rawPaid)) : installmentAmount
+
+    if (statusApi === 'paid' && !Number.isNaN(installmentAmount) && paidAmount > installmentAmount + 1e-6) {
+      this.error =
+        'O valor pago não pode exceder o valor da parcela. Registre o excedente como pagamento adicional no contrato.'
+      return
+    }
+
+    if (statusApi === 'paid' && !Number.isNaN(installmentAmount) && paidAmount < installmentAmount - 1e-6) {
+      try {
+        this.isEditProcessing = true
+        this.error = ''
+        const payPayload: PayInstallmentRequest = {
+          paymentDate: formValue.paymentDate || new Date().toISOString().split('T')[0],
+          paymentAmount: paidAmount
+        }
+        if (formValue.paymentMethod) {
+          payPayload.paymentMethod = formValue.paymentMethod
+        }
+        if (formValue.notes) {
+          payPayload.notes = formValue.notes
+        }
+        const payRes = await firstValueFrom(
+          this.installmentService.payInstallment(this.installmentToEdit.id, payPayload)
+        )
+        if (payRes.success) {
+          const fromApi = payRes.message?.trim()
+          this.toastService.success(fromApi || 'Pagamento parcial registrado')
+          await this.loadInstallments()
+          this.showEditModal = false
+          this.installmentToEdit = null
+        } else {
+          this.error = payRes.message || 'Erro ao registrar pagamento parcial'
+        }
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao registrar pagamento parcial')
+      } finally {
+        this.isEditProcessing = false
+      }
+      return
+    }
+
     const payload: UpdateInstallmentRequest = {
       status: statusApi,
       dueDate: formValue.dueDate,
@@ -523,7 +600,6 @@ export class InstallmentsListComponent implements OnInit {
     if (statusApi === 'paid') {
       if (formValue.paymentDate) payload.paymentDate = formValue.paymentDate
       else payload.paymentDate = new Date().toISOString().split('T')[0]
-      const rawPaid = formValue.paymentAmount
       payload.paymentAmount = (rawPaid !== '' && rawPaid != null)
         ? parseFloat(String(rawPaid))
         : Number(this.installmentToEdit.amount)
@@ -545,21 +621,18 @@ export class InstallmentsListComponent implements OnInit {
       )
 
       if (response.success) {
-        this.toastService.success('Parcela atualizada com sucesso')
+        const fromApi = response.message?.trim()
+        const fallback =
+          statusApi === 'paid' ? 'Parcela marcada como paga' : 'Parcela atualizada com sucesso'
+        this.toastService.success(fromApi || fallback)
         await this.loadInstallments()
         this.showEditModal = false
         this.installmentToEdit = null
       } else {
         this.error = response.message || 'Erro ao atualizar parcela'
       }
-    } catch (err: any) {
-      if (err.error?.error?.message) {
-        this.error = err.error.error.message
-      } else if (err.error?.message) {
-        this.error = err.error.message
-      } else {
-        this.error = err.message || 'Erro ao atualizar parcela'
-      }
+    } catch (err: unknown) {
+      this.error = getApiErrorMessage(err, 'Erro ao atualizar parcela')
     } finally {
       this.isEditProcessing = false
     }
@@ -699,6 +772,9 @@ export class InstallmentsListComponent implements OnInit {
     }
     if (field?.hasError('min') && field.touched) {
       return 'Valor deve ser maior que zero'
+    }
+    if (field?.hasError('max') && field.touched) {
+      return 'O valor não pode ser maior que o saldo da parcela. Use pagamento adicional no contrato para o excedente.'
     }
     return ''
   }

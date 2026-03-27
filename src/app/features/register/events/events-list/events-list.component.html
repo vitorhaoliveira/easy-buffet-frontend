@@ -6,7 +6,8 @@
       <div class="flex-1 w-full">
         <app-search-bar
           [placeholder]="'Buscar em ' + (pagination?.total ?? events.length) + ' evento' + ((pagination?.total ?? events.length) !== 1 ? 's' : '') + '...'"
-          [(ngModel)]="searchTerm">
+          [(ngModel)]="searchTerm"
+          (valueChange)="onSearchChange($event)">
         </app-search-bar>
       </div>
     </div>
@@ -37,16 +38,16 @@
   }
 
   <!-- Desktop / Cards grid (hidden on mobile: table would apply; here we use cards) -->
-  @if (!isLoading && filteredEvents.length > 0) {
+  @if (!isLoading && events.length > 0) {
   <!-- Cards grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-    @for (event of filteredEvents; track event.id) {
+    @for (event of events; track event.id) {
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-primary-200 transition-all overflow-hidden group relative">
       <a [routerLink]="['/cadastros/eventos/visualizar', event.id, 'dados']" class="block">
         <div class="h-1.5 w-full" [style.backgroundColor]="getCardAccentColor(event)"></div>
         <div class="p-4">
           <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-            {{ getPackageName(event.packageId) !== '-' ? getPackageName(event.packageId) : event.status }}
+            {{ getCardSubtitleLabel(event) }}
           </p>
           <h3 class="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
             {{ event.name }}
@@ -90,10 +91,10 @@
   }
 
   <!-- Empty State -->
-  @if (!isLoading && filteredEvents.length === 0) {
+  @if (!isLoading && events.length === 0) {
   <app-empty-state [icon]="CalendarDaysIcon"
-    [title]="searchTerm ? 'Nenhum evento encontrado' : 'Nenhum evento cadastrado'"
-    [message]="searchTerm ? 'Tente ajustar os filtros de busca.' : 'Comece criando seu primeiro evento.'">
+    [title]="searchTerm.trim() ? 'Nenhum evento encontrado' : 'Nenhum evento cadastrado'"
+    [message]="searchTerm.trim() ? 'Tente ajustar os filtros de busca.' : 'Comece criando seu primeiro evento.'">
   </app-empty-state>
   }
 

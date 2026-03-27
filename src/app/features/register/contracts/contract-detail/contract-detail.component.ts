@@ -24,8 +24,21 @@ import { SellerService } from '@core/services/seller.service'
 import { ToastService } from '@core/services/toast.service'
 import { ContractCommissionCardComponent } from '../contract-commission-card/contract-commission-card.component'
 import { ContractCommissionFormComponent } from '../contract-commission-form/contract-commission-form.component'
-import type { Contract, Installment, AdditionalPayment, PaymentMethod, ContractItem, CommissionDetails, Seller, UpdateInstallmentRequest, UpdateContractRequest } from '@shared/models/api.types'
+import type {
+  Contract,
+  ContractDetailPayload,
+  Installment,
+  AdditionalPayment,
+  PaymentMethod,
+  ContractItem,
+  CommissionDetails,
+  Seller,
+  UpdateInstallmentRequest,
+  UpdateContractRequest,
+  PayInstallmentRequest
+} from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
+import { getApiErrorMessage } from '@shared/utils/api-error.utils'
 
 interface ContractWithDetails extends Contract {
   event?: {
@@ -235,10 +248,11 @@ export class ContractDetailComponent implements OnInit, OnChanges {
    * @returns - void
    */
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['contractIdInput'] && this.contractIdInput) {
-      this.contractId = this.contractIdInput
-      this.loadContractDetails(this.contractId)
-    }
+    if (!changes['contractIdInput'] || !this.contractIdInput) return
+    // First change is handled in ngOnInit to avoid duplicate GET /contracts/:id/detail (or legacy chain)
+    if (changes['contractIdInput'].firstChange) return
+    this.contractId = this.contractIdInput
+    void this.loadContractDetails(this.contractId)
   }
 
   /**
@@ -252,30 +266,11 @@ export class ContractDetailComponent implements OnInit, OnChanges {
     try {
       this.isLoading = true
       this.error = ''
-      const response = await firstValueFrom(this.contractService.getContractById(id))
-      
-      if (response.success && response.data) {
-        this.contract = response.data as ContractWithDetails
-        // Load additional payments if not included in contract response
-        if (!this.contract.additionalPayments || this.contract.additionalPayments.length === 0) {
-          await this.loadAdditionalPayments(id)
-        } else {
-          this.additionalPayments = this.contract.additionalPayments
-        }
-        // Load contract items
-        await this.loadContractItems(id)
-        // Load installments so parcelas and totals stay in sync (e.g. after additional payment or partial pay)
-        const instRes = await firstValueFrom(this.contractService.getContractInstallments(id))
-        if (instRes.success && Array.isArray(instRes.data)) {
-          this.contract = { ...this.contract, installments: instRes.data }
-        }
-        // Load commission
-        await this.loadCommission(id)
-        // Load sellers for commission form
-        await this.loadSellers()
-      } else {
-        this.error = 'Erro ao carregar detalhes do evento'
+      const usedAggregate = await this.tryApplyContractDetailAggregate(id)
+      if (usedAggregate) {
+        return
       }
+      await this.loadContractDetailsSequential(id)
     } catch (err: any) {
       if (err.error?.error?.message) {
         this.error = err.error.error.message
@@ -286,6 +281,71 @@ export class ContractDetailComponent implements OnInit, OnChanges {
       }
     } finally {
       this.isLoading = false
+    }
+  }
+
+  /**
+   * @Function - tryApplyContractDetailAggregate
+   * @description - Uses GET /contracts/:id/detail when available; returns false to fall back to legacy multi-request load
+   * @param - id: string
+   * @returns - Promise<boolean>
+   */
+  private async tryApplyContractDetailAggregate(id: string): Promise<boolean> {
+    try {
+      const response = await firstValueFrom(this.contractService.getContractDetail(id))
+      const payload = response?.data
+      if (payload != null && response.success !== false) {
+        this.applyContractDetailPayload(payload)
+        return true
+      }
+    } catch {
+      /* 404 or backend without /detail */
+    }
+    return false
+  }
+
+  /**
+   * @Function - applyContractDetailPayload
+   * @description - Maps aggregated API payload into component state
+   * @param - payload: ContractDetailPayload
+   * @returns - void
+   */
+  private applyContractDetailPayload(payload: ContractDetailPayload): void {
+    this.contract = {
+      ...payload.contract,
+      installments: payload.installments
+    } as ContractWithDetails
+    this.additionalPayments = payload.additionalPayments
+    this.contractItems = payload.contractItems
+    this.commission = payload.commission
+    this.sellers = payload.sellers ?? []
+  }
+
+  /**
+   * @Function - loadContractDetailsSequential
+   * @description - Legacy load: contract + additional payments + items + installments + commission + sellers
+   * @param - id: string - Contract ID
+   * @returns - Promise<void>
+   */
+  private async loadContractDetailsSequential(id: string): Promise<void> {
+    const response = await firstValueFrom(this.contractService.getContractById(id))
+
+    if (response.success && response.data) {
+      this.contract = response.data as ContractWithDetails
+      if (!this.contract.additionalPayments || this.contract.additionalPayments.length === 0) {
+        await this.loadAdditionalPayments(id)
+      } else {
+        this.additionalPayments = this.contract.additionalPayments
+      }
+      await this.loadContractItems(id)
+      const instRes = await firstValueFrom(this.contractService.getContractInstallments(id))
+      if (instRes.success && Array.isArray(instRes.data)) {
+        this.contract = { ...this.contract, installments: instRes.data }
+      }
+      await this.loadCommission(id)
+      await this.loadSellers()
+    } else {
+      this.error = 'Erro ao carregar detalhes do evento'
     }
   }
 
@@ -468,6 +528,51 @@ export class ContractDetailComponent implements OnInit, OnChanges {
 
     const formValue = this.installmentEditForm.value
     const statusApi = this.normalizeInstallmentStatusToApi(formValue.status)
+    const installmentAmount =
+      formValue.amount != null && formValue.amount !== '' ? parseFloat(String(formValue.amount)) : NaN
+    const rawPaid = formValue.paymentAmount
+    const paidAmount =
+      rawPaid !== '' && rawPaid != null ? parseFloat(String(rawPaid)) : installmentAmount
+
+    if (statusApi === 'paid' && !Number.isNaN(installmentAmount) && paidAmount > installmentAmount + 1e-6) {
+      this.error =
+        'O valor pago não pode exceder o valor da parcela. Registre o excedente como pagamento adicional no contrato.'
+      return
+    }
+
+    if (statusApi === 'paid' && !Number.isNaN(installmentAmount) && paidAmount < installmentAmount - 1e-6) {
+      try {
+        this.isEditInstallmentProcessing = true
+        this.error = ''
+        const payPayload: PayInstallmentRequest = {
+          paymentDate: formValue.paymentDate || new Date().toISOString().split('T')[0],
+          paymentAmount: paidAmount
+        }
+        if (formValue.paymentMethod) {
+          payPayload.paymentMethod = formValue.paymentMethod
+        }
+        if (formValue.notes) {
+          payPayload.notes = formValue.notes
+        }
+        const payRes = await firstValueFrom(
+          this.installmentService.payInstallment(this.installmentToEdit.id, payPayload)
+        )
+        if (payRes.success) {
+          const fromApi = payRes.message?.trim()
+          this.toastService.success(fromApi || 'Pagamento parcial registrado')
+          await this.loadContractDetails(this.contractId)
+          this.showEditInstallmentModal = false
+          this.installmentToEdit = null
+        } else {
+          this.error = payRes.message || 'Erro ao registrar pagamento parcial'
+        }
+      } catch (err: unknown) {
+        this.error = getApiErrorMessage(err, 'Erro ao registrar pagamento parcial')
+      } finally {
+        this.isEditInstallmentProcessing = false
+      }
+      return
+    }
 
     try {
       this.isEditInstallmentProcessing = true
@@ -481,7 +586,6 @@ export class ContractDetailComponent implements OnInit, OnChanges {
 
       if (statusApi === 'paid') {
         payload.paymentDate = formValue.paymentDate || new Date().toISOString().split('T')[0]
-        const rawPaid = formValue.paymentAmount
         payload.paymentAmount = (rawPaid !== '' && rawPaid != null)
           ? parseFloat(String(rawPaid))
           : Number(this.installmentToEdit.amount)
@@ -502,18 +606,15 @@ export class ContractDetailComponent implements OnInit, OnChanges {
         await this.loadContractDetails(this.contractId)
         this.showEditInstallmentModal = false
         this.installmentToEdit = null
-        this.toastService.success('Parcela atualizada com sucesso')
+        const fromApi = response.message?.trim()
+        const fallback =
+          statusApi === 'paid' ? 'Parcela marcada como paga' : 'Parcela atualizada com sucesso'
+        this.toastService.success(fromApi || fallback)
       } else {
         this.error = response.message || 'Erro ao atualizar parcela'
       }
-    } catch (err: any) {
-      if (err.error?.error?.message) {
-        this.error = err.error.error.message
-      } else if (err.error?.message) {
-        this.error = err.error.message
-      } else {
-        this.error = err.message || 'Erro ao atualizar parcela'
-      }
+    } catch (err: unknown) {
+      this.error = getApiErrorMessage(err, 'Erro ao atualizar parcela')
     } finally {
       this.isEditInstallmentProcessing = false
     }

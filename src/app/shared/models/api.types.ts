@@ -220,6 +220,27 @@ export interface Event {
   contractId?: string | null
 }
 
+/**
+ * GET /events?view=list (or fields=minimal) — slim row for grid; omits notes, times, guestCount, audit, nested client/package.
+ */
+export interface EventListItem {
+  id: string
+  name: string
+  eventDate: string
+  status: Event['status']
+  clientId: string
+  packageId?: string | null
+  /** Display label when nested package is omitted */
+  packageName?: string | null
+  unitId?: string | null
+  unit?: {
+    id: string
+    name: string
+    code?: string | null
+    color?: string
+  } | null
+}
+
 // Contract Types
 export interface Contract {
   id: string
@@ -264,6 +285,41 @@ export interface Contract {
   installments?: Installment[]
   additionalPayments?: AdditionalPayment[]
   contractItems?: ContractItem[] // Itens do contrato (quando incluído)
+}
+
+/** Slim contract payload from GET /events/:id/hub when includeContract is not false */
+export interface EventHubContractSummary {
+  id: string
+  eventId: string
+  clientId: string
+  status: Contract['status']
+  closedAt: string | null
+  totalAmount: number
+  installmentCount: number
+  paymentStatus?: 'received' | 'pending'
+}
+
+export interface EventHubReference {
+  packages: Package[]
+  units: Unit[]
+  clients: {
+    items: Client[]
+    pagination: PaginationInfo
+  }
+}
+
+export interface EventHubMeta {
+  generatedAt: string
+  organizationId: string
+}
+
+/** data from GET /events/:id/hub or GET /events/:id?include=hub */
+export interface EventHubData {
+  event: Event
+  /** Omitted when includeContract=false; null = no contract linked */
+  contract?: EventHubContractSummary | null
+  reference?: EventHubReference
+  meta?: EventHubMeta
 }
 
 // Contract Item Types
@@ -941,6 +997,22 @@ export interface CommissionDetails {
     email: string
     phone: string
   } | null
+}
+
+/**
+ * Single response for GET /contracts/:id/detail — replaces chained
+ * getContractById + installments + items + additional payments + commission + sellers.
+ */
+export interface ContractDetailPayload {
+  contract: Contract
+  installments: Installment[]
+  contractItems: ContractItem[]
+  additionalPayments: AdditionalPayment[]
+  commission: CommissionDetails | null
+  sellers: Seller[]
+  meta?: {
+    generatedAt: string
+  }
 }
 
 // ===========================================

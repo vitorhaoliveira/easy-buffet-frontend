@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnDestroy, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
 import { LucideAngularModule, CalendarDays, Plus, Trash2 } from 'lucide-angular'
-import { firstValueFrom } from 'rxjs'
+import { firstValueFrom, Subject } from 'rxjs'
+import { debounceTime, distinctUntilChanged, map, takeUntil } from 'rxjs/operators'
 
 import { ConfirmationModalComponent } from '@shared/components/ui/confirmation-modal/confirmation-modal.component'
 import { EmptyStateComponent } from '@shared/components/ui/empty-state/empty-state.component'
@@ -12,10 +13,8 @@ import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.
 import { SkeletonComponent } from '@shared/components/ui/skeleton/skeleton.component'
 import { EventService, GetEventsParams } from '@core/services/event.service'
 import { PageTitleService } from '@core/services/page-title.service'
-import { ClientService } from '@core/services/client.service'
-import { PackageService } from '@core/services/package.service'
-import { UnitService } from '@core/services/unit.service'
-import type { Event, Client, Package, Unit, PaginationInfo } from '@shared/models/api.types'
+import { ReferenceDataCacheService } from '@core/services/reference-data-cache.service'
+import type { EventListItem, Client, Package, Unit, PaginationInfo } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -34,12 +33,12 @@ import { formatDateBR } from '@shared/utils/date.utils'
   ],
   templateUrl: './events-list.component.html'
 })
-export class EventsListComponent implements OnInit {
+export class EventsListComponent implements OnInit, OnDestroy {
   readonly CalendarDaysIcon = CalendarDays
   readonly PlusIcon = Plus
   readonly Trash2Icon = Trash2
 
-  events: Event[] = []
+  events: EventListItem[] = []
   clients: Client[] = []
   packages: Package[] = []
   units: Unit[] = []
@@ -49,7 +48,7 @@ export class EventsListComponent implements OnInit {
   isLoading: boolean = true
   error: string = ''
   showDeleteModal: boolean = false
-  eventToDelete: Event | null = null
+  eventToDelete: EventListItem | null = null
   isDeleting: boolean = false
 
   /** Pagination: backend returns page, limit, total, totalPages */
@@ -57,17 +56,51 @@ export class EventsListComponent implements OnInit {
   limit: number = 20
   pagination: PaginationInfo | null = null
 
+  private readonly searchTrigger$ = new Subject<string>()
+  private readonly destroy$ = new Subject<void>()
+
   constructor(
     private eventService: EventService,
-    private clientService: ClientService,
-    private packageService: PackageService,
-    private unitService: UnitService,
+    private referenceDataCache: ReferenceDataCacheService,
     private pageTitleService: PageTitleService
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.pageTitleService.setTitle('Eventos', '')
+    this.searchTrigger$
+      .pipe(
+        debounceTime(400),
+        map((value: string) => value.trim()),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.page = 1
+        void this.loadData()
+      })
     await this.loadData()
+  }
+
+  /**
+   * @Function - ngOnDestroy
+   * @description - Completes subscriptions to avoid memory leaks
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next()
+    this.destroy$.complete()
+  }
+
+  /**
+   * @Function - onSearchChange
+   * @description - Emits search text for debounced server-side reload
+   * @author - Vitor Hugo
+   * @param - value: string - Raw search input
+   * @returns - void
+   */
+  onSearchChange(value: string): void {
+    this.searchTrigger$.next(value)
   }
 
   async loadData(): Promise<void> {
@@ -75,38 +108,37 @@ export class EventsListComponent implements OnInit {
       this.isLoading = true
       this.error = ''
 
+      const search = this.searchTerm.trim()
       const params: GetEventsParams = {
         page: this.page,
         limit: this.limit,
         unitId: this.filterUnitId || undefined,
-        status: this.filterStatus !== 'todos' ? this.filterStatus : undefined
+        status: this.filterStatus !== 'todos' ? this.filterStatus : undefined,
+        search: search || undefined,
+        view: 'list'
       }
-      const [eventsResponse, clientsResponse, packagesResponse, unitsResponse] = await Promise.all([
+      const [eventsResponse, clientsList, packagesResponse, unitsList] = await Promise.all([
         firstValueFrom(this.eventService.getEventsPaginated(params)),
-        firstValueFrom(this.clientService.getClients()),
-        firstValueFrom(this.packageService.getPackages()),
-        firstValueFrom(this.unitService.getUnits(true))
+        this.referenceDataCache.getClientsList(),
+        this.referenceDataCache.getPackagesResponse(),
+        this.referenceDataCache.getUnitsList(true)
       ])
 
       if (eventsResponse.success && eventsResponse.data) {
-        this.events = eventsResponse.data
+        this.events = eventsResponse.data as EventListItem[]
         this.pagination = eventsResponse.pagination ?? null
       } else {
         this.error = 'Erro ao carregar eventos'
         this.pagination = null
       }
 
-      if (clientsResponse.success && clientsResponse.data) {
-        this.clients = clientsResponse.data as Client[]
-      }
+      this.clients = clientsList
 
       if (packagesResponse.success && packagesResponse.data) {
         this.packages = packagesResponse.data
       }
 
-      if (unitsResponse.success && unitsResponse.data) {
-        this.units = unitsResponse.data
-      }
+      this.units = unitsList
     } catch (err: any) {
       this.error = err.message || 'Erro ao carregar dados'
       this.pagination = null
@@ -150,21 +182,6 @@ export class EventsListComponent implements OnInit {
     await this.loadData()
   }
 
-  /** Events are already filtered by unit and status by the API; only search is client-side on current page */
-  get filteredEvents(): Event[] {
-    if (!this.searchTerm) return this.events
-    const searchLower = this.searchTerm.toLowerCase()
-    return this.events.filter(event => {
-      const client = this.getClientName(event.clientId)
-      const packageName = this.getPackageName(event.packageId)
-      const unitName = this.getUnitName(event)
-      return event.name.toLowerCase().includes(searchLower) ||
-             client.toLowerCase().includes(searchLower) ||
-             packageName.toLowerCase().includes(searchLower) ||
-             (unitName != null && unitName.toLowerCase().includes(searchLower))
-    })
-  }
-
   /**
    * @Function - handleDeleteClick
    * @description - Initiates the delete process by opening the confirmation modal and clearing previous errors
@@ -172,7 +189,7 @@ export class EventsListComponent implements OnInit {
    * @param - event: Event - The event to be deleted
    * @returns - void
    */
-  handleDeleteClick(event: Event): void {
+  handleDeleteClick(event: EventListItem): void {
     this.eventToDelete = event
     this.showDeleteModal = true
     this.error = '' // Clear previous errors
@@ -242,6 +259,29 @@ export class EventsListComponent implements OnInit {
     return pkg?.name || '-'
   }
 
+  /**
+   * @Function - getPackageDisplayName
+   * @description - Uses packageName from view=list when present; otherwise resolves via cache
+   * @param - event: EventListItem
+   * @returns - string
+   */
+  getPackageDisplayName(event: EventListItem): string {
+    const fromApi = event.packageName?.trim()
+    if (fromApi) return fromApi
+    return this.getPackageName(event.packageId ?? undefined)
+  }
+
+  /**
+   * @Function - getCardSubtitleLabel
+   * @description - Package name for card eyebrow, or status when no package label
+   * @param - event: EventListItem
+   * @returns - string
+   */
+  getCardSubtitleLabel(event: EventListItem): string {
+    const p = this.getPackageDisplayName(event)
+    return p !== '-' ? p : event.status
+  }
+
   formatDate(dateString: string): string {
     return formatDateBR(dateString)
   }
@@ -268,7 +308,7 @@ export class EventsListComponent implements OnInit {
    * @param - event: Event - The event to get unit from
    * @returns - string
    */
-  getUnitName(event: Event): string | null {
+  getUnitName(event: EventListItem): string | null {
     if (event.unit) {
       return event.unit.code || event.unit.name
     }
@@ -282,7 +322,7 @@ export class EventsListComponent implements OnInit {
    * @param - event: Event - The event to get unit color from
    * @returns - string
    */
-  getUnitColor(event: Event): string {
+  getUnitColor(event: EventListItem): string {
     return event.unit?.color || '#6c757d'
   }
 
@@ -293,7 +333,7 @@ export class EventsListComponent implements OnInit {
    * @param - event: Event
    * @returns - string - CSS color
    */
-  getCardAccentColor(event: Event): string {
+  getCardAccentColor(event: EventListItem): string {
     if (event.unit?.color) return event.unit.color
     switch (event.status) {
       case 'Confirmado':

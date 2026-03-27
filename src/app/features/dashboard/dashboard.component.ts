@@ -2,13 +2,12 @@ import { Component, OnInit, inject, ViewChild, ElementRef } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { RouterLink, Router } from '@angular/router'
-import { DashboardService } from '@core/services/dashboard.service'
 import { EventService } from '@core/services/event.service'
+import { DashboardCacheService } from '@core/services/dashboard-cache.service'
 import { PageTitleService } from '@core/services/page-title.service'
-import { UnitService } from '@core/services/unit.service'
-import { PackageService } from '@core/services/package.service'
 import { InstallmentService } from '@core/services/installment.service'
 import { ChecklistService } from '@core/services/checklist.service'
+import { ReferenceDataCacheService } from '@core/services/reference-data-cache.service'
 import { firstValueFrom } from 'rxjs'
 import type { DashboardStats, DashboardEvent, Event, Unit, Package, EventChecklist } from '@shared/models/api.types'
 import { parseDateIgnoringTimezone, formatDateBR, getDaysUntil, isSameDayAsDate } from '@shared/utils/date.utils'
@@ -33,12 +32,11 @@ interface CalendarDay {
 export class DashboardComponent implements OnInit {
   @ViewChild('recentEventsScroll') recentEventsScrollRef?: ElementRef<HTMLDivElement>
 
-  private readonly dashboardService = inject(DashboardService)
+  private readonly dashboardCache = inject(DashboardCacheService)
   private readonly eventService = inject(EventService)
-  private readonly unitService = inject(UnitService)
-  private readonly packageService = inject(PackageService)
   private readonly installmentService = inject(InstallmentService)
   private readonly checklistService = inject(ChecklistService)
+  private readonly referenceDataCache = inject(ReferenceDataCacheService)
   private readonly pageTitleService = inject(PageTitleService)
   private readonly router = inject(Router)
 
@@ -48,7 +46,12 @@ export class DashboardComponent implements OnInit {
   packages: Package[] = []
   units: Unit[] = []
   upcomingChecklists: EventChecklist[] = []
-  isLoading = true
+  /** Progressive loading: metrics cards */
+  isLoadingStats = true
+  /** Progressive loading: recent events carousel */
+  isLoadingRecent = true
+  /** Progressive loading: calendar grid */
+  isLoadingCalendar = true
   isLoadingChecklists = false
   error = ''
   
@@ -88,111 +91,232 @@ export class DashboardComponent implements OnInit {
    * @returns - Promise<void>
    */
   private async loadDashboardData(): Promise<void> {
+    this.isLoadingStats = true
+    this.isLoadingRecent = true
+    this.isLoadingCalendar = true
     try {
-      // Load stats
-      const statsResponse = await firstValueFrom(this.dashboardService.getStats())
-      if (statsResponse.success && statsResponse.data) {
-        const data = statsResponse.data
-        this.stats = {
-          ...data,
-          monthlyRevenue: typeof data.monthlyRevenue === 'string' 
-            ? parseFloat(data.monthlyRevenue) 
-            : data.monthlyRevenue,
-          totalRevenue: typeof data.totalRevenue === 'string'
-            ? parseFloat(data.totalRevenue)
-            : data.totalRevenue
-        }
-      } else {
-        this.loadMockData()
-      }
+      const [stats, packagesResponse, unitsList] = await Promise.all([
+        this.dashboardCache.getStatsWithSwr(fresh => {
+          this.stats = { ...fresh }
+          void this.applyOverdueInstallmentCountIfMissing()
+        }),
+        this.referenceDataCache.getPackagesResponse(),
+        this.referenceDataCache.getUnitsList(true)
+      ])
 
-      // Load overdue installments count (for stats only)
-      const overdueResponse = await firstValueFrom(
-        this.installmentService.getOverdueInstallments()
-      )
-      if (overdueResponse.success && overdueResponse.data) {
-        const overdueCount = (overdueResponse.data as any[]).length
-        if (this.stats) {
-          this.stats.overdueInstallments = overdueCount
-        }
-      }
+      this.stats = { ...stats }
+      await this.applyOverdueInstallmentCountIfMissing()
 
-      // Load all events for calendar and recent events carousel (all pages)
-      const fullEvents = await this.loadAllEvents()
-      // Calendar: convert to DashboardEvent[]
-      this.allEventsForCalendar = fullEvents.map(event => ({
-        id: event.id,
-        clientName: event.client?.name || 'Cliente não informado',
-        eventName: event.name,
-        eventDate: event.eventDate,
-        status: event.status,
-        daysUntilEvent: this.getDaysUntil(event.eventDate),
-        unit: event.unit
-      }))
-      // Recent events: future events only, sorted by date, take first 10
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      this.recentEvents = fullEvents
-        .filter(event => {
-          if (!event.eventDate) return false
-          const eventDate = parseDateIgnoringTimezone(event.eventDate)
-          return eventDate >= today
-        })
-        .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-        .slice(0, 10)
-
-      // Load packages for recent events type labels
-      const packagesResponse = await firstValueFrom(
-        this.packageService.getPackages()
-      )
       if (packagesResponse.success && packagesResponse.data) {
         this.packages = packagesResponse.data
       }
 
-      // Load units for legend
-      const unitsResponse = await firstValueFrom(
-        this.unitService.getUnits(true)
-      )
-      if (unitsResponse.success && unitsResponse.data) {
-        this.units = unitsResponse.data
-      }
+      this.units = unitsList
+      this.isLoadingStats = false
 
-      // Load upcoming checklists
+      const [calendarEvents, recentEventsRaw] = await Promise.all([
+        this.fetchEventsForCalendarMonth(this.currentDate),
+        this.fetchRecentEventsForCarousel()
+      ])
+
+      this.allEventsForCalendar = calendarEvents.map(event => this.mapEventToDashboardEvent(event))
+      this.recentEvents = recentEventsRaw
+
+      this.isLoadingRecent = false
+      this.isLoadingCalendar = false
+
+      this.generateCalendar()
+
       await this.loadUpcomingChecklists()
-
     } catch (err: unknown) {
       console.error('Error loading dashboard:', err)
       this.error = 'Não foi possível conectar ao servidor. Usando dados de demonstração.'
       this.loadMockData()
-    } finally {
-      this.isLoading = false
-      // Regenerate calendar after loading all events
-      this.generateCalendar()
     }
   }
 
   /**
-   * @Function - loadAllEvents
-   * @description - Load all events from API by fetching every page (calendar and carousel need full list)
-   * @author - Vitor Hugo
+   * @Function - applyOverdueInstallmentCountIfMissing
+   * @description - Uses dashboard stats when API sends overdue count; otherwise requests total via pagination
+   * @returns - Promise<void>
+   */
+  private async applyOverdueInstallmentCountIfMissing(): Promise<void> {
+    if (!this.stats) return
+    if (
+      this.stats.overdueInstallments !== undefined
+      && this.stats.overdueInstallments !== null
+    ) {
+      return
+    }
+    try {
+      const res = await firstValueFrom(
+        this.installmentService.getInstallmentsPaginated({ page: 1, limit: 1, status: 'overdue' })
+      )
+      if (res.success && res.pagination) {
+        this.stats.overdueInstallments = res.pagination.total
+        return
+      }
+    } catch {
+      // fall through
+    }
+    try {
+      const overdueResponse = await firstValueFrom(
+        this.installmentService.getOverdueInstallments()
+      )
+      if (overdueResponse.success && overdueResponse.data) {
+        this.stats.overdueInstallments = overdueResponse.data.length
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * @Function - getMonthDateRangeISO
+   * @description - Inclusive dateFrom/dateTo for the calendar month (YYYY-MM-DD) for API filters
+   * @param - d: Date - Any day in the target month
+   * @returns - { dateFrom: string; dateTo: string }
+   */
+  private getMonthDateRangeISO(d: Date): { dateFrom: string; dateTo: string } {
+    const y = d.getFullYear()
+    const m = d.getMonth()
+    const dateFrom = `${y}-${String(m + 1).padStart(2, '0')}-01`
+    const lastDay = new Date(y, m + 1, 0).getDate()
+    const dateTo = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    return { dateFrom, dateTo }
+  }
+
+  /**
+   * @Function - getTodayISODate
+   * @description - Local calendar date as YYYY-MM-DD
+   * @returns - string
+   */
+  private getTodayISODate(): string {
+    const t = new Date()
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+  }
+
+  /**
+   * @Function - addYearsToToday
+   * @description - Local date string years from today
+   * @param - years: number
+   * @returns - string - YYYY-MM-DD
+   */
+  private addYearsToToday(years: number): string {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() + years)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
+  /**
+   * @Function - fetchEventsInDateRange
+   * @description - Loads events with server-side date filters and pagination (bounded pages)
+   * @param - dateFrom: string - YYYY-MM-DD
+   * @param - dateTo: string - YYYY-MM-DD
+   * @param - maxPages: number - Safety cap on pagination loops
    * @returns - Promise<Event[]>
    */
-  private async loadAllEvents(): Promise<Event[]> {
+  private async fetchEventsInDateRange(
+    dateFrom: string,
+    dateTo: string,
+    maxPages: number = 30
+  ): Promise<Event[]> {
     const all: Event[] = []
     const limit = 100
-    let page = 1
-    let totalPages = 1
-    do {
+    for (let page = 1; page <= maxPages; page++) {
       const res = await firstValueFrom(
-        this.eventService.getEventsPaginated({ page, limit })
+        this.eventService.getEventsPaginated({ page, limit, dateFrom, dateTo })
       )
       if (!res.success || !res.data) break
       const list = Array.isArray(res.data) ? res.data : []
       all.push(...(list as Event[]))
-      totalPages = res.pagination?.totalPages ?? 1
-      page++
-    } while (page <= totalPages)
+      const totalPages = res.pagination?.totalPages ?? 1
+      if (page >= totalPages) break
+    }
     return all
+  }
+
+  /**
+   * @Function - fetchEventsForCalendarMonth
+   * @description - Events for a single visible calendar month (replaces loading all historical events)
+   * @param - d: Date - Month to load
+   * @returns - Promise<Event[]>
+   */
+  private async fetchEventsForCalendarMonth(d: Date): Promise<Event[]> {
+    return this.dashboardCache.getCalendarMonthEventsWithSwr(d, ev => {
+      this.allEventsForCalendar = ev.map(e => this.mapEventToDashboardEvent(e))
+      this.generateCalendar()
+    })
+  }
+
+  /**
+   * @Function - buildRecentCarouselEvents
+   * @description - Upcoming events within a one-year window, capped at 10 for the carousel
+   * @returns - Promise<Event[]>
+   */
+  private async buildRecentCarouselEvents(): Promise<Event[]> {
+    const dateFrom = this.getTodayISODate()
+    const dateTo = this.addYearsToToday(1)
+    const events = await this.fetchEventsInDateRange(dateFrom, dateTo, 5)
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    return events
+      .filter(event => {
+        if (!event.eventDate) return false
+        return parseDateIgnoringTimezone(event.eventDate) >= todayStart
+      })
+      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
+      .slice(0, 10)
+  }
+
+  /**
+   * @Function - fetchRecentEventsForCarousel
+   * @description - Carousel events with stale-while-revalidate
+   * @returns - Promise<Event[]>
+   */
+  private async fetchRecentEventsForCarousel(): Promise<Event[]> {
+    return this.dashboardCache.getRecentCarouselEventsWithSwr(
+      () => this.buildRecentCarouselEvents(),
+      ev => {
+        this.recentEvents = ev
+      }
+    )
+  }
+
+  /**
+   * @Function - mapEventToDashboardEvent
+   * @description - Maps full Event to calendar card shape
+   * @param - event: Event
+   * @returns - DashboardEvent
+   */
+  private mapEventToDashboardEvent(event: Event): DashboardEvent {
+    return {
+      id: event.id,
+      clientName: event.client?.name || 'Cliente não informado',
+      eventName: event.name,
+      eventDate: event.eventDate,
+      status: event.status,
+      daysUntilEvent: this.getDaysUntil(event.eventDate),
+      unit: event.unit
+    }
+  }
+
+  /**
+   * @Function - reloadCalendarForVisibleMonth
+   * @description - Refetches events when the user changes the visible month
+   * @returns - Promise<void>
+   */
+  private async reloadCalendarForVisibleMonth(): Promise<void> {
+    this.isLoadingCalendar = true
+    try {
+      const events = await this.fetchEventsForCalendarMonth(this.currentDate)
+      this.allEventsForCalendar = events.map(e => this.mapEventToDashboardEvent(e))
+      this.generateCalendar()
+    } catch (err: unknown) {
+      console.error('Error loading calendar month:', err)
+    } finally {
+      this.isLoadingCalendar = false
+    }
   }
 
   /**
@@ -282,6 +406,10 @@ export class DashboardComponent implements OnInit {
     }
     this.allEventsForCalendar = [mockEvent]
     this.recentEvents = []
+    this.isLoadingStats = false
+    this.isLoadingRecent = false
+    this.isLoadingCalendar = false
+    this.generateCalendar()
   }
 
   /**
@@ -338,7 +466,7 @@ export class DashboardComponent implements OnInit {
    */
   previousMonth(): void {
     this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1)
-    this.generateCalendar()
+    void this.reloadCalendarForVisibleMonth()
   }
 
   /**
@@ -350,7 +478,7 @@ export class DashboardComponent implements OnInit {
    */
   nextMonth(): void {
     this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1)
-    this.generateCalendar()
+    void this.reloadCalendarForVisibleMonth()
   }
 
   /**

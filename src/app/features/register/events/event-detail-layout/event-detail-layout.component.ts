@@ -6,8 +6,9 @@ import { firstValueFrom } from 'rxjs'
 import { Subject, takeUntil } from 'rxjs'
 
 import { EventService } from '@core/services/event.service'
+import { EventHubRefreshService } from '@core/services/event-hub-refresh.service'
 import { PageTitleService } from '@core/services/page-title.service'
-import type { Event } from '@shared/models/api.types'
+import type { Event, EventHubData, EventListItem } from '@shared/models/api.types'
 import { formatDateBR } from '@shared/utils/date.utils'
 
 @Component({
@@ -30,7 +31,7 @@ export class EventDetailLayoutComponent implements OnInit, OnDestroy {
   isLoading = true
   error = ''
   showEventDropdown = false
-  eventsForDropdown: Event[] = []
+  eventsForDropdown: EventListItem[] = []
   isLoadingEvents = false
   private destroy$ = new Subject<void>()
 
@@ -38,10 +39,19 @@ export class EventDetailLayoutComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private eventService: EventService,
+    private eventHubRefresh: EventHubRefreshService,
     private pageTitleService: PageTitleService
   ) {}
 
   ngOnInit(): void {
+    this.eventHubRefresh.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((id) => {
+        if (id === this.eventId) {
+          void this.loadEvent()
+        }
+      })
+
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(async (params) => {
       const id = params.get('eventId') || ''
       if (!id) {
@@ -63,6 +73,17 @@ export class EventDetailLayoutComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * @Function - yieldToBrowserPaint
+   * @description - Lets the loading UI commit before resolver data is applied (avoids sub-frame flash)
+   * @returns - Promise<void>
+   */
+  private yieldToBrowserPaint(): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    })
+  }
+
+  /**
    * @Function - loadEvent
    * @description - Loads event data for the hub header
    * @author - Vitor Hugo
@@ -70,9 +91,24 @@ export class EventDetailLayoutComponent implements OnInit, OnDestroy {
    */
   async loadEvent(): Promise<void> {
     try {
-      const response = await firstValueFrom(this.eventService.getEventById(this.eventId))
-      if (response.success && response.data) {
-        this.event = response.data
+      await this.yieldToBrowserPaint()
+      const hubData = this.route.snapshot.data['eventHub'] as EventHubData | null
+      if (this.isLoading && hubData?.event) {
+        this.event = hubData.event
+        this.pageTitleService.setTitle('Eventos', '')
+        return
+      }
+      const response = await firstValueFrom(
+        this.eventService.getEventHub(this.eventId, { includeReferenceLists: false })
+      )
+      if (response.success && response.data?.event) {
+        this.event = response.data.event
+        this.pageTitleService.setTitle('Eventos', '')
+        return
+      }
+      const fallback = await firstValueFrom(this.eventService.getEventById(this.eventId))
+      if (fallback.success && fallback.data) {
+        this.event = fallback.data
         this.pageTitleService.setTitle('Eventos', '')
       } else {
         this.error = 'Evento não encontrado'
@@ -128,10 +164,10 @@ export class EventDetailLayoutComponent implements OnInit, OnDestroy {
     this.isLoadingEvents = true
     try {
       const response = await firstValueFrom(
-        this.eventService.getEventsPaginated({ limit: 100, page: 1 })
+        this.eventService.getEventsPaginated({ limit: 100, page: 1, view: 'list' })
       )
       if (response.success && response.data) {
-        this.eventsForDropdown = response.data
+        this.eventsForDropdown = response.data as EventListItem[]
       }
     } catch {
       this.eventsForDropdown = []
@@ -159,7 +195,7 @@ export class EventDetailLayoutComponent implements OnInit, OnDestroy {
    * @param - ev: Event
    * @returns - void
    */
-  selectEvent(ev: Event): void {
+  selectEvent(ev: EventListItem): void {
     this.showEventDropdown = false
     if (ev.id === this.eventId) return
     const tab = this.getCurrentTab()

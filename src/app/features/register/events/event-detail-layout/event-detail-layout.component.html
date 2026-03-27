@@ -1,7 +1,15 @@
 <div class="space-y-4 sm:space-y-6">
-  <!-- Top bar: Event selector -->
-  <div class="flex flex-wrap items-center gap-3">
-    @if (!isLoading && event && !error) {
+  <!-- Top bar: Event selector or loading chip (always shows feedback when switching) -->
+  <div class="flex flex-wrap items-center gap-3 min-h-[42px]">
+    @if (isLoading) {
+    <div
+      class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-muted-foreground min-w-[200px] sm:min-w-[280px]"
+      role="status"
+      aria-live="polite">
+      <div class="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent flex-shrink-0"></div>
+      <span>Carregando evento...</span>
+    </div>
+    } @else if (event && !error) {
     <div class="relative">
       <button type="button" (click)="toggleEventDropdown()"
         class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-left font-medium text-gray-900 transition-colors min-w-[200px] sm:min-w-[280px]">
@@ -32,13 +40,12 @@
     }
   </div>
 
-  <!-- Loading -->
+  <!-- Main loading (tabs + content) -->
   @if (isLoading) {
-  <div class="flex items-center justify-center h-48">
-    <div class="text-center">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-      <p class="mt-2 text-muted-foreground">Carregando evento...</p>
-    </div>
+  <div class="flex flex-col items-center justify-center py-16 sm:py-20 rounded-lg border border-dashed border-gray-200 bg-gray-50/50">
+    <div class="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent"></div>
+    <p class="mt-4 text-sm font-medium text-gray-700">A preparar o evento</p>
+    <p class="mt-1 text-xs text-muted-foreground text-center max-w-sm px-4">A carregar dados e abas. Isto pode levar alguns segundos.</p>
   </div>
   }
 

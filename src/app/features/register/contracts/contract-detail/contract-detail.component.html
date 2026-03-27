@@ -522,7 +522,7 @@
               @if (installmentEditForm.get('amount')?.invalid && installmentEditForm.get('amount')?.touched) {
               <p class="text-xs text-red-500">Informe um valor maior que zero.</p>
               }
-              <p class="text-xs text-muted-foreground">Ao alterar o valor, a diferença é aplicada nas parcelas seguintes para manter o total do contrato.</p>
+              <p class="text-xs text-muted-foreground">Ao reduzir o valor da última parcela sem parcela seguinte, pode ser necessário criar uma nova parcela no contrato ou ajustar outra existente. O sistema exibirá o valor do restante se não for possível aplicar automaticamente.</p>
             </div>
           </div>
           @if (isPaidStatusInInstallmentEditForm) {
@@ -538,7 +538,7 @@
                 <label appLabel htmlFor="installmentEditPaymentAmount">Valor pago (R$)</label>
                 <input type="number" id="installmentEditPaymentAmount" formControlName="paymentAmount" step="0.01"
                   class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm" />
-                <p class="text-xs text-muted-foreground">Pagamento parcial permitido: o restante é somado à próxima parcela (ou criada uma nova).</p>
+                <p class="text-xs text-muted-foreground">Pagamento parcial: registra um pagamento adicional e mantém a parcela pendente com o saldo restante (veja em Pagamentos adicionais). O valor pago não pode exceder o saldo da parcela.</p>
               </div>
               <div class="space-y-2 sm:col-span-2">
                 <label appLabel htmlFor="installmentEditPaymentMethod">Forma de pagamento</label>

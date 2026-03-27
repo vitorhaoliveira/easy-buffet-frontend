@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core'
+import { Component, OnDestroy, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router, RouterModule } from '@angular/router'
 import { FormsModule } from '@angular/forms'
 import { LucideAngularModule, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, User } from 'lucide-angular'
-import { firstValueFrom } from 'rxjs'
+import { firstValueFrom, Subject } from 'rxjs'
+import { debounceTime, distinctUntilChanged, map, takeUntil } from 'rxjs/operators'
 
 import { ButtonComponent } from '@shared/components/ui/button/button.component'
 import { SearchBarComponent } from '@shared/components/ui/search-bar/search-bar.component'
@@ -49,7 +50,7 @@ import { formatDateBR } from '@shared/utils/date.utils'
   ],
   templateUrl: './client-list.component.html'
 })
-export class ClientListComponent implements OnInit {
+export class ClientListComponent implements OnInit, OnDestroy {
   readonly PlusIcon = Plus
   readonly EditIcon = Edit
   readonly Trash2Icon = Trash2
@@ -70,6 +71,9 @@ export class ClientListComponent implements OnInit {
   limit: number = 20
   pagination: PaginationInfo | null = null
 
+  private readonly searchTrigger$ = new Subject<string>()
+  private readonly destroy$ = new Subject<void>()
+
   constructor(
     private clientService: ClientService,
     private router: Router,
@@ -78,14 +82,52 @@ export class ClientListComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.pageTitleService.setTitle('Clientes', 'Gerencie os dados dos seus clientes')
+    this.searchTrigger$
+      .pipe(
+        debounceTime(400),
+        map((value: string) => value.trim()),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.page = 1
+        void this.loadClients()
+      })
     await this.loadClients()
+  }
+
+  /**
+   * @Function - ngOnDestroy
+   * @description - Completes subscriptions to avoid memory leaks
+   * @author - Vitor Hugo
+   * @returns - void
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next()
+    this.destroy$.complete()
+  }
+
+  /**
+   * @Function - onSearchChange
+   * @description - Emits search text for debounced server-side reload
+   * @author - Vitor Hugo
+   * @param - value: string - Raw search input
+   * @returns - void
+   */
+  onSearchChange(value: string): void {
+    this.searchTrigger$.next(value)
   }
 
   async loadClients(): Promise<void> {
     try {
       this.isLoading = true
       this.error = ''
-      const params: GetClientsParams = { page: this.page, limit: this.limit }
+      const search = this.searchTerm.trim()
+      const params: GetClientsParams = {
+        page: this.page,
+        limit: this.limit,
+        search: search || undefined
+      }
       const response = await firstValueFrom(this.clientService.getClientsPaginated(params))
       if (response.success && response.data) {
         this.clientes = response.data
@@ -113,19 +155,6 @@ export class ClientListComponent implements OnInit {
     if (p < 1 || (this.pagination && p > this.pagination.totalPages)) return
     this.page = p
     await this.loadClients()
-  }
-
-  /** Filter by search term on current page (client-side) */
-  get filteredClientes(): Client[] {
-    if (!this.searchTerm) return this.clientes
-    const searchLower = this.searchTerm.toLowerCase()
-    const searchDigits = this.searchTerm.replace(/\D/g, '')
-    return this.clientes.filter(cliente =>
-      (cliente.name || '').toLowerCase().includes(searchLower) ||
-      (cliente.email && cliente.email.toLowerCase().includes(searchLower)) ||
-      (cliente.phone && cliente.phone.includes(searchLower)) ||
-      (cliente.cpf && (cliente.cpf.toLowerCase().includes(searchLower) || cliente.cpf.replace(/\D/g, '').includes(searchDigits)))
-    )
   }
 
   /**
